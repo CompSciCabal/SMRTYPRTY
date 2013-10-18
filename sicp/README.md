@@ -1,5 +1,8 @@
 Add resources and links specific to Structure and Interpretation of Computer Programs here.
 
+Use the subdirectories for your homework. Label it like yourname-chapternumber.rkt
+
+
 SICP HTML version:
 http://mitpress.mit.edu/sicp/full-text/book/book.html
 
