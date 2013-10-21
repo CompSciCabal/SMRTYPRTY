@@ -70,7 +70,7 @@
 ;; I... have no idea how to prove things.
 
 ;;; 1.14
-;; On (the tree for the solution is n deep). On^2 for time (n/5 steps to calculate the total).
+;; On (the tree for the solution is n deep). On^2 time (n/5 steps to calculate the total).
 
 ;;; 1.15
 (define (cube x)
@@ -91,8 +91,8 @@
 
 ;;; 1.16
 (define (square n) (* n n))
+
 (define (fast-expt base expt)
-  (print (list 'fast-expt base expt))
   (cond ((= expt 0) 1)
         ((even? expt) (square (fast-expt base (/ expt 2))))
         (else (* base (fast-expt base (- expt 1))))))
@@ -233,6 +233,5 @@
 (map carmichael-test (list 561 1105 1729 2465 2821 6601))
 
 ;; Yes, that returns (list #t #t #t #t #t #t)
-
 
 ;;; 1.28
