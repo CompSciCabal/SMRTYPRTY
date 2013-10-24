@@ -186,12 +186,23 @@
              (lambda (i) 1)
              k))
 
+;(1/φ 11)
+
+; Recursive process
+(define (cont-frac-rec n d k)
+  (define (step i)
+    (if (> i k)
+        0.0
+        (/ (n i) (+ (d i) (step (+ i 1))))))
+  (step 1))
+
 ; Calculating continued fractions with tolerance
 (define (cont-frac-2 n d tolerance)
   (define (close-enough? x y)
     (< (abs (- x y)) tolerance))
   (define (step i value)
-    (let ((next (/ (n i) (+ (d i) value))))
+;    (let ((next (/ (n i) (+ (d i) value)))) ; no average damping
+    (let ((next (average value (/ (n i) (+ (d i) value)))))
       (if (close-enough? value next)
           (values next i)
           (step (+ 1 i) next))))
@@ -203,4 +214,30 @@
                (lambda (i) 1)
                tolerance))
 
-;(Φ 0.0001) ;=> 11
+;(Φ 0.0001) ;=> 11 without damping; 8 with damping
+
+; Exercise 1.38, p.71
+; Euler's expansion for e
+(define (e k)
+  (define (n i) 1)
+  (define (d i)
+    (if (= (remainder i 3) 2)
+        (* i 2)
+        1))
+  (+ 2 (cont-frac n d k)))
+
+; http://mathworld.wolfram.com/eContinuedFraction.html
+
+; Doesn't converge well enough
+; even with average damping
+;(list (e 100) (e 101) (e 102) (e 103))
+
+; Exercise 1.39, p.72
+(define (tan-cf x k)
+  (define (step i)
+    (if (> i k)
+        0.0
+        (/ (expt x i) (- (* 2 i) 1 (step (+ i 1))))))
+  (step 1))
+
+(tan-cf (/ pi 4) 1)
