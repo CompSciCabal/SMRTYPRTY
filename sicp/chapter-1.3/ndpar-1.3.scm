@@ -182,9 +182,8 @@
   (step k 0.0))
 
 (define (1/φ k)
-  (cont-frac (lambda (i) 1)
-             (lambda (i) 1)
-             k))
+  (define (one _) 1)
+  (cont-frac one one k))
 
 ;(1/φ 11)
 
