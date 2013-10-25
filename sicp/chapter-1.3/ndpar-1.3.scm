@@ -174,12 +174,12 @@
 ; Calculating continued fractions in K iterations
 ; Iterative process
 (define (cont-frac n d k)
-  (define (step i value)
-    (if (> i k)
-        value
-        (step (+ 1 i)
-              (/ (n i) (+ (d i) value)))))
-  (step 1 0.0))
+  (define (step i acc)
+    (if (= i 0)
+        acc
+        (step (- i 1)
+              (/ (n i) (+ (d i) acc)))))
+  (step k 0.0))
 
 (define (1/φ k)
   (cont-frac (lambda (i) 1)
@@ -190,11 +190,9 @@
 
 ; Recursive process
 (define (cont-frac-rec n d k)
-  (define (step i)
-    (if (> i k)
-        0.0
-        (/ (n i) (+ (d i) (step (+ i 1))))))
-  (step 1))
+  (if (= k 0)
+      0
+      (/ (n k) (+ (d k) (cont-frac-rec n d (- k 1))))))
 
 ; Calculating continued fractions with tolerance
 (define (cont-frac-2 n d tolerance)
@@ -218,6 +216,7 @@
 
 ; Exercise 1.38, p.71
 ; Euler's expansion for e
+; http://mathworld.wolfram.com/eContinuedFraction.html
 (define (e k)
   (define (n i) 1)
   (define (d i)
@@ -226,18 +225,20 @@
         1))
   (+ 2 (cont-frac n d k)))
 
-; http://mathworld.wolfram.com/eContinuedFraction.html
+;(list (e 10) (e 15) (e 20))
 
-; Doesn't converge well enough
-; even with average damping
-;(list (e 100) (e 101) (e 102) (e 103))
+; N.B. If you implement E function using
+; incrementing index (cont-frac-2),
+; it does not converge. Same with tangent.
+; Φ, on the other hand, does converge.
 
 ; Exercise 1.39, p.72
 (define (tan-cf x k)
-  (define (step i)
-    (if (> i k)
-        0.0
-        (/ (expt x i) (- (* 2 i) 1 (step (+ i 1))))))
-  (step 1))
+  (define (n i)
+    (if (= i 1) x (- (square x))))
+  (define (d i)
+    (- (* i 2) 1))
+  (cont-frac n d k))
 
-(tan-cf (/ pi 4) 1)
+;(tan (/ pi 4))
+;(tan-cf (/ pi 4) 9)
