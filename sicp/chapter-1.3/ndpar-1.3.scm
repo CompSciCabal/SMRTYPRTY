@@ -221,8 +221,8 @@
 (define (e k)
   (define (n i) 1)
   (define (d i)
-    (if (= (remainder i 3) 2)
-        (* i 2)
+    (if (= 2 (remainder i 3))
+        (* 2 (+ 1 (quotient i 3)))
         1))
   (+ 2 (cont-frac n d k)))
 
