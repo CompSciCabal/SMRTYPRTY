@@ -161,4 +161,103 @@
 
 ;;; EX 1.35
 
+(define phi (/ (+ 1 (sqrt 5)) 2))
 
+; 1 + 1/phi = 1 + 2/(1+r5) = (3 + r5)/(1 + r5) =
+; = (3 + r5 - 3r5 - 5) / (1 + r5 - r5 -5) = 
+; [i.e. * (1 - r5)/(1 - r5) ]
+; = (-2 - 2r5) / -4 = (1 + r5) / 2
+
+;(= (+ 1 (/ 1 phi)) phi)
+;  #t
+
+(define tolerance 0.00001) 
+(define (fixed-point f first-guess)
+  (define (close-enough? v1 v2) 
+    (< (abs (- v1 v2))
+       tolerance))
+  (define (try guess)
+    (let ((next (f guess)))
+      (display next)
+      (newline)
+      (if (close-enough? guess next)
+          next
+          (try next)))) 
+  (try first-guess))
+
+; (fixed-point (lambda (x) (+ 1 (/ 1 x))) 2.0)
+;   1.6180327868852458
+
+
+;;; EX 1.36
+
+; (fixed-point (lambda (x) (/ (log 1000) (log x))) 2.0)
+;   35 steps
+; (expt 4.555532270803653 4.555532270803653)
+;   999.9913579312362
+
+; (fixed-point (lambda (x) (/ (+ x (/ (log 1000) (log x))) 2)) 2.0)
+;   10 steps
+; (expt 4.555537551999825 4.555537551999825)
+;   1000.0046472054871
+
+
+;;; EX 1.37
+
+(define (cont-frac n d k)
+  (define (cont-frac-iter n d k acc)
+    (if (= k 0)
+        acc
+        (cont-frac-iter n d (- k 1) (/ (n k) (+ (d k) acc)))))
+  (cont-frac-iter n d k 0))
+
+; (/ 1 phi)
+;   0.6180339887498948
+; (cont-frac (lambda (i) 1.0) (lambda (i) 1.0) 10)
+;   0.6179775280898876
+; (cont-frac (lambda (i) 1.0) (lambda (i) 1.0) 11)
+;   0.6180555555555556
+
+(define (cont-frac-rec n d k)
+  (if (= k 0)
+      0
+      (/ (n k) (+ (d k) (cont-frac-rec n d (- k 1))))))
+
+
+;;; EX 1.38
+
+(define (e-approx n)
+  (+ 2
+     (cont-frac (lambda (i) 1.0) 
+                (lambda (x) 
+                  (if (= 2 (remainder x 3))
+                      (* 2 (+ 1 (quotient x 3)))
+                      1))
+                n)))
+
+(define e 2.718281828459045)
+
+; e
+;   2.718281828459045
+; (e-approx 10)
+;   2.7182817182817183
+; (e-approx 15)
+;   2.718281828470584
+; (e-approx 20)
+;   2.718281828459045
+
+
+;;; EX 1.39
+
+(define (tan-cf x k)
+  (let ((sx (- 0 (square x))))
+    (cont-frac (lambda (n) (if (= n 1) x sx))
+               (lambda (d) (- (* 2 d) 1.0))
+               k)))
+
+; (tan 1)
+;   1.557407724654902
+; (tan-cf 1 5)
+;   1.5574074074074076
+; (tan-cf 1 10)
+;   1.557407724654902
