@@ -20,6 +20,8 @@
       (* (coef k) (y k)))
     (* (/ h 3) (sum term 0 inc n))))
 
+(define (cube x) (* x x x))
+
 ; (integral cube 0 1 100)
 ; (integral cube 0 1 1000)
 
@@ -142,7 +144,7 @@
     (< (abs (- x y)) 0.00001))
   (define (try guess)
     (let ((next (f guess)))
-      ;      (printf "~a~n" next) ; Exercise 1.36
+;      (printf "~a~n" next) ; Exercise 1.36
       (if (close-enough? next guess)
           next
           (try next))))
@@ -241,3 +243,112 @@
 
 ;(tan (/ pi 4))
 ;(tan-cf (/ pi 4) 9)
+
+; p.72
+(define ((average-damp f) x)
+  (average x (f x)))
+
+; p.74
+(define dx 0.000001)
+
+(define ((deriv g) x)
+  (/ (- (g (+ x dx)) (g x)) dx))
+
+(define ((newton-transform g) x)
+  (- x (/ (g x) ((deriv g) x))))
+
+(define (newtons-method g guess)
+  (fixed-point (newton-transform g) guess))
+
+; Exercise 1.40, p.77
+(define ((cubic a b c) x)
+  (+ (cube x) (* a (square x)) (* b x) c))
+
+;(newtons-method (cubic 1 1 -14) 1)
+
+; Exercise 1.41, p.77
+(define ((double f) x)
+  (f (f x)))
+
+;((double inc) 0)
+;(((double (double double)) inc) 5) ;=> +16 = 21
+
+; Exercise 1.42, p.77
+(define ((compose f g) x)
+  (f (g x)))
+
+;((compose square inc) 6)
+
+; Exercies 1.43, p.77
+(define ((repeated-2 f n) x)
+  (if (= n 1)
+      (f x)
+      ((repeated-2 f (- n 1)) (f x))))
+
+;((repeated-2 square 2) 5)
+
+(define (repeated f n)
+  (cond ((= n 1) f)
+        ((even? n) (repeated (compose f f) (/ n 2)))
+        ((odd? n) (compose f (repeated f (- n 1))))))
+
+;((repeated square 2) 5)
+
+; Exercise 1.44, p.78
+(define ((smooth f) x)
+  (/ (+ (f (- x dx))
+        (f x)
+        (f (+ x dx)))
+     3))
+
+(define (n-smooth f n)
+  (repeated smooth n))
+
+; Exercise 1.45, p.78
+(define (nth-root n x damps)
+  (fixed-point ((repeated average-damp damps)
+                (lambda (y) (/ x (expt y (dec n)))))
+               1.0))
+
+; Square root
+(define (2-root x)
+  (nth-root 2 x 1))
+
+;(2-root 4)
+
+; Cube root
+(define (3-root x)
+  (nth-root 3 x 1))
+
+;(3-root 8)
+
+; Fourth root
+(define (4-root x)
+  (nth-root 4 x 2))
+
+;(4-root 16)
+
+(define (5-root x)
+  (nth-root 5 x 2))
+
+;(5-root 32)
+
+(define (6-root x)
+  (nth-root 6 x 1))
+
+;(6-root 64)
+
+(define (7-root x)
+  (nth-root 7 x 1))
+
+;(7-root 128)
+
+(define (8-root x)
+  (nth-root 8 x 1))
+
+;(8-root 256)
+
+(define (20-root x)
+  (nth-root 20 x 1))
+
+;(20-root 1048576)
