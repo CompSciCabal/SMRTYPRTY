@@ -1,13 +1,18 @@
 #lang racket
 (require (only-in math/number-theory prime?))
 
-; Exercise 1.29, p.60
-; Simpson's rule for numerical integration
-; N must be even
 (define (inc n) (+ n 1))
 
 (define (dec n) (- n 1))
 
+(define (cube x) (* x x x))
+
+(define (average x y)
+  (/ (+ x y) 2))
+
+; Exercise 1.29, p.60
+; Simpson's rule for numerical integration
+; N must be even
 (define (integral f a b n)
   (let ([h (/ (- b a) n)])
     (define (y k)
@@ -19,8 +24,6 @@
     (define (term k)
       (* (coef k) (y k)))
     (* (/ h 3) (sum term 0 inc n))))
-
-(define (cube x) (* x x x))
 
 ; (integral cube 0 1 100)
 ; (integral cube 0 1 1000)
@@ -109,14 +112,9 @@
 
 ; p.67
 ; Finding roots of equations by bisect method
-(define (average x y)
-  (/ (+ x y) 2))
-
 (define (search f neg-point pos-point)
-  (define (close-enough? x y)
-    (< (abs (- x y)) 0.001))
   (let ((midpoint (average neg-point pos-point)))
-    (if (close-enough? neg-point pos-point)
+    (if (good-enough? neg-point pos-point)
         midpoint
         (let ((test-value (f midpoint)))
           (cond ((positive? test-value)
@@ -180,12 +178,13 @@
   (define (step i acc)
     (if (= i 0)
         acc
-        (step (- i 1)
+        (step (dec i)
               (/ (n i) (+ (d i) acc)))))
   (step k 0.0))
 
+(define (one _) 1)
+
 (define (1/φ k)
-  (define (one _) 1)
   (cont-frac one one k))
 
 ;(1/φ 11)
@@ -194,7 +193,7 @@
 (define (cont-frac-rec n d k)
   (if (= k 0)
       0
-      (/ (n k) (+ (d k) (cont-frac-rec n d (- k 1))))))
+      (/ (n k) (+ (d k) (cont-frac-rec n d (dec k))))))
 
 ; Calculating continued fractions with tolerance
 (define (cont-frac-2 n d tolerance)
@@ -205,14 +204,12 @@
     (let ((next (average value (/ (n i) (+ (d i) value)))))
       (if (close-enough? value next)
           (values next i)
-          (step (+ 1 i) next))))
+          (step (inc i) next))))
   (step 1 0.0))
 
 ; Φ = 1/φ
 (define (Φ tolerance)
-  (cont-frac-2 (lambda (i) 1)
-               (lambda (i) 1)
-               tolerance))
+  (cont-frac-2 one one tolerance))
 
 ;(Φ 0.0001) ;=> 11 without damping; 8 with damping
 
@@ -284,7 +281,7 @@
 (define ((repeated-2 f n) x)
   (if (= n 1)
       (f x)
-      ((repeated-2 f (- n 1)) (f x))))
+      ((repeated-2 f (dec n)) (f x))))
 
 ;((repeated-2 square 2) 5)
 
