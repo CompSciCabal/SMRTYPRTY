@@ -139,13 +139,14 @@
 
 ; p.69
 ; Fixed points of functions
+(define (good-enough? x y)
+  (< (abs (- x y)) 0.00001))
+
 (define (fixed-point f first-guess)
-  (define (close-enough? x y)
-    (< (abs (- x y)) 0.00001))
   (define (try guess)
     (let ((next (f guess)))
 ;      (printf "~a~n" next) ; Exercise 1.36
-      (if (close-enough? next guess)
+      (if (good-enough? next guess)
           next
           (try next))))
   (try first-guess))
@@ -352,3 +353,25 @@
   (nth-root 20 x 1))
 
 ;(20-root 1048576)
+
+; Exercise 1.46, p.78
+(define ((iterative-improve good-enough? improve) guess)
+  (define (try prev)
+    (let ((next (improve prev)))
+      (if (good-enough? next prev)
+          next
+          (try next))))
+  (try guess))
+
+(define (fixed-point-2 f guess)
+  ((iterative-improve good-enough? f) guess))
+
+;(fixed-point cos 1.0)
+;(fixed-point-2 cos 1.0)
+
+(define (sqrt-2 x)
+  (define (improve guess)
+    (average guess (/ x guess)))
+  ((iterative-improve good-enough? improve) 1.0))
+
+;(sqrt-2 16)
