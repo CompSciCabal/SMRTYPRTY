@@ -232,4 +232,280 @@
 ;;; This doesn't work since when you evaluate it,
 
 ;;; you get (2 2) and 2 is not a valid operator name
+;;; 1.36 Display the guesses for finding a fixed point of x^x = 1000
+
+(display "s1 :")
+(display 4)
+(newline)
+(define (display-guess i guess)
+  (display "Guess ")
+  (display i)
+  (display ": ")
+  (display guess)
+  (newline))
+; (message "guess: %d" 127)
+
+(define (fixed-point f first-guess)
+  (define (close-enough? x y)
+    (< (abs (- x y)) tolerance))
+  (define (try i guess)
+    (let ((next (f guess)))
+      (display-guess i next)
+      (if (close-enough? guess next)
+        next
+        (try (+ i 1) next))))
+  (display-guess 0 first-guess)
+  (try 1 first-guess))
+(fixed-point cube 0.95)
+; using it with the transformation x <- log(1000)/log(x)
+
+(fixed-point (lambda (x)
+  (/ (log 1000) (log x)))
+             3)
+(define (average a b)
+  (/ (+ a b) 2))
+; 38 iterations without averaging
+
+(fixed-point (lambda (x)
+  (average x (/ (log 1000) (log x))))
+             3)
+; 9 iterations with averaging
+
+;;; 1.37 Continued fractions
+
+; a) recursive formulation
+
+(define (cont-frac-rec n d k)
+  (define (iter i)
+    (if (= i k)
+      (/ (n i) (d i))
+      (/ (n i) (+ (d i) (iter (+ i 1))))))
+  (iter 1))
+(define (golden-apx cont-frac k)
+  (/ 1 (cont-frac (lambda (i)
+    1.0)
+             (lambda (i)
+               1.0)
+             k)))
+(define (test-golden cont-frac k)
+  (define (iter i)
+    (if (> i k)
+      #t
+      (let ((result (golden-apx cont-frac i)))
+        (display i)
+        (display ": ")
+        (display result)
+        (newline)
+        (iter (+ i 1)))))
+  (iter 1))
+(test-golden cont-frac-rec 20)
+; it took 12 iterations to get 4 digits accuracy of phi
+
+;;; 1.37b an iterative approach, simple one is to start at the bottom and iterate up
+
+(define (cont-frac-iter n d k)
+  (define (iter i r)
+    (if (= 0 i)
+      r
+      (iter (- i 1) (/ (n i) (+ (d i) r)))))
+  (iter k 0))
+(test-golden cont-frac-iter 20)
+;;; the downside to both of these approaches, as andrey brought up 
+
+; is that if you compute the kth term and it isnt precise enough
+
+; you have to recompute all of it in order to get better accuracy.
+
+; Alternatively, the recursive approach could memoize everything.
+
+; Another approach, is to use rational functions to express each level of nesting.
+
+; A rational function is any function F(x) = (ax+b)/(cx+d)
+
+; a nice property of them is that when you compose them
+
+; you always get back a rational function
+
+; so for a linear continued fraction, you can express any depth of fraction as a single rational function
+
+; to this we work out an expression for computing the new coefficient values
+
+; after a function composition
+
+; given F(x) = (ax+b)/(cx+d) and G(x) = (ex+f)/(gx+h), then 
+
+; H(x) = F(G(x)) = (ix+j)/(kx+l) has coefficients:
+
+; i = ae+bg
+
+; j = af+bh
+
+; k = ce+dg
+
+; l = cf+dh
+
+(define (rational-function a b c d)
+  (lambda (f)
+    (f a b c d)))
+(define (rf-display r)
+  (r (lambda (a b c d)
+    (display "( ")
+    (display a)
+    (display ", ")
+    (display b)
+    (display ", ")
+    (display c)
+    (display ", ")
+    (display d)
+    (display " )")
+    (newline))))
+(define (rf-eval r x)
+  (r
+    (lambda (a b c d)
+      (/ (+ (* a x) b) (+ (* c x) d)))))
+;;; This composition function doesnt normalize the coefficients  for clarity
+
+; usually you would keep their values within a range for accuracy
+
+(define (rf-compose F G)
+  (F
+    (lambda (a b c d)
+      (G (lambda (e f g h)
+        (rational-function
+          (+ (* a e) (* b g))
+          (+ (* a f) (* b h))
+          (+ (* c e) (* d g))
+          (+ (* c f) (* d h))))))))
+(define (rf-normalize r)
+  (r
+    (lambda (a b c d)
+      (let ((s (sqrt
+        (+ (* a a) (* b b) (* c c) (* d d)))))
+        (rational-function (/ a s) (/ b s) (/ c s) (/ d s))))))
+(define f1
+  (rational-function 1 2 3 4))
+(define f2
+  (rational-function 5 6 7 8))
+(rf-display f1)
+(rf-display f2)
+(define f12
+  (rf-compose f1 f2))
+(rf-display f12)
+(define rf1 (rf-normalize f1))
+(rf-display rf1)
+;;; This function gives you a rational function back that is equivalent to the first k
+
+; nestings of the fraction
+
+(define (cont-frac-rf n d k)
+  (define (next i)
+    (rational-function 0.0 (n i) 1.0 (d i)))
+  (define (iter i F)
+    (if (> i k)
+      F
+      (iter (+ i 1) (rf-compose F (next i)))))
+  (iter 1 (rational-function 1.0 0.0 0.0 1.0)))
+;;; uses the function to compute the kth truncation
+
+(define (cont-frac-rf-eval n d k)
+  (let ((F (cont-frac-rf n d k)))
+    (rf-eval F 0.0)))
+(cont-frac-rf-eval (lambda (i)
+  1.0)
+                   (lambda (i)
+                     1.0)
+                   5)
+(test-golden cont-frac-rf-eval 20)
+;;; what if we have the 11th and we want the twelfth?
+
+(define cf11
+  (cont-frac-rf (lambda (i)
+    1.0)
+                (lambda (i)
+                  1.0)
+                11))
+; in our case n and d are constant, otherwise they need to be offset
+
+(define cf12
+  (rf-compose cf11 (cont-frac-rf (lambda (i)
+    1.0)
+                (lambda (i)
+                  1.0)
+                1)))
+(/ 1 (rf-eval cf11 0.0))
+(/ 1 (rf-eval cf12 0.0))
+;;; or maybe more useful for this constant case, if we want 22 terms accuracy
+
+; just compose cf11 with cf11
+
+(define cf22
+  (rf-compose cf11 cf11))
+(/ 1 (rf-eval cf22 0.0))
+;;; 1.38 approximating e
+
+(define (one i) 1.0)
+(define (euler-seq i)
+  (let ((j (+ i 1)))
+    (if (= 0 (remainder j 3))
+      (* 2 (/ j 3))
+      1.0)))
+(define (display-seq f i k)
+  (display (f i))
+  (display ", ")
+  (if (= i k)
+    #t
+    (display-seq f (+ i 1) k)))
+(display-seq one 1 20)
+(display-seq euler-seq 1 20)
+(define (e2-apx-rf k)
+  (cont-frac-rf one euler-seq k))
+(define e2-apx (e2-apx-rf 20))
+(define (e-apx)
+  (+ (rf-eval e2-apx 0.0) 2))
+(e-apx)
+;;; 1.39 approximating tan
+
+; cant use the rational functions any more, since it isnt linear
+
+(define (tan-apx x k)
+  (define (n i)
+    (* x x))
+  (define (d i)
+    (- (* 2 i) 1))
+  (define (iter i)
+    (if (= i k)
+      (/ (n i) (d i))
+      (/ (n i) (- (d i) (iter (+ i 1))))))
+  (/ (iter 1) x))
+(tan-apx 1 10)
+(tan 1)
+;;; actually thats wrong we can, just let y=x^2 and then divide by -x at the end
+
+(define (tan-apx-rf x k)
+  (define (n i)
+    (- (* x x)))
+  (define (d i)
+    (- (* 2 i) 1))
+  (/ (rf-eval (cont-frac-rf n d k) 0.0) (- x)))
+(tan-apx-rf 1 10)
+;;;
+
+;;;
+
+;;;
+
+;;;
+
+;;;
+
+;;;
+
+;;;
+
+;;;
+
+;;; these are pushing the last command up to the middle of the screen...
+
+
+
 
