@@ -488,6 +488,207 @@
     (- (* 2 i) 1))
   (/ (rf-eval (cont-frac-rf n d k) 0.0) (- x)))
 (tan-apx-rf 1 10)
+
+;;;SECTION 1.3.4
+
+(define (average-damp f)
+  (lambda (x)
+    (average x (f x))))
+;: ((average-damp square) 10)
+
+(define (sqrt x)
+  (fixed-point (average-damp (lambda (y)
+    (/ x y))) 1.0))
+(define (cube-root x)
+  (fixed-point
+    (average-damp (lambda (y)
+      (/ x (square y))))
+    1.0))
+;; Newton's method
+
+(define (deriv g)
+  (lambda (x)
+    (/ (- (g (+ x dx)) (g x)) dx)))
+(define dx 0.00001)
+(define (cube x)
+  (* x x x))
+;: ((deriv cube) 5)
+
+(define (newton-transform g)
+  (lambda (x)
+    (- x (/ (g x) ((deriv g) x)))))
+(define (newtons-method g guess)
+  (fixed-point (newton-transform g) guess))
+(define (sqrt x)
+  (newtons-method (lambda (y)
+    (- (square y) x))
+                  1.0))
+;; Fixed point of transformed function
+
+(define (fixed-point-of-transform g transform guess)
+  (fixed-point (transform g) guess))
+(define (sqrt x)
+  (fixed-point-of-transform (lambda (y)
+    (/ x y))
+                            average-damp 1.0))
+(define (sqrt x)
+  (fixed-point-of-transform (lambda (y)
+    (- (square y) x))
+                            newton-transform 1.0))
+;;EXERCISE 1.40
+
+;: (newtons-method (cubic a b c) 1)
+
+(define (cubic a b c)
+  (lambda (x)
+    (+ (* x x x) (* a x x) (* b x) c)))
+((cubic 1 (- 1) 0) 2.0)
+(newtons-method (cubic 1 (- 1) 0) 1.0)
+((cubic 1 (- 1) 0) 0.6180339887)
+(define tolerance 1e-12)
+(define dx 1e-8)
+(newtons-method (cubic 1 (- 1) 0) 1.0)
+((cubic 1 (- 1) 0) 0.6180339887)
+;;EXERCISE 1.41
+
+;: (((double (double double)) inc) 5)
+
+(define (double f)
+  (lambda (x)
+    (f (f x))))
+((double inc) 4)
+;; implicit in double is the assumption that the funtions result is also a valid input
+
+;; i think before trying it that the expression will add 8 to the argument
+
+(((double (double double)) inc) 5)
+;; it actually adds 16, right.  it doubles the double function first, so the new one 
+
+;  applies its function 4 times, then the next double should be 8... hmmm
+
+(define quadruple (double double))
+((quadruple inc) 5)
+(define sextuple (double quadruple))
+((sextuple inc) 5)
+(define (octuple f)
+  (lambda (x)
+    ((quadruple f) ((quadruple f) x))))
+((octuple inc) 5)
+;;; ok i get now, its doubling the compositions so when you double quad
+
+;  it is applying quad to quad times f, so 16
+
+;;EXERCISE 1.42
+
+;: ((compose square inc) 6)
+
+(define (compose f g)
+  (lambda (x)
+    (f (g x))))
+((compose square inc) 6)
+;;EXERCISE 1.43
+
+;: ((repeated square 2) 5)
+
+(define (repeated f n)
+  (define (iter i fn)
+    (if (= i n)
+      fn
+      (iter (+ i 1) (compose fn f))))
+  (iter 1 f))
+((repeated square 2) 3)
+(((repeated double 5) inc) 5)
+;;EXERCISE 1.44
+
+; smoothing function
+
+(define (smooth f)
+  (define (average a b c)
+    (/ (+ a b c) 3))
+  (define dx 1.0)
+  (lambda (x)
+    (average (f (- x dx)) (f x) (f (+ x dx)))))
+(define (sharp-fn x)
+  (define a 10.0)
+  (exp (- (/ (* x x) (* a a)))))
+(sharp-fn 0.0)
+(sharp-fn 5)
+(sharp-fn 10)
+(define smoothed-fn (smooth sharp-fn))
+(smoothed-fn 0.0)
+(smoothed-fn 5)
+; n-fold smoothed function
+
+(define five-smoothed-fn
+  ((repeated smooth 5) sharp-fn))
+(five-smoothed-fn 0.0)
+(five-smoothed-fn 5)
+;;EXERCISE 1.45
+
+; average damping for nth roots
+
+(define (nth-root x n)
+  (fixed-point
+    ((repeated average-damp (ceiling (sqrt n))) (lambda (y)
+      (/ x (expt y (- n 1)))))
+    1.0))
+(nth-root (expt 5 16) 16)
+(nth-root (expt 2 12) 12)
+; after trying a few numbers, (ceiling (sqrt n)) seems to suffice...
+
+; this would be really interesting to investigate further
+
+;;EXERCISE 1.46
+
+; generic iterative improvement method
+
+; first try which doesnt work.  i think the reason is because the recursive call
+
+; to the externally exposed function isnt available
+
+; i get illegal function error, maybe ive made a syntax error?
+
+(define (iterative-improve good-enough? improve-guess)
+  (define (iter guess)
+    (display guess)
+    (newline)
+    (if (good-enough? guess)
+      guess
+      (iter (improve-guess guess)))))
+; second try, this one works
+
+(define (iterative-improve good-enough? improve-guess)
+  (define (iter guess)
+    (if (good-enough? guess)
+      guess
+      (iter (improve-guess guess))))
+  (lambda (guess)
+    (iter guess)))
+(define (average a b)
+  (/ (+ a b) 2))
+; rewriting this sqrt procedure using itertive improve
+
+(define (sqrt x)
+  (define (good-enough? guess)
+    (< (abs (- (* guess guess) x)) 1e-6))
+  (define (improve-guess guess)
+    (average guess (/ x guess)))
+  (define solve
+    (iterative-improve good-enough? improve-guess))
+  (solve 1.0))
+(sqrt 25)
+; rewriting fixed point to use iterative improvement
+
+; this doesnt do exactly the same thing as the earlier version, 
+
+; the earlier one returns the next guess and this returns the current
+
+(define (fixed-point f first-guess)
+  (define tolerance 1e-6)
+  (define (close-enough? guess)
+    (< (abs (- guess (f guess))) tolerance))
+  ((iterative-improve close-enough? f) first-guess))
+(fixed-point sin 1.5)
 ;;;
 
 ;;;
