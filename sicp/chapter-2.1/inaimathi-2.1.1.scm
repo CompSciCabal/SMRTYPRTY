@@ -67,7 +67,7 @@
 
 (define (divides? divisor num) (zero? (remainder num divisor)))
 
-(define (count-divisions num divisor)
+(define (factor-count num divisor)
   (define (rec num ct)
     (if (divides? divisor num)
         (rec (/ num divisor) (+ ct 1))
