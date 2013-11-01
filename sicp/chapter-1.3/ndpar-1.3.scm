@@ -1,13 +1,18 @@
 #lang racket
 (require (only-in math/number-theory prime?))
 
-; Exercise 1.29, p.60
-; Simpson's rule for numerical integration
-; N must be even
 (define (inc n) (+ n 1))
 
 (define (dec n) (- n 1))
 
+(define (cube x) (* x x x))
+
+(define (average x y)
+  (/ (+ x y) 2))
+
+; Exercise 1.29, p.60
+; Simpson's rule for numerical integration
+; N must be even
 (define (integral f a b n)
   (let ([h (/ (- b a) n)])
     (define (y k)
@@ -107,14 +112,9 @@
 
 ; p.67
 ; Finding roots of equations by bisect method
-(define (average x y)
-  (/ (+ x y) 2))
-
 (define (search f neg-point pos-point)
-  (define (close-enough? x y)
-    (< (abs (- x y)) 0.001))
   (let ((midpoint (average neg-point pos-point)))
-    (if (close-enough? neg-point pos-point)
+    (if (good-enough? neg-point pos-point)
         midpoint
         (let ((test-value (f midpoint)))
           (cond ((positive? test-value)
@@ -137,13 +137,14 @@
 
 ; p.69
 ; Fixed points of functions
+(define (good-enough? x y)
+  (< (abs (- x y)) 0.00001))
+
 (define (fixed-point f first-guess)
-  (define (close-enough? x y)
-    (< (abs (- x y)) 0.00001))
   (define (try guess)
     (let ((next (f guess)))
-      ;      (printf "~a~n" next) ; Exercise 1.36
-      (if (close-enough? next guess)
+;      (printf "~a~n" next) ; Exercise 1.36
+      (if (good-enough? next guess)
           next
           (try next))))
   (try first-guess))
@@ -177,12 +178,13 @@
   (define (step i acc)
     (if (= i 0)
         acc
-        (step (- i 1)
+        (step (dec i)
               (/ (n i) (+ (d i) acc)))))
   (step k 0.0))
 
+(define (one _) 1)
+
 (define (1/φ k)
-  (define (one _) 1)
   (cont-frac one one k))
 
 ;(1/φ 11)
@@ -191,7 +193,7 @@
 (define (cont-frac-rec n d k)
   (if (= k 0)
       0
-      (/ (n k) (+ (d k) (cont-frac-rec n d (- k 1))))))
+      (/ (n k) (+ (d k) (cont-frac-rec n d (dec k))))))
 
 ; Calculating continued fractions with tolerance
 (define (cont-frac-2 n d tolerance)
@@ -202,14 +204,12 @@
     (let ((next (average value (/ (n i) (+ (d i) value)))))
       (if (close-enough? value next)
           (values next i)
-          (step (+ 1 i) next))))
+          (step (inc i) next))))
   (step 1 0.0))
 
 ; Φ = 1/φ
 (define (Φ tolerance)
-  (cont-frac-2 (lambda (i) 1)
-               (lambda (i) 1)
-               tolerance))
+  (cont-frac-2 one one tolerance))
 
 ;(Φ 0.0001) ;=> 11 without damping; 8 with damping
 
@@ -241,3 +241,134 @@
 
 ;(tan (/ pi 4))
 ;(tan-cf (/ pi 4) 9)
+
+; p.72
+(define ((average-damp f) x)
+  (average x (f x)))
+
+; p.74
+(define dx 0.000001)
+
+(define ((deriv g) x)
+  (/ (- (g (+ x dx)) (g x)) dx))
+
+(define ((newton-transform g) x)
+  (- x (/ (g x) ((deriv g) x))))
+
+(define (newtons-method g guess)
+  (fixed-point (newton-transform g) guess))
+
+; Exercise 1.40, p.77
+(define ((cubic a b c) x)
+  (+ (cube x) (* a (square x)) (* b x) c))
+
+;(newtons-method (cubic 1 1 -14) 1)
+
+; Exercise 1.41, p.77
+(define ((double f) x)
+  (f (f x)))
+
+;((double inc) 0)
+;(((double (double double)) inc) 5) ;=> +16 = 21
+
+; Exercise 1.42, p.77
+(define ((compose f g) x)
+  (f (g x)))
+
+;((compose square inc) 6)
+
+; Exercies 1.43, p.77
+(define ((repeated-2 f n) x)
+  (if (= n 1)
+      (f x)
+      ((repeated-2 f (dec n)) (f x))))
+
+;((repeated-2 square 2) 5)
+
+(define (repeated f n)
+  (cond ((= n 1) f)
+        ((even? n) (repeated (compose f f) (/ n 2)))
+        ((odd? n) (compose f (repeated f (- n 1))))))
+
+;((repeated square 2) 5)
+
+; Exercise 1.44, p.78
+(define ((smooth f) x)
+  (/ (+ (f (- x dx))
+        (f x)
+        (f (+ x dx)))
+     3))
+
+(define (n-smooth f n)
+  (repeated smooth n))
+
+; Exercise 1.45, p.78
+(define (nth-root n x damps)
+  (fixed-point ((repeated average-damp damps)
+                (lambda (y) (/ x (expt y (dec n)))))
+               1.0))
+
+; Square root
+(define (2-root x)
+  (nth-root 2 x 1))
+
+;(2-root 4)
+
+; Cube root
+(define (3-root x)
+  (nth-root 3 x 1))
+
+;(3-root 8)
+
+; Fourth root
+(define (4-root x)
+  (nth-root 4 x 2))
+
+;(4-root 16)
+
+(define (5-root x)
+  (nth-root 5 x 2))
+
+;(5-root 32)
+
+(define (6-root x)
+  (nth-root 6 x 1))
+
+;(6-root 64)
+
+(define (7-root x)
+  (nth-root 7 x 1))
+
+;(7-root 128)
+
+(define (8-root x)
+  (nth-root 8 x 1))
+
+;(8-root 256)
+
+(define (20-root x)
+  (nth-root 20 x 1))
+
+;(20-root 1048576)
+
+; Exercise 1.46, p.78
+(define ((iterative-improve good-enough? improve) guess)
+  (define (try prev)
+    (let ((next (improve prev)))
+      (if (good-enough? next prev)
+          next
+          (try next))))
+  (try guess))
+
+(define (fixed-point-2 f guess)
+  ((iterative-improve good-enough? f) guess))
+
+;(fixed-point cos 1.0)
+;(fixed-point-2 cos 1.0)
+
+(define (sqrt-2 x)
+  (define (improve guess)
+    (average guess (/ x guess)))
+  ((iterative-improve good-enough? improve) 1.0))
+
+;(sqrt-2 16)
