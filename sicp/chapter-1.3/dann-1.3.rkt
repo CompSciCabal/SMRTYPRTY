@@ -27,8 +27,8 @@
   (define (coeff k)
     (cond ((= k 0) 1)
           ((= k n) 1)
-          ((even? k) 4)
-          (else 2)))
+          ((even? k) 2)
+          (else 4)))
   (define (term k)
     (* (coeff k) (fun (+ a (* k h)))))
   (* (/ h 3) (sum-from 0 n term inc)))
@@ -45,6 +45,8 @@
 ;   1160.2499973749036
 
 ; and that's even worse (should be 1160.25)
+
+; note: i'd reversed 4 and 2 in the definition -- all better now.
 
 ;;; EX 1.30
 
@@ -261,3 +263,148 @@
 ;   1.5574074074074076
 ; (tan-cf 1 10)
 ;   1.557407724654902
+
+
+;;;;;;;;;;; START 1.3.4 ;;;;;;;;;;;;;;
+
+;;; EX 1.40
+
+(define (deriv g) 
+  (lambda (x) (/ (- (g (+ x dx)) (g x)) dx)))
+
+(define dx 0.00001)
+
+(define (newton-transform g) 
+  (lambda (x) (- x (/ (g x) ((deriv g) x)))))
+
+(define (newtons-method g guess) 
+  (fixed-point (newton-transform g) guess))
+
+(define (fixed-point-of-transform g transform guess) 
+  (fixed-point (transform g) guess))
+
+(define (cubic a b c)
+  (lambda (x) (+ (cube x) (* a (square x)) (* b x) c)))
+
+;;; EX 1.41
+
+(define (double f)
+  (lambda (x) (f (f x))))
+
+; (((double (double double)) inc) 5)
+;   21
+
+; ((double (double (double inc))) 5)
+;   13
+
+; (((double (double (double double))) inc) 0)
+;   256
+; ((double (double (double (double inc)))) 0)
+;   16
+
+;;; EX 1.42
+
+(define (compose f g)
+  (lambda (x) (f (g x))))
+
+;;; EX 1.43
+
+(define (repeated f n)
+  (define (repeat-iter f n acc)
+    (if (= n 0) 
+        acc
+        (repeat-iter f (- n 1) (compose f acc))))
+  (repeat-iter f n (lambda (x) x)))
+
+(define (repeated-rec f n)
+  (if (= n 0)
+      (lambda (x) x)
+      (compose f (repeated-rec f (- n 1)))))
+
+;;; EX 1.44
+
+(define (smooth f)
+  (lambda (x) 
+    (/ (+ (f (- x dx)) (f x) (f (+ x dx))) 3)))
+
+(define (n-smooth f n)
+  ((repeated smooth n) f))
+
+; (sin (/ 1 0.0001))
+;   -0.30561438888825215
+; ((smooth (lambda (x) (sin (/ 1 x)))) 0.0001)
+;   -0.13922089082976782
+; ((n-smooth (lambda (x) (sin (/ 1 x))) 2) 0.0001)
+;   0.023617992290436273
+; ((n-smooth (lambda (x) (sin (/ 1 x))) 3) 0.0001)
+;   0.05419684260015855
+; ((n-smooth (lambda (x) (sin (/ 1 x))) 4) 0.0001)
+;   0.0666205827502035
+; ((n-smooth (lambda (x) (sin (/ 1 x))) 5) 0.0001)
+;   0.06994069568929728
+; ((n-smooth (lambda (x) (sin (/ 1 x))) 6) 0.0001)
+;   0.06724567385347607
+; ((n-smooth (lambda (x) (sin (/ 1 x))) 7) 0.0001)
+;   0.06351046183967048
+
+;;; EX 1.45
+
+(define (average j k)
+  (/ (+ j k) 2))
+
+(define (average-damp f) 
+  (lambda (x) (average x (f x))))
+
+(define (ssqrt x) 
+  (fixed-point-of-transform (lambda (y) (/ x y)) average-damp 1.0))
+
+(define (cbrt x)
+  (fixed-point-of-transform (lambda (y) (/ x (* y y))) average-damp 1.0))
+
+(define (4rt x)
+  (fixed-point-of-transform (lambda (y) (/ x (* y y y))) (double average-damp) 1.0))
+
+(define (5rt x)
+  (fixed-point-of-transform (lambda (y) (/ x (* y y y y))) (double average-damp) 1.0))
+
+(define (6rt x)
+  (fixed-point-of-transform (lambda (y) (/ x (* y y y y y))) (double average-damp) 1.0))
+
+(define (7rt x)
+  (fixed-point-of-transform (lambda (y) (/ x (* y y y y y y))) (double average-damp) 1.0))
+
+(define (nrt x n)
+  (fixed-point-of-transform 
+   (lambda (y) (/ x (expt y (- n 1)))) 
+   (repeated average-damp (floor (/ (log n) (log 2)))) 
+   1.0))
+
+; the 10,000th root converges, but it takes a looooooong time...
+
+
+;;; EX 1.46
+
+(define (iterative-improve improve-guess good-enough)
+  (define (iterate guess)
+    (if (good-enough guess) 
+        guess
+        (iterate (improve-guess guess))))
+  (lambda (guess) (iterate guess)))
+
+; lambda, let, etc
+
+(define (iisqrt n)
+  ((iterative-improve
+    (lambda (x) (/ (+ x (/ n x)) 2))
+    (lambda (x) (< (abs (- n (* x x))) dx)))
+   1.0))
+
+(define (iifp f first-guess)
+  ((iterative-improve
+    f
+    (lambda (x) (< (abs (- x (f x))) dx)))
+   first-guess))
+
+; this is totally cheating...
+    
+
