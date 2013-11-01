@@ -62,6 +62,23 @@
 
 ;; -_-'
 
+(define (cons-int a b)
+  (* (expt 2 a) (expt 3 b)))
+
+(define (divides? divisor num) (zero? (remainder num divisor)))
+
+(define (count-divisions num divisor)
+  (define (rec num ct)
+    (if (divides? divisor num)
+        (rec (/ num divisor) (+ ct 1))
+        ct))
+  (rec num 0))
+
+(define (car-int cint) (count-divisions cint 2))
+(define (cdr-int cint) (count-divisions cint 3))
+
+;; (thanks, Dann)
+
 ;;; 2.6
 (define (add-1 n)
   (lambda (f) (lambda (x) (f ((n f) x)))))
