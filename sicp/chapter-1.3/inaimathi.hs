@@ -21,14 +21,14 @@ sumRec :: (Ord a, Num a) => (a -> a) -> a -> (a -> a) -> a -> a
 sumRec term a next b
   | a > b     = 0
   | otherwise = (term a) + (sumRec term (next a) next b)
-                
+
 --- 1.31
 sequence :: (Ord a, Num a) => (a -> a -> a) -> (a -> a) -> a -> (a -> a) -> a -> a
 sequence combine term a next b = iter a 0
   where iter a res
           | a > b     = res
           | otherwise = iter (next a) . combine res $ term a
-                        
+
 prod = SICP.sequence (*)
 
 --- 1.32
@@ -47,7 +47,7 @@ filteredAccumulate filter combine term a next b = iter a 0
           | a > b     = res
           | filter a  = iter (next a) . combine res $ term a
           | otherwise = iter (next a) res
-                        
+
 -- a)
 sumPrimeSquares a b = filteredAccumulate isPrime (+) square a succ b
 
@@ -57,7 +57,7 @@ abelsonsSum n = filteredAccumulate ((==1) . (gcd n)) (*) id 1 succ $ succ n
 -- Now then, as promised, what I see as the natural decompositions to the things we're writing.
 
 sumPrimeSquaresNat a b = Prelude.sum . map square $ filter isPrime [a..b]
-                         
+
 abelsonsSumNat n = product $ filter ((==1) . (gcd n)) [1..n]
 
 -- No filtered accumulate garbage, just string them together properly and you get
