@@ -160,6 +160,7 @@
 
 ;; Exercise 2.6, p.93
 ;; Church numerals
+;; http://en.wikipedia.org/wiki/Church_encoding
 (define (zero _) identity)
 
 ;(zero inc)
@@ -189,6 +190,9 @@
 (define ((two f) x)
   (f (f x)))
 
+(define ((three f) x)
+  (f (f (f x))))
+
 ;(= 5 ((zero inc) 5))
 
 ;(((add-1 zero) inc) 5)
@@ -197,7 +201,7 @@
 ;(((add-1 one) inc) 5)
 ;(= 7 ((two inc) 5))
 
-(define ((plus n m) f)
-  (lambda (x) (f ((n (m f)) x))))
+(define ((plus m n) f)
+  (lambda (x) ((m f) ((n f) x))))
 
-;(= 8 (((plus one two) inc) 5))
+;(= 10 (((plus three two) inc) 5))
