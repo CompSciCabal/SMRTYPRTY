@@ -22,11 +22,8 @@
 (define upper-bound cdr)
 
 ;;; 2.8
-
-;; I'm assuming we'll want `(Interval - Interval)` to result in a more accurate interval (one with a smaller difference between its upper-bound and lower-bound). So...
-
 (define (interval-- x y)
-  (make-interval (- (upper-bound y) (lower-bound x))
+  (make-interval (- (lower-bound x) (upper-bound y))
                  (- (upper-bound x) (lower-bound y))))
 
 ;;; 2.9

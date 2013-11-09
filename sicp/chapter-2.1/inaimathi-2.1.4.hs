@@ -11,15 +11,10 @@ instance Num Interval where
                                       d = u * u'
                                       lst = [a, b, c, d]
                                   in Interval (minimum lst) (maximum lst)
-  Interval l u - Interval l' u' = Interval (u' - l) (u - l')
+  Interval l u - Interval l' u' = Interval (l - u') (u - l')
   fromInteger a = Interval (realToFrac a) (realToFrac a)
-  abs int@(Interval l u) = case l `compare` u of
-    GT -> Interval u l
-    _ -> int
-  signum (Interval l u) = case l `compare` u of
-    GT -> -1
-    EQ -> 0
-    LT -> 1
+  abs = id
+  signum _ = 1
 
 instance Fractional Interval where
   a / Interval l u = assert (l /= u) a * Interval (1.0 / u) (1.0 / l)
