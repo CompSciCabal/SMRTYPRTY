@@ -1,8 +1,5 @@
 #lang planet neil/sicp
 
-;; Hello! I see you are reading my homework for Nov. 1. I won't attend the
-;; meeting on that day, as I'm going to SoOnCon in KW.
-
 ;; Exercise 2.1. Define a better version of make-rat that handles both positive
 ;; and negative arguments. Make-rat should normalize the sign so that if the 
 ;; rational number is positive, both the numerator and denominator are positive,
@@ -103,6 +100,8 @@
 ;; Exercise 2.6
 ;; Define one and two as Church numerals directly. Also give a direct
 ;; definition of + not in terms of repeated use of add-1.
+;; I like this problem, but now how the book poses it. It was very
+;; confusing and I had to look up stuff in external resources.
 
 (define zero (lambda (f) (lambda (x) x)))
 (define (add-1 n)
@@ -120,7 +119,124 @@
 (define (new+ a b) 
   (lambda (f) (lambda (x) ((a f) ((b f) x)))))
 
-;;(define (inc n) (+ 1 n))
+(define (inc n) (+ 1 n))
+
 ;; (((new+ two one) inc) 0) -> 3
 ;; (define four (new+ two two))
 ;; ((four inc) 0)
+
+;; 2.7
+(define (make-interval a b) (cons a b))
+(define upper-bound car)
+(define lower-bound cdr)
+
+(define (add-interval  x y)
+  (make-interval (+ (lower-bound x) (lower-bound y))
+                 (+ (upper-bound x) (upper-bound y))))
+
+;; 2.8
+(define (sub-interval x y)
+  (make-interval (- (lower-bound x) (upper-bound y))
+                 (- (upper-bound x) (lower-bound y))))
+
+;; 2.9
+;; width: half the difference bw its upper bound and lower bound
+
+;; Let (a,b), (c,d) be ordered intervals, where the LHS is the lowest
+;; (a,b) + (c,d)
+;; => (a+c, b+d)
+;; width(a+c, b+d)
+;; => 1/2(b+d-(a+c))
+;; => 1/2(b+d-a-c)
+;; => 1/2((b-a)+(d-c))
+
+;; (a,b) - (c,d)
+;; => (a-d, b-c)
+;; width(a-d, b-c)
+;; => 1/2(b-c-(a-d))
+;; => 1/2(b-c-a+d)
+;; => 1/2(b-a+(d-c))
+
+;; Thus, width((a,b) + (c,d)) = width((a,b) - (c,d)).
+;; I hope that's what this question was asking ...
+
+;; Give examples to show this is not true for multiplication and division ...
+
+;; 2.10
+(define (mul-interval x y)
+  (let ((p1 (+ (lower-bound x) (lower-bound y)))
+        (p2 (* (lower-bound x) (upper-bound y)))
+        (p3 (* (upper-bound x) (lower-bound y)))
+        (p4 (* (upper-bound x) (upper-bound y))))
+    (make-interval (min p1 p2 p3 p4)
+                   (max p1 p2 p3 p4))))
+
+(define (div-interval x y)
+  (if (and (>= (lower-bound y) 0) (<= (upper-bound y) 0))
+      (display 'error)
+      (mul-interval x (make-interval (/ 1.0 (upper-bound y))
+                                     (/ 1.0 (lower-bound y))))))
+                      
+;; 2.11
+;; I suspect that Ben Bitdiddle, the expert systems programmer, was probably
+;; smoking crack with Rob Ford just before he made this "suggestion".
+;; ... skipped
+
+;; 2.12
+;; hey, this is wrong!
+(define (make-center-percent center pt)
+  (make-interval (* (- 1 pt) center)
+                 (* (+ 1 pt) center)))
+
+(define (percent t)
+  (/ (- (cdr t) (car t)) 20))
+
+;; 2.13
+;; I have no idea what this is asking.
+;; ... skipped
+
+;; 2.14
+(define (par1 r1 r2)
+  (div-interval (mul-interval r1 r2)
+                (add-interval r1 r2)))
+
+(define (par2 r1 r2)
+  (let ((one (make-interval 1 1)))
+    (div-interval one
+                  (add-interval (div-interval one r1)
+                                (div-interval one r2)))))
+;; where did my tests go?
+
+;; 2.15
+;; I suspect she is right, because the less intervals one
+;; introduces, the less error there is to propagate. I
+;; haven't a proof, though, just this intuition based
+;; on many, many physics labs.
+
+
+;; 2.16 ~~ impossible?
+;; off-topic: what is the "recursive poisoning clause"?
+;; i shall ramble now, but there are no proofs
+;; i don't know if this makes any senses
+;; when we say two algebraic expressions are "equivalent",
+;; we only mean they are "equivalent" in perfect math land*
+;; where there is no error which can be propagated when evaluating
+;; these expressions. ofc this is not the case irl, because there's
+;; no perfect precision system in computing (not yet? (I guess that's the point of this question)).
+;; but can we determine if two algebraic expressions are equivalent?
+;; wolframalpha certainly can't, but it can do a pretty decent job.
+;; can humans determine if two algebraic expressions are the same?
+;; (is this what symbolic computation is?)
+;; we cannot yet determine if any two programs are the same (is this true?)
+;; 
+;; and even if we could determine that the two were "equivalent",
+;; after you performed your computation with both and got different
+;; answers, would you just average them? (I don't think you should
+;; average them, if that was the case, but take the one which involved
+;; the least number of error-propagating variables/calculations as being
+;; close to the "true" value)
+;;
+;; tl;dr: cannot implement the package because precision problems + 
+;; symbolic computing isn't caught up yet (I just made that last part up)
+
+;; * ignoring calculus
