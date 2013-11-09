@@ -183,7 +183,6 @@
 ;; ... skipped
 
 ;; 2.12
-;; hey, this is wrong!
 (define (make-center-percent center pt)
   (make-interval (* (- 1 pt) center)
                  (* (+ 1 pt) center)))
