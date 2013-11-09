@@ -17,7 +17,7 @@ instance Num Interval where
   signum _ = 1
 
 instance Fractional Interval where
-  a / Interval l u = assert (l /= u) a * Interval (1.0 / u) (1.0 / l)
+  a / Interval l u = assert (not $ and[l <= 0, u >= 0]) a * Interval (1.0 / u) (1.0 / l)
   fromRational a = Interval r r
     where r = fromRat a
 

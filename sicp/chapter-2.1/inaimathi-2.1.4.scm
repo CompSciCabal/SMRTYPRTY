@@ -50,16 +50,15 @@
 
 ;; but not of interval-*||interval-/ and *||/
 
-
 ;;; 2.10
 (define (interval-/ x y)
-  (if (= (upper-bound y) (lower-bound y))
-      (error "Divide by zero-interval")
+  (if (and (<= (lower-bound y) 0) (>= (upper-bound y) 0))
+      (error "Divide by zero-spanning interval")
       (interval-* x (make-interval (/ 1.0 (upper-bound y))
                                    (/ 1.0 (lower-bound y))))))
 
 ;;; 2.11
- ;; -_-
+;; -_-
 
 ;;; 2.12
 (define (make-center-width center w)
