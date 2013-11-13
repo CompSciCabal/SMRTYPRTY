@@ -10,4 +10,13 @@ fil =: u @. 2
 
 square_primes =: (+ ` *: ` (1&p:)) ACC
 
-NB. square_primes 1 2 3 4
+echo square_primes 1 2 3 4
+
+
+NB. Exercise 1.35, p.70
+NB. http://www.rogerstokes.free-online.co.uk/13.htm
+
+FPF =: 1 : '(u ^: _ ) 0.5'     NB. fixed-point-finder adverb with initial guess 0.5
+phi =: 1: + %                  NB. iterative function to calculate phi
+
+echo phi FPF
