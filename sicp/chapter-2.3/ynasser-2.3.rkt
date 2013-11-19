@@ -56,7 +56,7 @@
               0
               coefficient-sequence))
 
-\
+
 (define (horner-eval-2 x coefficient-sequence)
   (accumulate (lambda (this-coeff higher-term)
  ;               (display "this-coeff is ")(display this-coeff)(newline)
@@ -112,7 +112,28 @@
 
 (define (transpose m)
   (accumulate-n cons null m))
-  
-;(define (matrix-*-matrix m n)
- ; (let ((cols (transpose n)))
-  ;  (map <> m)))
+
+;; must finish!
+(define (matrix-*-matrix m n)
+  (let ((cols (transpose n)))
+    (map 'something m)))
+
+(define m '((1 2) (3 4)))
+
+;; exercise 2.38
+(define (fold-left op initial sequence)
+  (define (iter result rest)
+    (if (null? rest)
+        result
+        (iter (op result (car rest))
+              (cdr rest))))
+  (iter initial sequence))
+
+;(foldr / 1 (list 1 2 3)) => 1.5
+;(foldl / 1 (list 1 2 3)) => 1.5
+;(foldr list null (list 1 2 3)) => '(1 (2 (3 ())))
+;(foldl list null (list 1 2 3)) => '(3 (2 (1 ())))
+
+;; Q: What property should op satisfy for foldr and foldl to have the same
+;; results?
+;; A: (op A B) == (op B A)
