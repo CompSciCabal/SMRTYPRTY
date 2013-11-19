@@ -1,4 +1,18 @@
 #lang racket
+;#lang planet neil/sicp
+
+;; Stuff to make sicp scheme compatible with racket
+(define first car)
+(define rest cdr)
+(define null '())
+(define nil null)
+(define empty? null?)
+(define sqr (lambda (x) (* x x)))
+(define (filter op lst)
+  (cond 
+    ((empty? lst) null)
+    ((op (car lst)) (cons (car lst) (filter op (cdr lst))))
+    (else (filter op (cdr lst)))))
 
 ;; Example functions
 (define (accumulate op initial sequence)
@@ -113,12 +127,11 @@
 (define (transpose m)
   (accumulate-n cons null m))
 
-;; must finish!
 (define (matrix-*-matrix m n)
   (let ((cols (transpose n)))
-    (map 'something m)))
+    (map (lambda (x) (matrix-*-vector cols x)) m)))
 
-(define m '((1 2) (3 4)))
+(define m '((1 2 3) (4 5 6) (7 8 9)))
 
 ;; exercise 2.38
 (define (fold-left op initial sequence)
@@ -128,6 +141,13 @@
         (iter (op result (car rest))
               (cdr rest))))
   (iter initial sequence))
+(define (fold-right op initial sequence)
+  (fold-left op initial (reverse sequence)))
+
+(define foldl fold-left)
+(define foldr fold-right)
+
+
 
 ;(foldr / 1 (list 1 2 3)) => 1.5
 ;(foldl / 1 (list 1 2 3)) => 1.5
@@ -137,3 +157,56 @@
 ;; Q: What property should op satisfy for foldr and foldl to have the same
 ;; results?
 ;; A: (op A B) == (op B A)
+
+;; Exercise 2.39
+(define (reverse-right sequence)
+  (foldr (lambda (x y) (append y (list x))) null sequence))
+
+(define (reverse-left sequence)
+  (foldl (lambda (x y) (cons x y)) null sequence))
+
+;; Exercise 2.40
+;; define unique-pairs:
+;; given n, it generates all pairs (i,j) st 1<=j<i<=n
+;; example: n = 4
+;; (4,3) (4,2) (4,1)
+;; (3,2) (3,1)
+;; (2,1)
+(define (unique-pairs n)
+  (cond
+    [(>= 1 n) null]
+    [else (append 
+          (map (lambda (x) (cons n x)) (build-list (- n 1) (lambda (x) (+ 1 x))))
+          (unique-pairs (- n 1)))]))
+
+;; Use unique-pairs to simplify the definition of prime-sum-pairs.
+
+(define (flatmap proc seq)
+  (accumulate append nil (map proc seq)))
+
+;; lol
+(define (prime? n) 
+  (map (lambda (x) (and (not (equal? n x)) (eq? 0 (remainder n x)))) (build-list n (lambda (x) (+ 1 x)))))
+
+(define (prime-sum? pair)
+  (prime? (+ (car pair) (cadr pair))))
+
+(define (make-pair-sum pair)
+  (list (car pair) (cadr pair) (+ (car pair) (cadr pair))))
+
+(define (prime-sum-pairs-original n)
+  (map make-pair-sum
+       (filter prime-sum?
+               (flatmap
+                (lambda (i)
+                  (map (lambda (j) (list i j))
+                       (enumerate-interval 1 (- i 1))))
+                (enumerate-interval 1 n)))))
+
+;; Exercise 2.41
+;; Write a procedure to find all ordered triples of distinct positive integers
+;; i, j, and k less than or equal to a given integer n that sums to a given 
+;; integer s.
+
+;; Exercise 2.42
+;; The Eigh Queens Puzzle
