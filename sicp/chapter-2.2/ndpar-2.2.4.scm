@@ -24,18 +24,16 @@
 (define (square-limit painter n)
   (let ((combine4 (square-of-four flip-horiz identity
                                   rotate180 flip-vert)))
-    (combine4 (corner-split painter n))))
+    (combine4 (corner-split (flip-horiz painter) n))))
 
 (define (corner-split painter n)
   (if (= n 0)
       painter
       (let* ((up (up-split painter (dec n)))
              (right (right-split painter (dec n)))
-             (top-left (beside up up))
-             (bottom-right (below right right))
              (corner (corner-split painter (dec n))))
-        (beside (below painter top-left)
-                (below bottom-right corner)))))
+        (beside (below painter up)
+                (below right corner)))))
 
 ;; Exercise 2.44, p.132
 (define (up-split painter n)
@@ -138,6 +136,8 @@
          (make-segment (make-vect 0.20 0.55) (make-vect 0.40 0.60))
          (make-segment (make-vect 0.40 0.60) (make-vect 0.35 0.80))
          (make-segment (make-vect 0.35 0.80) (make-vect 0.40 1.00))
+         (make-segment (make-vect 0.45 0.72) (make-vect 0.50 0.70)) ; smile
+         (make-segment (make-vect 0.50 0.70) (make-vect 0.55 0.72))
          (make-segment (make-vect 0.60 1.00) (make-vect 0.65 0.80)) ; 2 line
          (make-segment (make-vect 0.65 0.80) (make-vect 0.60 0.60))
          (make-segment (make-vect 0.60 0.60) (make-vect 0.80 0.60))
