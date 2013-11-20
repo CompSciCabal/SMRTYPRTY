@@ -184,15 +184,22 @@
 (define (flatmap proc seq)
   (accumulate append nil (map proc seq)))
 
-;; lol
-(define (prime? n) 
-  (map (lambda (x) (and (not (equal? n x)) (eq? 0 (remainder n x)))) (build-list n (lambda (x) (+ 1 x)))))
+(define (prime? n)
+  (empty? (cdr (filter (lambda (x) (and (not (equal? n x))
+                           (equal? 0 (remainder n x))))
+          (build-list n (lambda (y) (+ 1 y)))))))
+
+;; lol, my original attempt ended with:
+;; (build-list 100000 (lambda (y) (+ 1 y)))))))
 
 (define (prime-sum? pair)
   (prime? (+ (car pair) (cadr pair))))
 
 (define (make-pair-sum pair)
   (list (car pair) (cadr pair) (+ (car pair) (cadr pair))))
+
+(define (make-pair-sum-new pair)
+  (list (car pair) (cdr pair) (+ (car pair) (cdr pair))))
 
 (define (prime-sum-pairs-original n)
   (map make-pair-sum
@@ -202,6 +209,12 @@
                   (map (lambda (j) (list i j))
                        (enumerate-interval 1 (- i 1))))
                 (enumerate-interval 1 n)))))
+
+
+;; simplified version of prime-sum-pairs
+(define (prime-sum-pairs n)
+  (map make-pair-sum-new (filter (lambda (x) (prime? (+ (car x) (cdr x))))
+                                 (unique-pairs n))))
 
 ;; Exercise 2.41
 ;; Write a procedure to find all ordered triples of distinct positive integers
