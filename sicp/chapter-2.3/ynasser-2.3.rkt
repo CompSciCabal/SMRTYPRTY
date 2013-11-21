@@ -176,7 +176,7 @@
   (cond
     [(>= 1 n) null]
     [else (append 
-          (map (lambda (x) (cons n x)) (build-list (- n 1) (lambda (x) (+ 1 x))))
+          (map (lambda (x) (list n x)) (build-list (- n 1) (lambda (x) (+ 1 x))))
           (unique-pairs (- n 1)))]))
 
 ;; Use unique-pairs to simplify the definition of prime-sum-pairs.
@@ -220,6 +220,35 @@
 ;; Write a procedure to find all ordered triples of distinct positive integers
 ;; i, j, and k less than or equal to a given integer n that sums to a given 
 ;; integer s.
+;; constraints: i + j + k = s and
+
+(define (happy-sum? sum nums)
+  (equal? (accumulate + 0 nums) sum))
+
+(define (fragment orig lst)
+  (cond
+    [(empty? orig) lst]
+    [else (fragment (rest (rest (rest orig))) (cons (list (car orig) (first (rest orig)) (first (rest (rest orig)))) lst))]))
+
+(define (generate-filling item)
+  (cond
+    [(< (first item) (second item)) #f]
+    [else
+     (define lst (rest (build-list (- (car item) (car (cdr item))) (lambda (x) (+ x (car (cdr item)))))))
+     (define clump (accumulate (lambda (x y) (cons (first item) (cons x (cons (car (cdr item)) y)))) null lst))
+     (fragment clump empty)]))
+
+(define (unique-triplets n)
+  (accumulate (lambda (x y) (append (generate-filling x) y)) null (unique-pairs n)))
+
+(define (exercise-2.41 n sum)
+  (filter (lambda (x) (happy-sum? sum x)) (unique-triplets n)))
+
+;; There must be a more succinct solution!
+
+;; If I could generalize unique-x, I could generalize this whole problem.
+;; How do I write code to write code for me?   
 
 ;; Exercise 2.42
-;; The Eigh Queens Puzzle
+;; The Eight Queens Puzzle
+
