@@ -243,6 +243,121 @@ x
       (make-mobile (make-branch 1 0.5) (make-branch 1 0.5)))
     (make-branch 3 1)))
 (balanced? bx)
+
+
+;;; sicp 2.2.3
+
+(define (accumulate op initial sequence)
+  (if (null? sequence)
+    initial
+    (op
+      (car sequence)
+      (accumulate op initial (cdr sequence)))))
+(accumulate + 0 (list 1 4 5 9))
+;; 2.33
+
+(define (map2 p sequence)
+  (accumulate (lambda (x y)
+    (cons (p x) y))
+              (list) sequence))
+(map (lambda (x)
+  (* 2 x))
+     (list 1 2 3))
+(map2 (lambda (x)
+  (* 2 x))
+      (list 1 2 3))
+(define (append2 seq1 seq2)
+  (accumulate cons seq2 seq1))
+(append2 (list 1 2 3) (list 4 5 6))
+(define (length2 sequence)
+  (accumulate (lambda (x y)
+    (+ 1 y))
+              0 sequence))
+(length2 (list 1 5 7))
+;; 2.34 horners rule
+
+(define (horner-eval x coeffs)
+  (accumulate (lambda (this-coeff higher-terms)
+    (+ this-coeff (* x higher-terms)))
+              0 coeffs))
+(horner-eval 2 (list 1 3 0 5 0 1))
+;; 2.35 count-leaves
+
+(define (count-leaves T)
+  (accumulate
+    +
+    0
+    (map
+      (lambda (t)
+        (cond
+          ((null? t) 0)
+          ((not (pair? t)) 1)
+          (else
+            (+ (count-leaves (car t)) (count-leaves (cdr t))))))
+      (list T))))
+(count-leaves (list))
+(count-leaves (list 1 2))
+(count-leaves (list (list 1 2)))
+(count-leaves (list (list 1 2) (list 3 4)))
+;; 2.36
+
+;; 2.42 8 queens puzzle
+
+(define (flatmap proc seq)
+  (accumulate append (list) (map proc seq)))
+(define (filter predicate sequence)
+  (cond
+    ((null? sequence) (list))
+    ((predicate (car sequence))
+      (cons (car sequence) (filter predicate (cdr sequence))))
+    (else (filter predicate (cdr sequence)))))
+;; enumerate a sequence
+
+(define (seq a b)
+  (if (> a b)
+    (list)
+    (cons a (seq (+ a 1) b))))
+(seq 1 10)
+(define (queens board-size)
+  (define empty-board (list))
+  (define (adjoin-position new-row k rest-of-queens)
+    (cons (cons new-row k) rest-of-queens))
+  (define (safe? k positions)
+    (define (safe-horizontal? x1 x2)
+      (not (= x1 x2)))
+    (define (safe-diagonal? x1 y1 x2 y2)
+      (and
+        (not (= (+ x1 y1) (+ x2 y2)))
+        (not (=
+          (+ x1 (- board-size y1) 1)
+          (+ x2 (- board-size y2) 1)))))
+    (define (safe-position? p q)
+      (and
+        (safe-horizontal? (car p) (car q))
+        (safe-diagonal? (car p) (cdr p) (car q) (cdr q))))
+    (let ((p (car positions)))
+      (accumulate
+        (lambda (x y)
+          (and x y))
+        #t
+        (map (lambda (q)
+          (safe-position? p q))
+             (cdr positions)))))
+  (define (queen-cols k)
+    (if (= k 0)
+      (list empty-board)
+      (filter
+        (lambda (positions)
+          (safe? k positions))
+        (flatmap
+          (lambda (rest-of-queens)
+            (map
+              (lambda (new-row)
+                (adjoin-position new-row k rest-of-queens))
+              (seq 1 board-size)))
+          (queen-cols (- k 1))))))
+  (queen-cols board-size))
+(queens 8)
 ;;;
 
 ;;;
