@@ -249,9 +249,7 @@
   (iter initial sequence))
 
 ; 3/2, 1/6, (1 (2 (3 ()))), (((() 1) 2) 3)
-; op should be commutative:
-; GACK GRACIOUS GO TO BED
-; (op a (op b c)) === (op (op a b) c)
+; op should be commutative -- we're inverting the inputs, not just changing the ordering.
 
 ;;; 2.39
 
