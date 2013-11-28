@@ -1,3 +1,5 @@
+module SICP where
+
 ---- 2.17 ----------
 lastPair :: [a] -> [a]
 lastPair [elem] = [elem]
@@ -50,3 +52,30 @@ forEach proc (val:[]) = do
 forEach proc (val:rest) = do
   proc val
   forEach proc rest
+
+---- 2.29 ----------
+-- data Tree a = Leaf a | Node (Tree a) (Tree a) deriving (Functor, Foldable, Traversable)
+
+data Mobile = Mobile { left :: Branch, right :: Branch } deriving (Eq, Ord, Show, Read)
+data Branch = Branch { len :: Float, struct :: Structure } deriving (Eq, Ord, Show, Read)
+data Structure = Weight Float | SubMobile Mobile deriving (Eq, Ord, Show, Read)
+
+branchWeight :: Branch -> Float
+branchWeight b = totalWeight $ struct b
+
+totalWeight :: Structure -> Float
+totalWeight (SubMobile s) = branchWeight l + branchWeight r
+  where l = left s
+        r = right s
+totalWeight (Weight f) = f
+
+torque :: Branch -> Float
+torque b = (len b) * (branchWeight b)
+
+isBalanced :: Structure -> Bool
+isBalanced (SubMobile s) = and [ torque l == torque r
+                               , isBalanced $ struct l
+                               , isBalanced $ struct r]
+  where l = left s
+        r = right s
+isBalanced (Weight f) = True
