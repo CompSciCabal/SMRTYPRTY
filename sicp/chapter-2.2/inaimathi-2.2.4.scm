@@ -54,8 +54,8 @@
 ;;; 2.45
 ;; Our target is
 
-; (define right-split (split beside below))
-; (define up-split (split below beside))
+;   (define right-split (split beside below))
+;   (define up-split (split below beside))
 
 ;; so...
 
@@ -72,10 +72,10 @@
   (lambda (v)
     (vector-+
      (frame-origin frame)
-     (vector-+ (scale-vect (xcor-vect v)
-                           (frame-edge1 frame))
-               (scale-vect (ycor-vect v)
-                           (frame-edge2 frame))))))
+     (vector-+ (vector-scale (vector-x v)
+                             (frame-edge1 frame))
+               (vector-scale (vector-y v)
+                             (frame-edge2 frame))))))
 
 ;;; 2.46
 (define (make-vector x y) (list x y))
@@ -98,8 +98,8 @@
 ;;   (cons origin (cons edge1 edge2)))
 
 ;; The first two selectors work on this representation too. Only edge2 would need to change:
-;
-;    (define (edge2 frame) (cddr frame))
+                                        ;
+                                        ;    (define (edge2 frame) (cddr frame))
 
 ;;; Yet more givens:
 (define (segments->painter segment-list)
@@ -108,9 +108,9 @@
      (lambda (segment)
        (draw-line
         ((frame-coord-map frame)
-         (start-segment segment))
+         (segment-start segment))
         ((frame-coord-map frame)
-         (end-segment segment))))
+         (segment-end segment))))
      segment-list)))
 
 ;;; 2.48
@@ -127,7 +127,7 @@
          (b (frame-edge1 frame))
          (c (vector-+ (frame-edge1 frame)
                       (frame-edge2 frame)))
-         (d (frame-edge2)))
+         (d (frame-edge2 frame)))
      (list (make-segment a b)
            (make-segment b c)
            (make-segment c d)
@@ -140,7 +140,7 @@
          (b (frame-edge1 frame))
          (c (vector-+ (frame-edge1 frame)
                       (frame-edge2 frame)))
-         (d (frame-edge2)))
+         (d (frame-edge2 frame)))
      (list (make-segment a c)
            (make-segment b d)))))
 
@@ -157,19 +157,47 @@
          (b (frame-edge1 frame))
          (c (vector-+ (frame-edge1 frame)
                       (frame-edge2 frame)))
-         (d (frame-edge2)))
+         (d (frame-edge2 frame)))
      (let ((mid-a (vector-midpoint a b))
            (mid-b (vector-midpoint b c))
            (mid-c (vector-midpoint c d))
-           (mid-d (vector-midpoint d a))))
-     (list
-      (make-segment mid-a mid-b)
-      (make-segment mid-b mid-c)
-      (make-segment mid-c mid-d)
-      (make-segment mid-d mid-a)))))
+           (mid-d (vector-midpoint d a)))
+       (list
+        (make-segment mid-a mid-b)
+        (make-segment mid-b mid-c)
+        (make-segment mid-c mid-d)
+        (make-segment mid-d mid-a))))))
 
 ;d)
-;; .... no. Ok, ok, not right now at least.
+;; .... Here's a shitty minimalist version.
+;; To actually replicate it, we'd need a notional primitive
+;; called "curve", and we'd need to compute a fuckton of points,
+;; which I really don't have time to do just now.
+(define (wave-painter frame)
+  (segments->painter
+   (let ((a (frame-origin frame))
+         (b (frame-edge1 frame))
+         (c (vector-+ (frame-edge1 frame)
+                      (frame-edge2 frame)))
+         (d (frame-edge2 frame)))
+     (letrec ((mid-a (vector-midpoint a b))
+              (mid-b (vector-midpoint b c))
+              (mid-c (vector-midpoint c d))
+              (mid-d (vector-midpoint d a))
+              (center (vector-midpoint mid-a mid-c))
+              (q1b (vector-midpoint b mid-b))
+              (q3b (vector-midpoint mid-b c)))
+       (list
+        (make-segment mid-a center)
+        (make-segment center q1b)
+        (make-segment center q3b)
+        (make-segment q3b center)
+        (make-segment center mid-c)
+        (make-segment mid-c center)
+        (make-segment center mid-d)
+        (make-segment mid-d center)
+        (make-segment mid-d center)
+        (make-segment center mid-a))))))
 
 ;;; Givens Again: The Givensing
 (define (transform-painter painter origin corner1 corner2)
@@ -178,8 +206,8 @@
       (let ((new-origin (m origin)))
         (painter (make-frame
                   new-origin
-                  (sub-vect (m corner1) new-origin)
-                  (sub-vect (m corner2) new-origin)))))))
+                  (vector-- (m corner1) new-origin)
+                  (vector-- (m corner2) new-origin)))))))
 
 (define (flip-vert painter)
   (transform-painter painter
@@ -218,7 +246,7 @@
       (lambda (frame) (paint-left frame) (paint-right frame)))))
 
 ;;; 2.50
-(define (flip-vert painter)
+(define (flip-horiz painter)
   (transform-painter painter
                      (make-vector 1.0 0.0)
                      (make-vector 0.0 0.0)
@@ -231,24 +259,72 @@
                      (make-vector 1.0 0.0)))
 (define (rotate270 painter)
   (transform-painter painter
-                     (make-painter 0.0 1.0)
-                     (make-painter 0.0 0.0)
-                     (make-painter 1.0 1.0)))
+                     (make-vector 0.0 1.0)
+                     (make-vector 0.0 0.0)
+                     (make-vector 1.0 1.0)))
 
 ;;; 2.51
 (define (below painter1 painter2)
   (let ((split-point (make-vector 0.0 0.5)))
     (let ((paint-top (transform-painter painter2
-                                           split-point
-                                           (make-vector 1.0 0.5)
-                                           (make-vector 0.0 1.0)))
+                                        split-point
+                                        (make-vector 1.0 0.5)
+                                        (make-vector 0.0 1.0)))
           (paint-bottom (transform-painter painter1
-                                         (make-vector 0.0 0.0)
-                                         (make-vector 1.0 0.0)
-                                         split-point)))
-      (lambda (frame) (paint-left frame) (paint-right frame)))))
+                                           (make-vector 0.0 0.0)
+                                           (make-vector 1.0 0.0)
+                                           split-point)))
+      (lambda (frame) (paint-top frame) (paint-bottom frame)))))
 
 (define (below painter1 painter2)
   (rotate90 (beside painter1 painter2)))
 
 ;;; 2.52
+
+;;; BONUS ROUND
+;; (load "inaimathi-2.2.4.scm")
+
+(define (draw-line a b)
+  (printf
+   "<line stroke-width=\"2\" stroke=\"black\" x1=\"~a\" y1=\"~a\" x2=\"~a\" y2=\"~a\" />"
+   (vector-x a) (vector-y a) (vector-x b) (vector-y b)))
+
+(define (->svg painter frame filename)
+  (with-output-to-file filename
+    (lambda ()
+      (print "<svg>")
+      (painter frame)
+      (print "</svg>"))))
+
+;;; TESTING
+;; Sadly, there seems to be a bug in my transformation functions, because they always come out crazily oriented.
+
+(define *frame*
+  (make-frame (make-vector 0 0)
+              (make-vector 10 0)
+              (make-vector 0 10)))
+
+(->svg (diamond-painter *frame*) *frame* "single-diamond.svg")
+(->svg (outline-painter *frame*) *frame* "single-outline.svg")
+(->svg (cross-painter *frame*) *frame* "single-cross.svg")
+(->svg (wave-painter *frame*) *frame* "single-wave.svg")
+
+(->svg (corner-split (diamond-painter *frame*) 4) *frame* "DIAMONDS-MOTHERFUCKER.svg")
+(->svg (corner-split (outline-painter *frame*) 4) *frame* "OUTLINES-MOTHERFUCKER.svg")
+(->svg (corner-split (cross-painter *frame*) 4) *frame* "CROSSES-MOTHERFUCKER.svg")
+(->svg (corner-split (wave-painter *frame*) 4) *frame* "ALSO-WAVES-MOTHERFUCKER-I-GUESS?.svg")
+
+
+;; Incidentally, this is the sort of situation where having dynamic scope would be fucking awesome.
+;; If we had that, we could easily re-define `draw-line` inside of something like ->svg.
+;; That would let us use the same program for whatever kind of output we'd like. As it stands, what we'd
+;; have to do is either change draw-line for each representation, OR, make draw-line collect output into some
+;; globally accessible variable, the output of which we'd then funnel into different formats.
+
+;; (let ((f (make-frame (make-vector 0 0)
+;;                      (make-vector 4 4)
+;;                      (make-vector 3 3)))
+;;       (draw-line (lambda (a b)
+;;                    ;; insert whatever implementation you like at the time.
+;;                    )))
+;;   ((diamond-painter f) f))
