@@ -44,6 +44,71 @@
   (let ((combine4 (square-of-four flip-horiz identity rotate180 flip-vert)))
     (combine4 (corner-split painter n))))
 
+(define (frame-coord-map frame)
+  (lambda (v)
+    (vector-+
+     (frame-origin frame)
+     (vector-+ (vector-scale (vector-x v)
+                             (frame-edge1 frame))
+               (vector-scale (vector-y v)
+                             (frame-edge2 frame))))))
+
+(define (segments->painter segment-list)
+  (lambda (frame)
+    (for-each
+     (lambda (segment)
+       (draw-line
+        ((frame-coord-map frame)
+         (segment-start segment))
+        ((frame-coord-map frame)
+         (segment-end segment))))
+     segment-list)))
+
+(define (transform-painter painter origin corner1 corner2)
+  (lambda (frame)
+    (let ((m (frame-coord-map frame)))
+      (let ((new-origin (m origin)))
+        (painter (make-frame
+                  new-origin
+                  (vector-- (m corner1) new-origin)
+                  (vector-- (m corner2) new-origin)))))))
+
+(define (flip-vert painter)
+  (transform-painter painter
+                     (make-vector 0.0 1.0)
+                     (make-vector 1.0 1.0)
+                     (make-vector 0.0 0.0)))
+
+(define (shrink-to-upper-right painter)
+  (transform-painter painter
+                     (make-vector 0.5 0.5)
+                     (make-vector 1.0 0.5)
+                     (make-vector 0.5 1.0)))
+
+(define (rotate90 painter)
+  (transform-painter painter
+                     (make-vector 1.0 0.0)
+                     (make-vector 1.0 1.0)
+                     (make-vector 0.0 0.0)))
+
+(define (squash-inwards painter)
+  (transform-painter painter
+                     (make-vector 0.0 0.0)
+                     (make-vector 0.65 0.35)
+                     (make-vector 0.35 0.65)))
+
+(define (beside painter1 painter2)
+  (let ((split-point (make-vector 0.5 0.0)))
+    (let ((paint-left (transform-painter painter1
+                                         (make-vector 0.0 0.0)
+                                         split-point
+                                         (make-vector 0.0 1.0)))
+          (paint-right (transform-painter painter2
+                                          split-point
+                                          (make-vector 1.0 0.0)
+                                          (make-vector 0.5 1.0))))
+      (lambda (frame) (paint-left frame) (paint-right frame)))))
+
 ;;; 2.44
 (define (up-split painter n)
   (if (= n 0)
@@ -66,16 +131,6 @@
         (let ((smaller (rec painter (- n 1))))
           (fst painter (snd smaller smaller)))))
   rec)
-
-;;; More givens:
-(define (frame-coord-map frame)
-  (lambda (v)
-    (vector-+
-     (frame-origin frame)
-     (vector-+ (vector-scale (vector-x v)
-                             (frame-edge1 frame))
-               (vector-scale (vector-y v)
-                             (frame-edge2 frame))))))
 
 ;;; 2.46
 (define (make-vector x y) (list x y))
@@ -100,18 +155,6 @@
 ;; The first two selectors work on this representation too. Only edge2 would need to change:
                                         ;
                                         ;    (define (edge2 frame) (cddr frame))
-
-;;; Yet more givens:
-(define (segments->painter segment-list)
-  (lambda (frame)
-    (for-each
-     (lambda (segment)
-       (draw-line
-        ((frame-coord-map frame)
-         (segment-start segment))
-        ((frame-coord-map frame)
-         (segment-end segment))))
-     segment-list)))
 
 ;;; 2.48
 (define (make-segment start end)
@@ -174,76 +217,31 @@
 ;; called "curve", and we'd need to compute a fuckton of points,
 ;; which I really don't have time to do just now.
 (define (wave-painter frame)
-  (segments->painter
-   (let ((a (frame-origin frame))
-         (b (frame-edge1 frame))
-         (c (vector-+ (frame-edge1 frame)
-                      (frame-edge2 frame)))
-         (d (frame-edge2 frame)))
-     (letrec ((mid-a (vector-midpoint a b))
-              (mid-b (vector-midpoint b c))
-              (mid-c (vector-midpoint c d))
-              (mid-d (vector-midpoint d a))
-              (center (vector-midpoint mid-a mid-c))
-              (q1b (vector-midpoint b mid-b))
-              (q3b (vector-midpoint mid-b c)))
-       (list
-        (make-segment mid-a center)
-        (make-segment center q1b)
-        (make-segment center q3b)
-        (make-segment q3b center)
-        (make-segment center mid-c)
-        (make-segment mid-c center)
-        (make-segment center mid-d)
-        (make-segment mid-d center)
-        (make-segment mid-d center)
-        (make-segment center mid-a))))))
-
-;;; Givens Again: The Givensing
-(define (transform-painter painter origin corner1 corner2)
-  (lambda (frame)
-    (let ((m (frame-coord-map frame)))
-      (let ((new-origin (m origin)))
-        (painter (make-frame
-                  new-origin
-                  (vector-- (m corner1) new-origin)
-                  (vector-- (m corner2) new-origin)))))))
-
-(define (flip-vert painter)
-  (transform-painter painter
-                     (make-vector 0.0 1.0)
-                     (make-vector 1.0 1.0)
-                     (make-vector 0.0 0.0)))
-
-(define (shrink-to-upper-right painter)
-  (transform-painter painter
-                     (make-vector 0.5 0.5)
-                     (make-vector 1.0 0.5)
-                     (make-vector 0.5 1.0)))
-
-(define (rotate90 painter)
-  (transform-painter painter
-                     (make-vector 1.0 0.0)
-                     (make-vector 1.0 1.0)
-                     (make-vector 0.0 0.0)))
-
-(define (squash-inwards painter)
-  (transform-painter painter
-                     (make-vector 0.0 0.0)
-                     (make-vector 0.65 0.35)
-                     (make-vector 0.35 0.65)))
-
-(define (beside painter1 painter2)
-  (let ((split-point (make-vector 0.5 0.0)))
-    (let ((paint-left (transform-painter painter1
-                                         (make-vector 0.0 0.0)
-                                         split-point
-                                         (make-vector 0.0 1.0)))
-          (paint-right (transform-painter painter2
-                                          split-point
-                                          (make-vector 1.0 0.0)
-                                          (make-vector 0.5 1.0))))
-      (lambda (frame) (paint-left frame) (paint-right frame)))))
+  (rotate90
+   (segments->painter
+    (let ((a (frame-origin frame))
+          (b (frame-edge1 frame))
+          (c (vector-+ (frame-edge1 frame)
+                       (frame-edge2 frame)))
+          (d (frame-edge2 frame)))
+      (letrec ((mid-a (vector-midpoint a b))
+               (mid-b (vector-midpoint b c))
+               (mid-c (vector-midpoint c d))
+               (mid-d (vector-midpoint d a))
+               (center (vector-midpoint mid-a mid-c))
+               (q1b (vector-midpoint b mid-b))
+               (q3b (vector-midpoint mid-b c)))
+        (list
+         (make-segment mid-a center)
+         (make-segment center q1b)
+         (make-segment center q3b)
+         (make-segment q3b center)
+         (make-segment center mid-c)
+         (make-segment mid-c center)
+         (make-segment center mid-d)
+         (make-segment mid-d center)
+         (make-segment mid-d center)
+         (make-segment center mid-a)))))))
 
 ;;; 2.50
 (define (flip-horiz painter)
@@ -277,17 +275,25 @@
       (lambda (frame) (paint-top frame) (paint-bottom frame)))))
 
 (define (below painter1 painter2)
-  (rotate90 (beside painter1 painter2)))
+  (rotate90 (beside (rotate270 painter2)
+                    (rotate270 painter1))))
 
 ;;; 2.52
+
+;; -_-
 
 ;;; BONUS ROUND
 ;; (load "inaimathi-2.2.4.scm")
 
+(define *scale* 300)
+
 (define (draw-line a b)
   (printf
-   "<line stroke-width=\"2\" stroke=\"black\" x1=\"~a\" y1=\"~a\" x2=\"~a\" y2=\"~a\" />"
-   (vector-x a) (vector-y a) (vector-x b) (vector-y b)))
+   "<line stroke-width=\"1\" stroke=\"black\" x1=\"~a\" y1=\"~a\" x2=\"~a\" y2=\"~a\" />"
+   (* *scale* (vector-x a))
+   (* *scale* (vector-y a))
+   (* *scale* (vector-x b))
+   (* *scale* (vector-y b))))
 
 (define (->svg painter frame filename)
   (with-output-to-file filename
@@ -301,18 +307,18 @@
 
 (define *frame*
   (make-frame (make-vector 0 0)
-              (make-vector 10 0)
-              (make-vector 0 10)))
+              (make-vector 1 0)
+              (make-vector 0 1)))
 
 (->svg (diamond-painter *frame*) *frame* "single-diamond.svg")
 (->svg (outline-painter *frame*) *frame* "single-outline.svg")
 (->svg (cross-painter *frame*) *frame* "single-cross.svg")
 (->svg (wave-painter *frame*) *frame* "single-wave.svg")
 
-(->svg (corner-split (diamond-painter *frame*) 4) *frame* "DIAMONDS-MOTHERFUCKER.svg")
-(->svg (corner-split (outline-painter *frame*) 4) *frame* "OUTLINES-MOTHERFUCKER.svg")
-(->svg (corner-split (cross-painter *frame*) 4) *frame* "CROSSES-MOTHERFUCKER.svg")
-(->svg (corner-split (wave-painter *frame*) 4) *frame* "ALSO-WAVES-MOTHERFUCKER-I-GUESS?.svg")
+(->svg (corner-split (diamond-painter *frame*) 5) *frame* "DIAMONDS-MOTHERFUCKER.svg")
+(->svg (corner-split (outline-painter *frame*) 5) *frame* "OUTLINES-MOTHERFUCKER.svg")
+(->svg (corner-split (cross-painter *frame*) 5) *frame* "CROSSES-MOTHERFUCKER.svg")
+(->svg (corner-split (wave-painter *frame*) 5) *frame* "ALSO-WAVES-MOTHERFUCKER-I-GUESS?.svg")
 
 
 ;; Incidentally, this is the sort of situation where having dynamic scope would be fucking awesome.
