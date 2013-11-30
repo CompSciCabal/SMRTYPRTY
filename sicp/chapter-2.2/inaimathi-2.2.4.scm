@@ -306,8 +306,6 @@
       (print "</svg>"))))
 
 ;;; TESTING
-;; Sadly, there seems to be a bug in my transformation functions, because they always come out crazily oriented.
-
 (define *frame*
   (make-frame (make-vector 0 0)
               (make-vector 1 0)
