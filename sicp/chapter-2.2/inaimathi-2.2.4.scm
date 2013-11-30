@@ -132,6 +132,9 @@
           (fst painter (snd smaller smaller)))))
   rec)
 
+(define right-split (split beside below))
+(define up-split (split below beside))
+
 ;;; 2.46
 (define (make-vector x y) (list x y))
 (define (vector-x vec) (car vec))
@@ -153,8 +156,8 @@
 ;;   (cons origin (cons edge1 edge2)))
 
 ;; The first two selectors work on this representation too. Only edge2 would need to change:
-                                        ;
-                                        ;    (define (edge2 frame) (cddr frame))
+
+;    (define (edge2 frame) (cddr frame))
 
 ;;; 2.48
 (define (make-segment start end)
@@ -320,6 +323,7 @@
 (->svg (corner-split (cross-painter *frame*) 5) *frame* "CROSSES-MOTHERFUCKER.svg")
 (->svg (corner-split (wave-painter *frame*) 5) *frame* "ALSO-WAVES-MOTHERFUCKER-I-GUESS?.svg")
 
+(->svg (square-limit (wave-painter *frame*) 5) *frame* "square-limit-wave.svg")
 
 ;; Incidentally, this is the sort of situation where having dynamic scope would be fucking awesome.
 ;; If we had that, we could easily re-define `draw-line` inside of something like ->svg.
