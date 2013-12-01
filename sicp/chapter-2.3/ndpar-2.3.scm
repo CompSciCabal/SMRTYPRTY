@@ -70,7 +70,13 @@
   (and (pair? x) (eq? (car x) '+)))
 
 (define addend cadr)
-(define augend caddr)
+(define (augend s) (combine-rest s '+))
+
+(define (combine-rest sexp op)
+  (let ((rest (cddr sexp)))
+    (if (= (length rest) 1)
+        (car rest)
+        (cons op rest))))
 
 (define (make-product m1 m2)
   (cond ((or (=number? m1 0) (=number? m2 0)) 0)
@@ -83,7 +89,7 @@
   (and (pair? x) (eq? (car x) '*)))
 
 (define multiplier cadr)
-(define multiplicand caddr)
+(define (multiplicand p) (combine-rest p '*))
 
 (define (=number? sexp num)
   (and (number? sexp) (= sexp num)))
@@ -114,3 +120,12 @@
         (deriv '(** x 2) 'x))
 
 (= 1 (deriv '(** x 1) 'x))
+
+;; Exercise 2.57, p.151
+(equal? '(+ (* 2 x) 2)
+        (deriv '(+ (** x 2) (* 2 x) 1) 'x))
+
+(equal? '(+ (* x y) (* y (+ x 3)))
+        (deriv '(* x y (+ x 3)) 'x))
+
+(= 2 (deriv '(+ x y (+ x 3)) 'x))
