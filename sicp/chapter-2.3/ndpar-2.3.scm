@@ -48,6 +48,11 @@
                                  (deriv (multiplicand sexp) var))
                    (make-product (deriv (multiplier sexp) var)
                                  (multiplicand sexp))))
+        ((exponentiation? sexp)
+         (let ((u (base sexp))
+               (n (exponent sexp)))
+           (make-product (make-product n (deriv u var))
+                         (make-exponentiation u (- n 1)))))
         (else (error "unknown s-expression type -- DERIV" sexp))))
 
 (define variable? symbol?)
@@ -87,3 +92,25 @@
 (eq? 1 (deriv '(+ x 3) 'x))
 
 (eq? 'y (deriv '(* x y) 'x))
+
+;; Exercise 2.56, p.150
+;; Derivative of polynomial
+(define (make-exponentiation b e)
+  (cond ((=number? e 0) 1)
+        ((=number? e 1) b)
+        (else (list '** b e))))
+
+(define (exponentiation? x)
+  (and (pair? x) (eq? (car x) '**)))
+
+(define base cadr)
+(define exponent caddr)
+
+;; Tests
+(equal? '(* 5 (** x 4))
+        (deriv '(** x 5) 'x))
+
+(equal? '(* 2 x)
+        (deriv '(** x 2) 'x))
+
+(= 1 (deriv '(** x 1) 'x))
