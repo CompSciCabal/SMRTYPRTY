@@ -129,3 +129,91 @@
         (deriv '(* x y (+ x 3)) 'x))
 
 (= 2 (deriv '(+ x y (+ x 3)) 'x))
+
+;; Exercise 2.58, p.151
+;; Algebraic infix notation
+#|
+;; Parenthesized version
+(define (make-sum a1 a2)
+  (cond ((=number? a1 0) a2)
+        ((=number? a2 0) a1)
+        ((and (number? a1) (number? a2)) (+ a1 a2))
+        (else (list a1 '+ a2)))) ; swap the addend and +
+
+(define (sum? x)
+  (and (pair? x) (eq? (cadr x) '+))) ; car -> cadr
+
+(define addend car) ; cadr -> car
+(define augend caddr)
+
+(define (make-product m1 m2)
+  (cond ((or (=number? m1 0) (=number? m2 0)) 0)
+        ((=number? m1 1) m2)
+        ((=number? m2 1) m1)
+        ((and (number? m1) (number? m2)) (* m1 m2))
+        (else (list m1 '* m2)))) ; swap the multiplier and *
+
+(define (product? x)
+  (and (pair? x) (eq? (cadr x) '*))) ; car -> cadr
+
+(define multiplier car) ; cadr -> car
+(define multiplicand caddr)
+
+;; Tests
+(= 4 (deriv '(x + (3 * (x + (y + 2)))) 'x))
+
+;; Standard algebraic version
+(define (make-sum a1 a2)
+  (cond ((=number? a1 0) a2)
+        ((=number? a2 0) a1)
+        ((and (number? a1) (number? a2)) (+ a1 a2))
+        ((and (pair? a1) (pair? a2)) (append a1 '(+) a2))
+        ((pair? a1) (append a1 `(+ ,a2)))
+        ((pair? a2) (append `(,a1 +) a2))
+        (else (list a1 '+ a2))))
+
+(define (sum? x)
+  (and (pair? x) (member '+ x)))
+
+(define (addend x)
+  (let-values (((left _) (split-by x '+)))
+    (if (= (length left) 1)
+        (car left)
+        left)))
+
+(define (augend x)
+  (let-values (((_ right) (split-by x '+)))
+    (if (= (length right) 1)
+        (car right)
+        right)))
+
+(define (make-product m1 m2)
+  (cond ((or (=number? m1 0) (=number? m2 0)) 0)
+        ((=number? m1 1) m2)
+        ((=number? m2 1) m1)
+        ((and (number? m1) (number? m2)) (* m1 m2))
+        (else (list m1 '* m2))))
+
+(define (product? x)
+  (and (pair? x) (eq? (cadr x) '*)))
+
+(define multiplier car)
+
+(define (multiplicand x)
+  (let-values (((left _) (split-by x '+)))
+    (let ((m (cddr left)))
+      (if (= (length m) 1)
+          (car m)
+          m))))
+
+(define (split-by li op)
+  (let-values (((left right)
+                (splitf-at li (lambda (x) (not (eq? '+ x))))))
+    (if (null? right)
+        (values left right)
+        (values left (cdr right)))))
+
+;; Tests
+(= 4 (deriv '(x + 3 * (x + y + 2)) 'x))
+(deriv '(x * y * z + x * (x + y) + 2 * x * (x + z) + y * z) 'x)
+|#
