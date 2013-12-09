@@ -416,12 +416,7 @@
 
 ;; Membership, Θ(log n) on balanced tree
 (define (element-of-set? x set)
-  (cond ((null? set) false)
-        ((= x (entry set)) true)
-        ((< x (entry set))
-         (element-of-set? x (left-branch set)))
-        ((> x (entry set))
-         (element-of-set? x (right-branch set)))))
+  (lookup x set identity))
 
 ;; Adjoin, Θ(log n) on balanced tree
 (define (adjoin-set x set)
@@ -470,6 +465,15 @@
                        (cons x1 (union-list (cdr ol1) ol2)))
                       ((< x2 x1)
                        (cons x2 (union-list ol1 (cdr ol2)))))))))
+
+;; Exercise 2.66, p.161
+(define (lookup key records keyf)
+  (cond ((null? records) false)
+        ((= key (keyf (entry set))) true)
+        ((< key (keyf (entry set)))
+         (lookup key (left-branch set) keyf))
+        ((> key (keyf (entry set)))
+         (lookup key (right-branch set) keyf))))
 
 ;; Tests
 (define tree-5 '(6 (2 ()
