@@ -28,14 +28,19 @@
   (append set-a set-b))
 
 (define (intersection-set set-a set-b)
-  (cond ((or (null? set-a) (null? set-b)) '())
-        ((element-of-set? (car set-a) set-b)
-         (cons (car set1) (intersection-set (cdr set-a) set-b)))
-        (else (intersection-set (cdr set-a) set-b))))
-;; Ok, I typed that out line by line, but the original definition of intersection-set given in the book will still work fine with this other implementation
+  (define (rec a b acc)
+    (cond ((or (null? a) (null? b))
+           acc)
+          ((element-of-set? (car a) set-b)
+           (rec (cdr a) b (cons (car a) acc)))
+          ((element-of-set? (car b) set-a)
+           (rec a (cdr b) (cons (car b) acc)))
+          (else
+           (rec (cdr a) (cdr b) acc))))
+  (rec set-a set-b))
 
 ; b)
-;; adjoin-set works in constant time instead of linear time. union-set works much better now, since my implementation of remove-duplicates is utter garbage performance-wise. The others didn't change, so they're obviously the same in performance terms.
+;; adjoin-set works in constant time instead of linear time. union-set works much better now, since my implementation of remove-duplicates is utter garbage performance-wise. element-of-set? doesn't change, so it performs the same.
 
 ; c)
 ;; Trivially, if there was something I needed to do with sets that involved lots of insertion and no lookup, the second representation would be fine. Can't really think of that one.
