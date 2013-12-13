@@ -56,7 +56,7 @@
     (if (or (null? ops)
             (null? (car ops)))
         (lambda id (car id))
-        (let ((smaller ((multisplit (cdr ops)) painter) ))
+        (let ((smaller ((apply multisplit (cdr ops)) painter) ))
           ((car ops) smaller painter))))
   inner)
 ; this needs a 'spread' operator to work correctly... ask leo.
@@ -123,8 +123,6 @@
 (paint wave)   ; ha ha not really
 
 ;;; 2.50
-
-; Fn 29 how would you rotate by 90 an arbitrary frame?
 
 (define (flip-vert1 painter) 
   ((transform-painter (make-vect 0.0 1.0)
