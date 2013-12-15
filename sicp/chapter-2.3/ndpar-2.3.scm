@@ -340,6 +340,20 @@
   (list entry left right))
 
 ;; Exercise 2.63, p.158
+;; Depth-first traversal. Order of growth?
+;; 1) No left trees:
+;;    result = (append '() (cons x y))
+;;           = (cons x y),
+;;    which gives Θ(n) complexity.
+;; 2) No right trees:
+;;    result = (append z (cons a '())
+;;           = (append z '(a))
+;;           = (append (append y (cons b '())) '(a))
+;;           = (append (append y '(b)) '(a))
+;;           = (append (append (append x '(c)) '(b)) '(a)),
+;;    and we have triangular matrix of cons in the end,
+;;    which gives Θ(n^2) complexity.
+;; 3) Balanced tree: Θ(n log n) complexity.
 (define (tree->list-1 tree)
   (if (null? tree)
       '()
@@ -347,6 +361,8 @@
               (cons (entry tree)
                     (tree->list-1 (right-branch tree))))))
 
+;; Depth-first traversal, Θ(n).
+;; Every element of the tree is cons'ed only once.
 (define (tree->list-2 tree)
   (define (copy-to-list tree result)
     (if (null? tree)
@@ -372,9 +388,7 @@
                    (9 (7 () ())
                       (11 () ()))))
 
-;; tree->list-1 and tree->list-2 produce
-;; the same results, depth-first binary search,
-;; with the same order of growth, Θ(n).
+;; tree->list-1 and tree->list-2 produce the same results
 (equal? '(1 3 5 7 9 11) (tree->list-1 tree-1))
 (equal? '(1 3 5 7 9 11) (tree->list-1 tree-2))
 (equal? '(1 3 5 7 9 11) (tree->list-1 tree-3))
@@ -433,13 +447,13 @@
 
 ;; Exercise 2.65, p.160
 (define (union-set set1 set2)
-  (let ((ol1 (tree->list-1 set1))
-        (ol2 (tree->list-1 set2)))
+  (let ((ol1 (tree->list-2 set1))
+        (ol2 (tree->list-2 set2)))
     (list->tree (union-list ol1 ol2))))
 
 (define (intersection-set set1 set2)
-  (let ((ol1 (tree->list-1 set1))
-        (ol2 (tree->list-1 set2)))
+  (let ((ol1 (tree->list-2 set1))
+        (ol2 (tree->list-2 set2)))
     (list->tree (intersection-list ol1 ol2))))
 
 ;; These two procedures are the same
