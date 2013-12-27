@@ -1,3 +1,13 @@
+NB. Exercise 1.29, p.60
+NB. http://www.jsoftware.com/svn/addons/trunk/math/misc/integrat.ijs
+
+simpson =: 2 : 0
+'a b n' =. 3{. y,128
+h =. (b-a) % n
+val =. x a + h * i. >: n
+h * +/ val * 3%~ 1,((n-1)$4 2),1
+)
+
 NB. Exercise 1.33, p.61
 NB. http://www.rogerstokes.free-online.co.uk/14.htm
 
