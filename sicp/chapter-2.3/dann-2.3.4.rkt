@@ -122,7 +122,7 @@
 ; (encode rocksong rocktree)
 ;   '(1 1 1 1 1 1 1 0 0 1 1 1 1 0 1 1 1 0 0 0 0 0 0 0 0 0 1 1 1 1 1 1 1 0 0 1 1 1 1 0 1 1 1 0 0 0 0 0 0 0 0 0 1 1 0 1 1 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 1 1 0 1 1 0 1 0)
 
-; 84 bits. 4 * 36 = 144 bits for fixed-width encoding. (58%!)
+; 84 bits. 3 * 36 = 108 bits for fixed-width encoding. (78%!)
 
 ;;; Ex 2.71
 
