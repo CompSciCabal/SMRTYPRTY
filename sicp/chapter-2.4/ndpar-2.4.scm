@@ -100,3 +100,24 @@
         ((=number? m2 1) m1)
         ((and (number? m1) (number? m2)) (* m1 m2))
         (else (list '* m1 m2))))
+
+;; -------------------------------------------------------------------
+;; Message passing, p.186
+;; -------------------------------------------------------------------
+
+(define (apply-generic op arg) (arg op))
+
+;; Exercise 2.75, p.187
+
+(define (make-from-mag-ang r a)
+  (define (dispatch op)
+    (cond ((eq? op 'real-part) (* r (cos a)))
+          ((eq? op 'imag-part) (* r (sin a)))
+          ((eq? op 'magnitude) r)
+          ((eq? op 'angle) a)
+          (else (error "Unknown op -- MAKE-FROM-MAG-ANG" op))))
+  dispatch)
+
+;; Tests
+
+(= 1 (apply-generic 'magnitude (make-from-mag-ang 1 1)))
