@@ -5,6 +5,7 @@
 *.aux
 *.bbl
 *.blg
+*.dep
 *.dvi
 *.fdb_latexmk
 *.glg
@@ -31,3 +32,4 @@
 *.vrb
 *.xdy
 *.tdo
+*.zo
