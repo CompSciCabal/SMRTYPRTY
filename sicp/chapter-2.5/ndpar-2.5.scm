@@ -37,6 +37,7 @@
 ;; -------------------------------------------------------------------
 
 (define (equ? x y) (apply-generic 'equ? x y))
+(define (=zero? x) (apply-generic '=zero? x))
 
 (define (add x y) (apply-generic 'add x y))
 (define (sub x y) (apply-generic 'sub x y))
@@ -66,6 +67,7 @@
   (put 'make 'scheme-number
        (lambda (x) (tag x)))
   (put 'equ? '(scheme-number scheme-number) =)
+  (put '=zero? '(scheme-number) zero?)
   'done)
 
 ;; Rational numbers
@@ -107,6 +109,8 @@
   (put 'make 'rational
        (lambda (n d) (tag (make n d))))
   (put 'equ? '(rational rational) equal?)
+  (put '=zero? '(rational)
+       (lambda (x) (zero? (numer x))))
   'done)
 
 ;; Complex numbers
@@ -157,6 +161,9 @@
   (put 'equ? '(complex complex)
        (lambda (z1 z2) (and (= (real-part z1) (real-part z2))
                             (= (imag-part z1) (imag-part z2)))))
+  (put '=zero? '(complex)
+       (lambda (z) (and (zero? (real-part z))
+                        (zero? (imag-part z)))))
 
   (put 'real-part '(complex) real-part)
   (put 'imag-part '(complex) imag-part)
@@ -269,3 +276,15 @@
 (= (sub 6 2) 4)
 (= (mul 6 2) 12)
 (= (div 6 2) 3)
+
+;; Exercise 2.80, p.193
+
+(=zero? 0)
+(not (=zero? 5))
+
+(equ? (make-rational 0 5) (make-rational 0 6))
+(=zero? (make-rational 0 5))
+(not (=zero? r1))
+
+(=zero? (make-complex-from-real-imag 0 0))
+(not (=zero? c1))
