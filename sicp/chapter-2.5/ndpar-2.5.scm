@@ -9,17 +9,19 @@
 ;; -------------------------------------------------------------------
 
 (define (attach-tag type-tag contents)
-  (cons type-tag contents))
+  (if (number? contents)
+      contents
+      (cons type-tag contents)))
 
 (define (type-tag datum)
-  (if (pair? datum)
-      (car datum)
-      (error "Bad tagged datum -- TYPE-TAG" datum)))
+  (cond ((number? datum) 'scheme-number)
+        ((pair? datum) (car datum))
+        (else (error "Bad tagged datum -- TYPE-TAG" datum))))
 
 (define (contents datum)
-  (if (pair? datum)
-      (cdr datum)
-      (error "Bad tagged datum -- CONTENTS" datum)))
+  (cond ((number? datum) datum)
+        ((pair? datum) (cdr datum))
+        (else (error "Bad tagged datum -- CONTENTS" datum))))
 
 (define (apply-generic op . args)
   (let* ((type-tags (map type-tag args))
@@ -253,3 +255,10 @@
 ;; Exercise 2.77, p.192
 
 (= 5 (magnitude c1))
+
+;; Exercise 2.78, p.193
+
+(= (add 6 2) 8)
+(= (sub 6 2) 4)
+(= (mul 6 2) 12)
+(= (div 6 2) 3)
