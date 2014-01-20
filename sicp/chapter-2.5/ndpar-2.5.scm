@@ -24,6 +24,7 @@
 (define (apply-generic op . args)
   (let* ((type-tags (map type-tag args))
          (proc (get op type-tags)))
+    ;(printf "(~a ~a)~n" proc type-tags)
     (if proc
         (apply proc (map contents args))
         (error "No method for these types -- APPLY-GENERIC"
@@ -37,6 +38,11 @@
 (define (sub x y) (apply-generic 'sub x y))
 (define (mul x y) (apply-generic 'mul x y))
 (define (div x y) (apply-generic 'div x y))
+
+(define (real-part z) (apply-generic 'real-part z))
+(define (imag-part z) (apply-generic 'imag-part z))
+(define (magnitude z) (apply-generic 'magnitude z))
+(define (angle z) (apply-generic angle z))
 
 ;; Scheme numbers
 
@@ -143,6 +149,11 @@
   (put 'make-from-mag-ang 'complex
        (lambda (r a) (tag (make-from-mag-ang r a))))
 
+  (put 'real-part '(complex) real-part)
+  (put 'imag-part '(complex) imag-part)
+  (put 'magnitude '(complex) magnitude)
+  (put 'angle '(complex) angle)
+
   (install-rectangular-package)
   (install-polar-package)
   'done)
@@ -238,3 +249,7 @@
 
 (equal? (make-complex-from-mag-ang 8 (/ pi 2)) (mul p1 p2))
 (equal? (make-complex-from-mag-ang 2 (/ pi 2)) (div p1 p2))
+
+;; Exercise 2.77, p.192
+
+(= 5 (magnitude c1))
