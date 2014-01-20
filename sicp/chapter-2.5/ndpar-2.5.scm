@@ -36,6 +36,8 @@
 ;; Generic Arithmetic Operations, p.189
 ;; -------------------------------------------------------------------
 
+(define (equ? x y) (apply-generic 'equ? x y))
+
 (define (add x y) (apply-generic 'add x y))
 (define (sub x y) (apply-generic 'sub x y))
 (define (mul x y) (apply-generic 'mul x y))
@@ -63,6 +65,7 @@
        (lambda (x y) (tag (/ x y))))
   (put 'make 'scheme-number
        (lambda (x) (tag x)))
+  (put 'equ? '(scheme-number scheme-number) =)
   'done)
 
 ;; Rational numbers
@@ -103,6 +106,7 @@
        (lambda (x y) (tag (div x y))))
   (put 'make 'rational
        (lambda (n d) (tag (make n d))))
+  (put 'equ? '(rational rational) equal?)
   'done)
 
 ;; Complex numbers
@@ -150,6 +154,9 @@
        (lambda (x y) (tag (make-from-real-imag x y))))
   (put 'make-from-mag-ang 'complex
        (lambda (r a) (tag (make-from-mag-ang r a))))
+  (put 'equ? '(complex complex)
+       (lambda (z1 z2) (and (= (real-part z1) (real-part z2))
+                            (= (imag-part z1) (imag-part z2)))))
 
   (put 'real-part '(complex) real-part)
   (put 'imag-part '(complex) imag-part)
@@ -216,41 +223,41 @@
        (lambda (r a) (tag (make-from-mag-ang r a))))
   'done)
 
-;;  Tests
+;; Exercise 2.79, p.193
 
 (install-scheme-number-package)
 
 (define s1 (make-scheme-number 6))
 (define s2 (make-scheme-number 2))
 
-(equal? (make-scheme-number 8) (add s1 s2))
-(equal? (make-scheme-number 4) (sub s1 s2))
-(equal? (make-scheme-number 12) (mul s1 s2))
-(equal? (make-scheme-number 3) (div s1 s2))
+(equ? (make-scheme-number 8) (add s1 s2))
+(equ? (make-scheme-number 4) (sub s1 s2))
+(equ? (make-scheme-number 12) (mul s1 s2))
+(equ? (make-scheme-number 3) (div s1 s2))
 
 (install-rational-package)
 
 (define r1 (make-rational 2 3))
 (define r2 (make-rational 1 2))
 
-(equal? (make-rational 7 6) (add r1 r2))
-(equal? (make-rational 1 6) (sub r1 r2))
-(equal? (make-rational 1 3) (mul r1 r2))
-(equal? (make-rational 4 3) (div r1 r2))
+(equ? (make-rational 7 6) (add r1 r2))
+(equ? (make-rational 1 6) (sub r1 r2))
+(equ? (make-rational 1 3) (mul r1 r2))
+(equ? (make-rational 4 3) (div r1 r2))
 
 (install-complex-package)
 
 (define c1 (make-complex-from-real-imag 3 4))
 (define c2 (make-complex-from-real-imag 1 1))
 
-(equal? (make-complex-from-real-imag 4 5) (add c1 c2))
-(equal? (make-complex-from-real-imag 2 3) (sub c1 c2))
+(equ? (make-complex-from-real-imag 4 5) (add c1 c2))
+(equ? (make-complex-from-real-imag 2 3) (sub c1 c2))
 
 (define p1 (make-complex-from-mag-ang 4 (/ pi 2)))
 (define p2 (make-complex-from-mag-ang 2 0))
 
-(equal? (make-complex-from-mag-ang 8 (/ pi 2)) (mul p1 p2))
-(equal? (make-complex-from-mag-ang 2 (/ pi 2)) (div p1 p2))
+(equ? (make-complex-from-mag-ang 8 (/ pi 2)) (mul p1 p2))
+(equ? (make-complex-from-mag-ang 2 (/ pi 2)) (div p1 p2))
 
 ;; Exercise 2.77, p.192
 
