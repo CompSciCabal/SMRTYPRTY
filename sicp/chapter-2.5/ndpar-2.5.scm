@@ -23,14 +23,34 @@
         ((pair? datum) (cdr datum))
         (else (error "Bad tagged datum -- CONTENTS" datum))))
 
+;(define (apply-generic op . args)
+;  (let* ((type-tags (map type-tag args))
+;         (proc (get op type-tags)))
+;    ;(printf "(~a ~a)~n" proc type-tags)
+;    (if proc
+;        (apply proc (map contents args))
+;        (error "No method for these types -- APPLY-GENERIC"
+;               (list op type-tags)))))
+
 (define (apply-generic op . args)
   (let* ((type-tags (map type-tag args))
          (proc (get op type-tags)))
-    ;(printf "(~a ~a)~n" proc type-tags)
     (if proc
         (apply proc (map contents args))
-        (error "No method for these types -- APPLY-GENERIC"
-               (list op type-tags)))))
+        (if (= (length args) 2)
+            (let* ((type1 (car type-tags))
+                   (type2 (cadr type-tags))
+                   (a1 (car args))
+                   (a2 (cadr args))
+                   (t1->t2 (get-coercion type1 type2))
+                   (t2->t1 (get-coercion type2 type1)))
+              (cond ((eq? type1 type2) ; Exercise 2.81, p.200
+                     (error "Coercion to the same type" type1))
+                    (t1->t2 (apply-generic op (t1->t2 a1) a2))
+                    (t2->t1 (apply-generic op a1 (t2->t1 a2)))
+                    (else "No method for these types" (list op type-tags))))
+            (error "No method for these types -- APPLY-GENERIC"
+                   (list op type-tags))))))
 
 ;; -------------------------------------------------------------------
 ;; Generic Arithmetic Operations, p.189
@@ -144,7 +164,7 @@
     ((get 'make-from-real-imag 'rectangular) x y))
   (define (make-from-mag-ang r a)
     ((get 'make-from-mag-ang 'polar) r a))
-  
+
   (define (tag z) (attach-tag 'complex z))
   (put 'add '(complex complex)
        (lambda (z1 z2) (tag (add z1 z2))))
@@ -288,3 +308,19 @@
 
 (=zero? (make-complex-from-real-imag 0 0))
 (not (=zero? c1))
+
+;; -------------------------------------------------------------------
+;; Coercion
+;; -------------------------------------------------------------------
+
+(define (install-coercion-package)
+  (define (scheme-number->complex n)
+    (make-complex-from-real-imag (contents n) 0))
+  (put-coercion 'scheme-number 'complex scheme-number->complex)
+  'done)
+
+;; Tests
+
+(install-coercion-package)
+
+(equ? (make-complex-from-real-imag 9 4) (add s1 c1))
