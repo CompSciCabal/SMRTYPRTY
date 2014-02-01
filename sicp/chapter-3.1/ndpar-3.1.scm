@@ -4,23 +4,34 @@
 ;; Introducing assignment. p.223
 ;; -------------------------------------------------------------------
 
-;; Exercise 3.3, p.225
+;; Exercise 3.3, 3.4, p.225
 
 (define (make-account balance password)
-  (define (withdraw amount)
-    (if (>= balance amount)
-        (begin (set! balance (- balance amount))
-               balance)
-        "Insufficient funds"))
-  (define (deposit amount)
-    (set! balance (+ balance amount))
-    balance)
-  (define (dispatch pswd m)
-    (cond ((not (eq? pswd password)) (const "Incorrect password"))
-          ((eq? m 'withdraw) withdraw)
-          ((eq? m 'deposit) deposit)
-          (else (error "Unknown request -- MAKE-ACCOUNT" m))))
-  dispatch)
+  (let ((count 0))
+    (define (reset-count) (set! count 0))
+    (define (inc-count) (set! count (+ 1 count)))
+    (define (withdraw amount)
+      (if (>= balance amount)
+          (begin (set! balance (- balance amount))
+                 balance)
+          "Insufficient funds"))
+    (define (deposit amount)
+      (set! balance (+ balance amount))
+      balance)
+    (define (dispatch pswd m)
+      (cond ((not (eq? pswd password))
+             (inc-count)
+             (if (> count 3)
+                 (const "Calling cops...")
+                 (const "Incorrect password")))
+            ((eq? m 'withdraw)
+             (reset-count)
+             withdraw)
+            ((eq? m 'deposit)
+             (reset-count)
+             deposit)
+            (else (error "Unknown request -- MAKE-ACCOUNT" m))))
+    dispatch))
 
 ;; Tests
 
