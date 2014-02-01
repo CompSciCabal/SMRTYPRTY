@@ -4,7 +4,9 @@
 ;; Introducing assignment. p.223
 ;; -------------------------------------------------------------------
 
-(define (make-account balance)
+;; Exercise 3.3, p.225
+
+(define (make-account balance password)
   (define (withdraw amount)
     (if (>= balance amount)
         (begin (set! balance (- balance amount))
@@ -13,18 +15,20 @@
   (define (deposit amount)
     (set! balance (+ balance amount))
     balance)
-  (define (dispatch m)
-    (cond ((eq? m 'withdraw) withdraw)
+  (define (dispatch pswd m)
+    (cond ((not (eq? pswd password)) (const "Incorrect password"))
+          ((eq? m 'withdraw) withdraw)
           ((eq? m 'deposit) deposit)
           (else (error "Unknown request -- MAKE-ACCOUNT" m))))
   dispatch)
 
 ;; Tests
 
-(define acc (make-account 100))
-(= 30 ((acc 'withdraw) 70))
-(= 80 ((acc 'deposit) 50))
-(= 10 ((acc 'withdraw) 70))
+(define acc (make-account 100 'secret-password))
+(= 30 ((acc 'secret-password 'withdraw) 70))
+(= 80 ((acc 'secret-password 'deposit) 50))
+(= 10 ((acc 'secret-password 'withdraw) 70))
+(eq? "Incorrect password" ((acc 'some-other-password 'withdraw) 5))
 
 ;; Exercise 3.1, p.224
 
