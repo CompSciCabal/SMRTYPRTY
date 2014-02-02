@@ -1,5 +1,7 @@
 #lang racket
 
+(define (square x) (* x x))
+
 ;; -------------------------------------------------------------------
 ;; Introducing assignment. p.223
 ;; -------------------------------------------------------------------
@@ -68,3 +70,35 @@
 (= 1 (S 'how-many-calls?))
 (= 0 (S 'reset-count))
 (= 0 (S 'how-many-calls?))
+
+;; -------------------------------------------------------------------
+;; Random numbers, p.225
+;; -------------------------------------------------------------------
+
+(define (monte-carlo trials experiment)
+  (define (iter trials-remaining trials-passed)
+    (cond ((= trials-remaining 0)
+           (/ trials-passed trials 1.0))
+          ((experiment)
+           (iter (- trials-remaining 1) (+ trials-passed 1)))
+          (else
+           (iter (- trials-remaining 1) trials-passed))))
+  (iter trials 0))
+
+(define (random-in-range low high)
+  (let ((range (- high low)))
+    (+ low (* (random) range))))
+
+;; Exercise 3.5, p.228
+
+(define (estimate-integral p x1 y1 x2 y2 trials)
+  (* (- x2 x1) (- y2 y1) (monte-carlo trials p)))
+
+(define (estimate-pi trials)
+  (define (unit-circle)
+    (<= (+ (square (random-in-range -1 1))
+           (square (random-in-range -1 1)))
+        1))
+  (estimate-integral unit-circle -1 -1 1 1 trials))
+
+(estimate-pi 1e5)
