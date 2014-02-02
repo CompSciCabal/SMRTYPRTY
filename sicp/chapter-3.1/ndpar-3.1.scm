@@ -140,3 +140,12 @@
 
 (= 60 ((paul-acc 'rosebud 'deposit) 50))
 (= 50 ((peter-acc 'secret-password 'withdraw) 10))
+
+;; Exercise 3.8, p.236
+
+(define f
+  (let ((state 0))
+    (lambda (n)
+      (let ((result state))
+        (set! state (+ n state))
+        result))))
