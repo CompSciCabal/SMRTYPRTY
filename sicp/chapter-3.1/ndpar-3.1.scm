@@ -102,3 +102,25 @@
   (estimate-integral unit-circle -1 -1 1 1 trials))
 
 (estimate-pi 1e5)
+
+;; Exercise 3.6, p.229
+
+(define (rand-update n)
+  (remainder (+ (* 103 n) 701) 101))
+
+(define rand
+  (let ((x 100))
+    (lambda (m)
+      (cond ((eq? m 'generate)
+             (set! x (rand-update x))
+             x)
+            ((eq? m 'reset)
+             (lambda (new-value)
+               (set! x new-value)
+               x))))))
+
+(= 93 (rand 'generate))
+(= 79 (rand 'generate))
+(= 51 (rand 'generate))
+((rand 'reset) 100)
+(= 93 (rand 'generate))
