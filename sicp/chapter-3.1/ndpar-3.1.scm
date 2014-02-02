@@ -9,9 +9,14 @@
 ;; Exercise 3.3, 3.4, p.225
 
 (define (make-account balance password)
-  (let ((count 0))
+  (let ((count 0)
+        (passwords (list password)))
+    ; Security
+    (define (valid? pswd) (member pswd passwords))
+    (define (add-password pswd) (set! passwords (cons pswd passwords)))
     (define (reset-count) (set! count 0))
     (define (inc-count) (set! count (+ 1 count)))
+    ; Business
     (define (withdraw amount)
       (if (>= balance amount)
           (begin (set! balance (- balance amount))
@@ -20,28 +25,27 @@
     (define (deposit amount)
       (set! balance (+ balance amount))
       balance)
+    ; Helper
     (define (dispatch pswd m)
-      (cond ((not (eq? pswd password))
-             (inc-count)
-             (if (> count 3)
-                 (const "Calling cops...")
-                 (const "Incorrect password")))
-            ((eq? m 'withdraw)
-             (reset-count)
-             withdraw)
-            ((eq? m 'deposit)
-             (reset-count)
-             deposit)
-            (else (error "Unknown request -- MAKE-ACCOUNT" m))))
+      (if (> count 3)
+          (const "Calling cops...")
+          (if (valid? pswd)
+              (begin (reset-count)
+                     (cond ((eq? m 'withdraw) withdraw)
+                           ((eq? m 'deposit) deposit)
+                           ((eq? m 'add-password) add-password)
+                           (else (error "Unknown request -- MAKE-ACCOUNT" m))))
+              (begin (inc-count)
+                     (const "Incorrect password")))))
     dispatch))
 
 ;; Tests
 
-(define acc (make-account 100 'secret-password))
-(= 30 ((acc 'secret-password 'withdraw) 70))
-(= 80 ((acc 'secret-password 'deposit) 50))
-(= 10 ((acc 'secret-password 'withdraw) 70))
-(eq? "Incorrect password" ((acc 'some-other-password 'withdraw) 5))
+(define peter-acc (make-account 100 'secret-password))
+(= 30 ((peter-acc 'secret-password 'withdraw) 70))
+(= 80 ((peter-acc 'secret-password 'deposit) 50))
+(= 10 ((peter-acc 'secret-password 'withdraw) 70))
+(eq? "Incorrect password" ((peter-acc 'some-other-password 'withdraw) 5))
 
 ;; Exercise 3.1, p.224
 
@@ -124,3 +128,15 @@
 (= 51 (rand 'generate))
 ((rand 'reset) 100)
 (= 93 (rand 'generate))
+
+;; Exercise 3.7, p.236
+
+(define (make-joint account master-password password)
+  ((account master-password 'add-password) password)
+  account)
+
+(define paul-acc
+  (make-joint peter-acc 'secret-password 'rosebud))
+
+(= 60 ((paul-acc 'rosebud 'deposit) 50))
+(= 50 ((peter-acc 'secret-password 'withdraw) 10))
