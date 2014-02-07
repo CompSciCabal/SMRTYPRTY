@@ -58,12 +58,9 @@
 (define f
   (let ((n #f))
     (lambda (num)
-      (cond ((and n (zero? n))
-	     'no-op)
-	    (n
-	     (set! n (- n 1)))
-	    (else
-	     (set! n num)))
+      (if n
+	  (set! n (max 0 (- n 1)))
+	  (set! n num))
       n)))
 
 (define f
