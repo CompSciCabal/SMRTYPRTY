@@ -65,3 +65,9 @@
 	    (else
 	     (set! n num)))
       n)))
+
+(define f
+  (let ((prev 100))
+    (lambda (num)
+      (when (> prev num) (set! prev num))
+      prev)))
