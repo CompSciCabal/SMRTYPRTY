@@ -44,3 +44,24 @@
 	    (else
 	     (set! fails (+ 1 fails))
 	     "Incorrect password")))))
+
+;;;;;;;;;; Exercise 3.7
+(define (make-joint account main-pass joint-pass)
+  (if (equal? "Incorrect password" ((account main-pass 'deposit) 0))
+      "Incorrect password"
+      (lambda (pass msg)
+	(if (eq? pass joint-pass)
+	    (account main-pass msg)
+	    "Incorrect password"))))
+
+;;;;;;;;;; Exercise 3.8
+(define f
+  (let ((n #f))
+    (lambda (num)
+      (cond ((and n (zero? n))
+	     'no-op)
+	    (n
+	     (set! n (- n 1)))
+	    (else
+	     (set! n num)))
+      n)))
