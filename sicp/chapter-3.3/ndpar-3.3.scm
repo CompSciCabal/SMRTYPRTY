@@ -274,25 +274,25 @@
 ;; Representing Tables, p.270
 ;; -------------------------------------------------------------------
 
-(define (assoc key records)
+(define (assoc key records same-key?)
   (cond ((null? records) false)
-        ((equal? key (caar records)) (car records))
-        (else (assoc key (cdr records)))))
+        ((same-key? key (caar records)) (car records))
+        (else (assoc key (cdr records) same-key?))))
 
-(define (make-table)
+(define (make-table same-key?)
   (let ((local-table (list '*table*)))
     (define (lookup key-1 key-2)
-      (let ((subtable (assoc key-1 (cdr local-table))))
+      (let ((subtable (assoc key-1 (cdr local-table) same-key?)))
         (if subtable
-            (let ((record (assoc key-2 (cdr subtable))))
+            (let ((record (assoc key-2 (cdr subtable) same-key?)))
               (if record
                   (cdr record)
                   false))
             false)))
     (define (insert! key-1 key-2 value)
-      (let ((subtable (assoc key-1 (cdr local-table))))
+      (let ((subtable (assoc key-1 (cdr local-table) same-key?)))
         (if subtable
-            (let ((record (assoc key-2 (cdr subtable))))
+            (let ((record (assoc key-2 (cdr subtable) same-key?)))
               (if record
                   (set-cdr! record value)
                   (set-cdr! subtable
@@ -309,7 +309,7 @@
             (else (error "Unknown operation -- TABLE" m))))
     dispatch))
 
-(define operation-table (make-table))
+(define operation-table (make-table equal?))
 (define get (operation-table 'lookup-proc))
 (define put (operation-table 'insert-proc!))
 
@@ -317,3 +317,7 @@
 
 (put 'a 'b 5)
 (get 'a 'b)
+
+(define test-table (make-table =))
+((test-table 'insert-proc!) 4 2 42)
+(= 42 ((test-table 'lookup-proc) 4.0 2.0))
