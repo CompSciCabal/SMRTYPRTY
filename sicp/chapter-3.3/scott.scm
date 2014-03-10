@@ -292,3 +292,297 @@
 ;;;
 
 ;;;
+;;; Section 3.3.5 Constraint Propagation
+
+;;;
+
+(define true #t)
+(define false #f)
+(define (inform-about-value constraint)
+  (constraint 'I-have-a-value))
+(define (inform-about-no-value constraint)
+  (constraint 'I-lost-my-value))
+(define (multiplier m1 m2 product)
+  (define (process-new-value)
+    (cond
+      ((or
+        (and (has-value? m1) (= (get-value m1) 0))
+        (and (has-value? m2) (= (get-value m2) 0)))
+       (set-value! product 0 me))
+      ((and (has-value? m1) (has-value? m2)) (set-value!
+        product
+        (* (get-value m1) (get-value m2))
+        me))
+      ((and (has-value? product) (has-value? m1)) (set-value!
+        m2
+        (/ (get-value product) (get-value m1))
+        me))
+      ((and (has-value? product) (has-value? m2)) (set-value!
+        m1
+        (/ (get-value product) (get-value m2))
+        me))))
+  (define (process-forget-value)
+    (forget-value! product me)
+    (forget-value! m1 me)
+    (forget-value! m2 me)
+    (process-new-value))
+  (define (me request)
+    (cond
+      ((eq? request 'I-have-a-value) (process-new-value))
+      ((eq? request 'I-lost-my-value) (process-forget-value))
+      (else (error "Unknown request -- MULTIPLIER" request))))
+  (connect m1 me)
+  (connect m2 me)
+  (connect product me)
+  me)
+(define (constant value connector)
+  (define (me request)
+    (error "Unknown request -- CONSTANT" request))
+  (connect connector me)
+  (set-value! connector value me)
+  me)
+(define (probe name connector)
+  (define (print-probe value)
+    (newline)
+    (display "Probe: ")
+    (display name)
+    (display " = ")
+    (display value))
+  (define (process-new-value)
+    (print-probe (get-value connector)))
+  (define (process-forget-value)
+    (print-probe "?"))
+  (define (me request)
+    (cond
+      ((eq? request 'I-have-a-value) (process-new-value))
+      ((eq? request 'I-lost-my-value) (process-forget-value))
+      (else (error "Unknown request -- PROBE" request))))
+  (connect connector me)
+  me)
+(define (make-connector)
+  (let ((value false)
+  (informant false)
+  (constraints '()))
+    (define (set-my-value newval setter)
+      (cond
+        ((not (has-value? me))
+          (set! value newval)
+          (set! informant setter)
+          (for-each-except setter inform-about-value constraints))
+        ((not (= value newval)) (error "Contradiction" (list value newval)))
+        (else 'ignored)))
+    (define (forget-my-value retractor)
+      (if (eq? retractor informant)
+        (begin
+          (set! informant false)
+          (for-each-except retractor inform-about-no-value constraints))
+        'ignored))
+    (define (connect new-constraint)
+      (if (not (memq new-constraint constraints))
+        (set! constraints (cons new-constraint constraints)))
+      (if (has-value? me)
+        (inform-about-value new-constraint))
+      'done)
+    (define (me request)
+      (cond
+        ((eq? request 'has-value?) (if informant
+          true
+          false))
+        ((eq? request 'value) value)
+        ((eq? request 'set-value!) set-my-value)
+        ((eq? request 'forget) forget-my-value)
+        ((eq? request 'connect) connect)
+        (else (error "Unknown operation -- CONNECTOR" request))))
+    me))
+(define (for-each-except exception procedure list)
+  (define (loop items)
+    (cond
+      ((null? items) 'done)
+      ((eq? (car items) exception) (loop (cdr items)))
+      (else (procedure (car items)) (loop (cdr items)))))
+  (loop list))
+(define (has-value? connector)
+  (connector 'has-value?))
+(define (get-value connector)
+  (connector 'value))
+(define (set-value! connector new-value informant)
+  ((connector 'set-value!) new-value informant))
+(define (forget-value! connector retractor)
+  ((connector 'forget) retractor))
+(define (connect connector new-constraint)
+  ((connector 'connect) new-constraint))
+(define (celsius-fahrenheit-converter c f)
+  (let ((u (make-connector))
+  (v (make-connector))
+  (w (make-connector))
+  (x (make-connector))
+  (y (make-connector)))
+    (multiplier c w u)
+    (multiplier v x u)
+    (adder v y f)
+    (constant 9 w)
+    (constant 5 x)
+    (constant 32 y)
+    'ok))
+(define (adder a1 a2 sum)
+  (define (process-new-value)
+    (cond
+      ((and (has-value? a1) (has-value? a2))
+        (set-value! sum (+ (get-value a1) (get-value a2)) me))
+      ((and (has-value? a1) (has-value? sum))
+        (set-value! a2 (- (get-value sum) (get-value a1)) me))
+      ((and (has-value? a2) (has-value? sum))
+        (set-value! a1 (- (get-value sum) (get-value a2)) me))))
+  (define (process-forget-value)
+    (forget-value! sum me)
+    (forget-value! a1 me)
+    (forget-value! a2 me)
+    (process-new-value))
+  (define (me request)
+    (cond
+      ((eq? request 'I-have-a-value) (process-new-value))
+      ((eq? request 'I-lost-my-value) (process-forget-value))
+      (else (error "Unknown request -- ADDER" request))))
+  (connect a1 me)
+  (connect a2 me)
+  (connect sum me)
+  me)
+(define C (make-connector))
+(define F (make-connector))
+(celsius-fahrenheit-converter C F)
+(probe "Celsius temp" C)
+(probe "Fahrenheit temp" F)
+;(set-value! C 25 'user)
+
+;(set-value! F 212 'user)
+
+;(forget-value! C 'user)
+
+;(set-value! F 212 'user)
+
+;; exercise 3.33 c= average(a, b)
+
+;; 2c = a + b
+
+(define (averager a b c)
+  (let ((two (make-connector))
+  (total (make-connector)))
+    (multiplier two c total)
+    (adder a b total)
+    (constant 2 two)
+    'ok))
+(define A1 (make-connector))
+(define A2 (make-connector))
+(define A3 (make-connector))
+(probe "A1" A1)
+(probe "A2" A2)
+(probe "A3" A3)
+(averager A1 A2 A3)
+(set-value! A1 3 'user)
+(set-value! A2 5 'user)
+(get-value A3)
+;; exercise 3.34
+
+;; this approach isnt a relation, it only works in one direction.  if you specify the 
+
+;; squared value it will not fill inthe squareroot, since multiplier needs two inputs 
+
+;; before it will propogate the constraint.
+
+(define (squarer-wrong a b)
+  (multiplier a a b))
+(define va (make-connector))
+(define vb (make-connector))
+(squarer-wrong va vb)
+(probe "va" va)
+(probe "vb" vb)
+(set-value! vb 25 'user)
+;; exercise 3.35 squareroot
+
+(define (squarer a b)
+  (define (square x)
+    (* x x))
+  (define (process-new-value)
+    (cond
+      ((has-value? b)
+        (if (< (get-value b) 0)
+          (error "square less than 0: SQUARER" (get-value b))
+          (set-value! a (sqrt (get-value b)) me)))
+      ((has-value? a) (set-value! b (square (get-value a)) me))))
+  (define (process-forget-value)
+    (forget-value! a me)
+    (forget-value! b me)
+    (process-new-value))
+  (define (me request)
+    (cond
+      ((eq? request 'I-have-a-value) (process-new-value))
+      ((eq? request 'I-lost-my-value) (process-forget-value))
+      (else (error "Unknown request -- SQUARER" request))))
+  (connect a me)
+  (connect b me)
+  me)
+(define vc (make-connector))
+(define vd (make-connector))
+(squarer vc vd)
+(probe "vc" vc)
+(probe "vd" vd)
+(set-value! vd 25 'user)
+(forget-value! vd 'user)
+(set-value! vc 7 'user)
+;; exercise 3.36 needs a diagram
+
+;; exercise 3.37, expression syntax
+
+(define (celsius-fahrenheit-converter x)
+  (c+ (c* (c/ (cv 9) (cv 5)) x) (cv 32)))
+(define C (make-connector))
+(define F (celsius-fahrenheit-converter C))
+(define (c+ x y)
+  (let ((z (make-connector)))
+    (adder x y z)
+    z))
+(define (c* x y)
+  (let ((z (make-connector)))
+    (multiplier x y z)
+    z))
+(define (c/ x y)
+  (let ((z (make-connector)))
+    (multiplier z y x)
+    z))
+(define (cv v)
+  (let ((z (make-connector)))
+    (constant v z)
+    z))
+(celsius-fahrenheit-converter C F)
+(probe "Celsius temp" C)
+(probe "Fahrenheit temp" F)
+(set-value! C 25 'user)
+;(set-value! F 77 'user)
+
+(forget-value! C 'user)
+(set-value! F 212 'user)
+;; footnote 33 is very interesting, they discuss how the imperative style is cumbersome, 
+
+;; but it is straightforward to move to expression oriented and 
+
+;; not the other way.  they also bring up vectorization, if you can 
+
+;; return procedures than you can avoid temporary variables.
+
+;; this is pretty important, compilers do a good job of this when they are single variables but much less so for vectors.
+
+;; also vectorizing often brings up data flow, which often has to be done explicitly by the programmer, even though the vectorized expression is often compleely data parallel.
+
+;; this should be interesting in the coming chapter on concurrency.
+
+;;;
+
+;;;
+
+;;;
+
+;;;
+
+;;;
+
+;;;
