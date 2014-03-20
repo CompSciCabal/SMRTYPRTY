@@ -157,13 +157,37 @@
 
 ;; Exerciese 3.60, p.333
 
-; FIXME: does not work
 (define (mul-series s1 s2)
   (cons-stream (* (stream-car s1) (stream-car s2))
-               (add-streams (mul-series s1 (stream-cdr s2))
-                            (mul-series (stream-cdr s1) s2))))
+               (add-streams (scale-stream (stream-cdr s2) (stream-car s1))
+                            (mul-series s2 (stream-cdr s1)))))
+
+; 1 0 -1 0 1/3 0 -2/45 0 1/315
+;(stream-first (mul-series cos-series cos-series) 7)
+; 0 0 1 0 -1/3 0 2/45 0 -1/315
+;(stream-first (mul-series sin-series sin-series) 7)
 
 (define one (add-streams (mul-series sin-series sin-series)
                          (mul-series cos-series cos-series)))
 
-(stream-first one 5)
+;(stream-first one 5)
+
+;; Exercise 3.61, p.333
+
+(define (invert-unit-series s)
+  (cons-stream 1 (scale-stream (mul-series (stream-cdr s)
+                                           (invert-unit-series s))
+                               -1)))
+
+;; Exercise 3.62, p.334
+
+(define (div-series n d)
+  (if (= 0 (stream-car d))
+      (error "Division by zero")
+      (mul-series n (invert-unit-series (scale-stream d (/ (stream-car d)))))))
+
+(define tan-series
+  (div-series sin-series cos-series))
+
+; 0 1 0 1/3 0 2/15 0 17/315
+;(stream-first tan-series 9)
