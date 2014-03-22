@@ -1,5 +1,10 @@
 #lang planet neil/sicp
 
+(define (square x) (* x x))
+
+(define (average a b)
+  (/ (+ a b) 2))
+
 (define (display-line x)
   (newline)
   (display x))
@@ -8,9 +13,9 @@
   (display-line x)
   x)
 
-;; -------------------------------------------------------------------
+;; -------------------------------------------------------
 ;; Streams, p.316
-;; -------------------------------------------------------------------
+;; -------------------------------------------------------
 
 (define (stream-car s) (car s))
 (define (stream-cdr s) (force (cdr s)))
@@ -27,11 +32,21 @@
       (stream-car s)
       (stream-ref (stream-cdr s) (- n 1))))
 
+(define (stream-for-each proc s)
+  (if (stream-null? s)
+      'done
+      (begin (proc (stream-car s))
+             (stream-for-each proc (stream-cdr s)))))
+
+(define (display-stream s)
+  (stream-for-each display-line s))
+
 (define (stream-first s n)
   (define (iter i)
     (if (= i n)
-        nil
-        (cons (stream-ref s i) (iter (+ i 1)))))
+        (newline)
+        (begin (display-line (stream-ref s i))
+               (iter (+ i 1)))))
   (iter 0))
 
 (define (stream-enumerate-interval low high)
@@ -58,9 +73,9 @@
 
 ;(define x (stream-map show (stream-enumerate-interval 0 100)))
 
-;; -------------------------------------------------------------------
+;; -------------------------------------------------------
 ;; Infinite Streams, p.326
-;; -------------------------------------------------------------------
+;; -------------------------------------------------------
 
 (define (scale-stream s factor)
   (stream-map (lambda (x) (* x factor)) s))
@@ -155,7 +170,7 @@
 ;(stream-first cos-series 5)
 ;(stream-first sin-series 6)
 
-;; Exerciese 3.60, p.333
+;; Exercise 3.60, p.333
 
 (define (mul-series s1 s2)
   (cons-stream (* (stream-car s1) (stream-car s2))
@@ -191,3 +206,80 @@
 
 ; 0 1 0 1/3 0 2/15 0 17/315
 ;(stream-first tan-series 9)
+
+;; -------------------------------------------------------
+;; Iterations as Streams, p.334
+;; -------------------------------------------------------
+
+;; Square root stream
+
+(define (sqrt-improve guess x)
+  (average guess (/ x guess)))
+
+(define (sqrt-stream x)
+  (define guesses
+    (cons-stream 1.0 (stream-map (lambda (guess)
+                                   (sqrt-improve guess x))
+                                 guesses)))
+  guesses)
+
+;(display-stream (sqrt-stream 2))
+
+;; Approximation of π
+
+(define (π-summands n)
+  (cons-stream (/ 1.0 n) (stream-map - (π-summands (+ n 2)))))
+
+(define π-stream
+  (scale-stream (partial-sums (π-summands 1)) 4))
+
+;(display-stream π-stream)
+
+;; Sequence accelerator for alternating partial sums
+
+(define (euler-transform s)
+  (let ((s0 (stream-ref s 0))
+        (s1 (stream-ref s 1))
+        (s2 (stream-ref s 2)))
+    (cons-stream (- s2 (/ (square (- s2 s1))
+                          (+ s0 (* -2 s1) s2)))
+                 (euler-transform (stream-cdr s)))))
+
+;(display-stream (euler-transform π-stream))
+
+(define (make-tableau transform s)
+  (cons-stream s (make-tableau transform
+                               (transform s))))
+
+(define (accelerated-sequence transform s)
+  (stream-map stream-car (make-tableau transform s)))
+
+;(stream-first (accelerated-sequence euler-transform π-stream) 8)
+
+;; Exercise 3.64, p.338
+
+(define (stream-limit s tolerance)
+  (define (iter s item)
+    (let ((head (stream-car s)))
+      (if (< (abs (- head item)) tolerance)
+          head
+          (iter (stream-cdr s) head))))
+  (iter (stream-cdr s) (stream-car s)))
+
+(define (sqrt x tolerance)
+  (stream-limit (sqrt-stream x) tolerance))
+
+;(sqrt 2 1e-6)
+
+;; Exercise 3.65, p.338
+
+(define (ln2-summands n)
+  (cons-stream (/ 1.0 n)
+               (stream-map - (ln2-summands (+ n 1)))))
+
+(define ln2-stream
+  (partial-sums (ln2-summands 1)))
+
+;(display-stream ln2-stream)
+;(display-stream (euler-transform ln2-stream))
+;(stream-first (accelerated-sequence euler-transform ln2-stream) 10)
