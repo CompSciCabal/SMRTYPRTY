@@ -40,3 +40,10 @@
   (if (> tolerance (- (abs a) (abs b)))
       b
       (stream-limit rest tolerance)))
+
+;; 3.76
+(define smooth (stream)
+  (define rest (cdr-stream (cdr-stream stream)))
+  (define a (car-stream stream))
+  (define b (car-stream (cdr-stream stream)))
+  (cons-stream (/ (+ a b) 2) rest))
