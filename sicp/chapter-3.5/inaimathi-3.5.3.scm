@@ -23,7 +23,7 @@
     (lambda (guess) (sqrt-improve guess x))
     (sqrt-stream x))))
 
-;; The call to (sqrt-stream x) in the loosley reasoned version is generating a separate stream, 
+;; The call to (sqrt-stream x) in the loosely reasoned version is generating a separate stream, 
 ;; which will therefore re-do the work of computing each step.
 ;; If we didn't memoize, both versions would be re-computing things on the way down, so
 ;; they would no longer differ in efficiency.
