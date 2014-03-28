@@ -283,3 +283,46 @@
 ;(display-stream ln2-stream)
 ;(display-stream (euler-transform ln2-stream))
 ;(stream-first (accelerated-sequence euler-transform ln2-stream) 10)
+
+;; -------------------------------------------------------
+;; Infinite Pairs, p.338
+;; -------------------------------------------------------
+
+(define (pairs s t)
+  (cons-stream
+   (list (stream-car s) (stream-car t))
+   (interleave
+    (stream-map (lambda (x) (list (stream-car s) x))
+                (stream-cdr t))
+    (pairs (stream-cdr s) (stream-cdr t)))))
+
+(define (interleave s1 s2)
+  (if (stream-null? s1)
+      s2
+      (cons-stream (stream-car s1)
+                   (interleave s2 (stream-cdr s1)))))
+
+(define int-pairs (pairs integers integers))
+
+;; Exercise 3.66, p.341
+
+(define (find-first pred s)
+  (define (iter i stream)
+    (if (pred (stream-car stream))
+        i
+        (iter (+ i 1) (stream-cdr stream))))
+  (iter 0 s))
+
+(find-first (lambda (x) (equal? x '(99 100)))
+            int-pairs)
+
+;; (1, k) -> 2k-3
+(equal? '(1 2) (stream-ref int-pairs 1))
+(equal? '(1 3) (stream-ref int-pairs 3))
+(equal? '(1 4) (stream-ref int-pairs 5))
+(equal? '(1 100) (stream-ref int-pairs 197))
+
+(equal? '(2 2) (stream-ref int-pairs 2))
+(equal? '(3 3) (stream-ref int-pairs 6))
+(equal? '(4 4) (stream-ref int-pairs 14))
+(stream-ref int-pairs 14)
