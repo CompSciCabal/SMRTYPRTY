@@ -42,8 +42,24 @@
       (stream-limit rest tolerance)))
 
 ;; 3.76
-(define smooth (stream)
-  (define rest (cdr-stream (cdr-stream stream)))
+(define (smooth stream)
+  (define rest (cdr-stream stream))
   (define a (car-stream stream))
-  (define b (car-stream (cdr-stream stream)))
+  (define b (car-stream rest))
   (cons-stream (/ (+ a b) 2) rest))
+
+;; Scott talked about this, so I wrote it
+(define (stream-nth-sum n stream)
+  (define (rec rn str acc)
+    (if (= 0 rn)
+	acc
+	(rec (- rn 1) (stream-cdr str) (+ acc (stream-car str)))))
+  (rec n stream 0))
+
+(define (rolling-average n stream)
+  (stream-cons 
+   (/ (stream-nth-sum stream) n)
+   (rolling-average n (stream-cdr stream))))
+
+(define (smooth stream)
+  (rolling-average 2 stream))
