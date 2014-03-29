@@ -306,23 +306,54 @@
 
 ;; Exercise 3.66, p.341
 
-(define (find-first pred s)
-  (define (iter i stream)
-    (if (pred (stream-car stream))
-        i
-        (iter (+ i 1) (stream-cdr stream))))
-  (iter 0 s))
+;;    NB. J program to compute index of pair (m,n)
+;;    N=. (2 ^ <:@{.) + (2 ^ {.) * {: - {. + 1:
+;;    D=. [: <: [: +/ 2 ^ i.
+;;    index=. D@{. + N`0:@.(=/)
+;;    index 1 100
+;; 197
+;;    index 99 100
+;; 9.5073795e29
+;;    index 100 100
+;; 1.2676506e30
 
-(find-first (lambda (x) (equal? x '(99 100)))
-            int-pairs)
-
-;; (1, k) -> 2k-3
+(equal? '(1 1) (stream-ref int-pairs 0))
 (equal? '(1 2) (stream-ref int-pairs 1))
 (equal? '(1 3) (stream-ref int-pairs 3))
 (equal? '(1 4) (stream-ref int-pairs 5))
 (equal? '(1 100) (stream-ref int-pairs 197))
 
 (equal? '(2 2) (stream-ref int-pairs 2))
+(equal? '(2 3) (stream-ref int-pairs 4))
+(equal? '(2 4) (stream-ref int-pairs 8))
+(equal? '(2 5) (stream-ref int-pairs 12))
+
 (equal? '(3 3) (stream-ref int-pairs 6))
+(equal? '(3 4) (stream-ref int-pairs 10))
+(equal? '(3 5) (stream-ref int-pairs 18))
+(equal? '(3 6) (stream-ref int-pairs 26))
+
 (equal? '(4 4) (stream-ref int-pairs 14))
-(stream-ref int-pairs 14)
+(equal? '(4 5) (stream-ref int-pairs 22))
+(equal? '(4 6) (stream-ref int-pairs 38))
+(equal? '(4 7) (stream-ref int-pairs 54))
+
+(equal? '(5 5) (stream-ref int-pairs 30))
+(equal? '(5 6) (stream-ref int-pairs 46))
+(equal? '(5 7) (stream-ref int-pairs 78))
+(equal? '(5 8) (stream-ref int-pairs 110))
+
+(equal? '(6 6) (stream-ref int-pairs 62))
+(equal? '(6 7) (stream-ref int-pairs 94))
+(equal? '(6 8) (stream-ref int-pairs 158))
+(equal? '(6 9) (stream-ref int-pairs 222))
+
+(equal? '(7 7) (stream-ref int-pairs 126))
+(equal? '(7 8) (stream-ref int-pairs 190))
+(equal? '(7 9) (stream-ref int-pairs 318))
+(equal? '(7 10) (stream-ref int-pairs 446))
+
+(equal? '(8 8) (stream-ref int-pairs 254))
+(equal? '(8 9) (stream-ref int-pairs 382))
+(equal? '(8 10) (stream-ref int-pairs 638))
+(equal? '(8 11) (stream-ref int-pairs 894))
