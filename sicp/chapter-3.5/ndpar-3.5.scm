@@ -27,6 +27,7 @@
 (define (stream-car s) (car s))
 (define (stream-cdr s) (force (cdr s)))
 (define (stream-cadr s) (stream-car (stream-cdr s)))
+(define (stream-cddr s) (stream-cdr (stream-cdr s)))
 
 (define (stream-filter pred s)
   (cond ((stream-null? s) the-empty-stream)
@@ -451,6 +452,32 @@
 (= (stream-ref ramanujan-stream 3) 20683)
 (= (stream-ref ramanujan-stream 4) 32832)
 (= (stream-ref ramanujan-stream 5) 39312)
+
+;; Exercise 3.72, p. 343
+
+(define (sum-of-squares a b)
+  (+ (square a) (square b)))
+
+(define (sum-of-squares-pair p)
+  (sum-of-squares (car p) (cadr p)))
+
+(define sum-of-squares-stream
+  (stream-map
+   (lambda (x) (list (sum-of-squares-pair x) x))
+   (weighted-pairs integers integers sum-of-squares)))
+
+(define (triplets a b c)
+  (let ((ls (list a b c)))
+    (list (apply = (map car ls)) ls)))
+
+(define sum-of-squares-numbers
+  (let ((s (stream-map triplets
+                       sum-of-squares-stream
+                       (stream-cdr sum-of-squares-stream)
+                       (stream-cddr sum-of-squares-stream))))
+    (stream-map cadr (stream-filter car s))))
+
+;(stream-first sum-of-squares-numbers 6)
 
 ;; -------------------------------------------------------
 ;; Streams as Signals, p.343
