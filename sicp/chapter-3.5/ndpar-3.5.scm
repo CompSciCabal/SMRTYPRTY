@@ -521,3 +521,24 @@
   (zero-crossings-1 (smooth sense-data)))
 
 ;(stream-first (zero-crossings (ln2-summands 1)) 10)
+
+;; -------------------------------------------------------
+;; Streams and Delayed Evaluation, p.346
+;; -------------------------------------------------------
+
+(define (delayed-integral delayed-integrand initial-value dt)
+  (define int
+    (cons-stream initial-value
+                 (let ((integrand (force delayed-integrand)))
+                   (add-streams (scale-stream integrand dt)
+                                int))))
+  int)
+
+(define (solve f y0 dt)
+  (define y (delayed-integral (delay dy) y0 dt))
+  ; WARN: Does not work in Racket SICP: y is undefined.
+  ; See footnote 71, p.348
+  (define dy (stream-map f y))
+  y)
+
+;(stream-ref (solve identity 1 0.001) 1000)
