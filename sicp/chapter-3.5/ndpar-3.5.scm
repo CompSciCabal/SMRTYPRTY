@@ -2,6 +2,8 @@
 
 (define (square x) (* x x))
 
+(define (cube x) (* x x x))
+
 (define (average a b)
   (/ (+ a b) 2))
 
@@ -19,6 +21,7 @@
 
 (define (stream-car s) (car s))
 (define (stream-cdr s) (force (cdr s)))
+(define (stream-cadr s) (stream-car (stream-cdr s)))
 
 (define (stream-filter pred s)
   (cond ((stream-null? s) the-empty-stream)
@@ -357,3 +360,89 @@
 (equal? '(8 9) (stream-ref int-pairs 382))
 (equal? '(8 10) (stream-ref int-pairs 638))
 (equal? '(8 11) (stream-ref int-pairs 894))
+
+;; Exercise 3.70, p.342
+
+(define (merge-weighted s1 s2 w)
+  (cond ((stream-null? s1) s2)
+        ((stream-null? s2) s1)
+        (else
+         (let* ((s1car (stream-car s1))
+                (s2car (stream-car s2))
+                (w1 (w (car s1car) (cadr s1car)))
+                (w2 (w (car s2car) (cadr s2car))))
+           (cond ((< w1 w2)
+                  (cons-stream s1car (merge-weighted (stream-cdr s1) s2 w)))
+                 (else
+                  (cons-stream s2car (merge-weighted s1 (stream-cdr s2) w))))))))
+
+(define (weighted-pairs s t w)
+  (cons-stream
+   (list (stream-car s) (stream-car t))
+   (merge-weighted
+    (stream-map (lambda (x) (list (stream-car s) x))
+                (stream-cdr t))
+    (weighted-pairs (stream-cdr s) (stream-cdr t) w)
+    w)))
+
+(define sum-pairs (weighted-pairs integers integers +))
+
+;(stream-first sum-pairs 10)
+
+(define (235-order i j)
+  (+ (* 2 i) (* 3 j) (* 5 i j)))
+
+(define (235-div n)
+  (or (= 0 (remainder n 2))
+      (= 0 (remainder n 3))
+      (= 0 (remainder n 5))))
+
+(define (235-filter pair)
+  (let ((i (car pair))
+        (j (cadr pair)))
+    (and (not (235-div i))
+         (not (235-div j)))))
+
+(define 235-pairs
+  (stream-filter 235-filter
+                 (weighted-pairs integers integers 235-order)))
+
+;(stream-first 235-pairs 20)
+
+;; Exercise 3.71, p.342
+
+(define (sum-of-cubes i j) (+ (cube i) (cube j)))
+
+(define (ramanujan-filter s)
+  (define (sum-of-cubes-pair p)
+    (sum-of-cubes (car p) (cadr p)))
+
+  (define (stream-next s w n)
+    (if (= n (w (stream-car s)))
+        (stream-next (stream-cdr s) w n)
+        s))
+
+  (if (stream-null? s)
+      the-empty-stream
+      (let ((a (sum-of-cubes-pair (stream-car s)))
+            (b (sum-of-cubes-pair (stream-cadr s))))
+        (if (= a b)
+            (cons-stream a (ramanujan-filter
+                            (stream-next (stream-cdr s)
+                                         sum-of-cubes-pair
+                                         a)))
+            (ramanujan-filter (stream-cdr s))))))
+
+(define sum-of-cubes-stream
+  (weighted-pairs integers integers sum-of-cubes))
+
+(define ramanujan-stream
+  (ramanujan-filter sum-of-cubes-stream))
+
+;(stream-first ramanujan-stream 6)
+(= (stream-ref ramanujan-stream 0) 1729)
+(= (stream-ref ramanujan-stream 1) 4104)
+(= (stream-ref ramanujan-stream 2) 13832)
+(= (stream-ref ramanujan-stream 3) 20683)
+(= (stream-ref ramanujan-stream 4) 32832)
+(= (stream-ref ramanujan-stream 5) 39312)
