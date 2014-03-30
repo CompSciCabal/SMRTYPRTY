@@ -7,6 +7,11 @@
 (define (average a b)
   (/ (+ a b) 2))
 
+(define (sign x)
+  (cond ((< x 0) -1)
+        ((< 0 x) 1)
+        (else 0)))
+
 (define (display-line x)
   (newline)
   (display x))
@@ -446,3 +451,46 @@
 (= (stream-ref ramanujan-stream 3) 20683)
 (= (stream-ref ramanujan-stream 4) 32832)
 (= (stream-ref ramanujan-stream 5) 39312)
+
+;; -------------------------------------------------------
+;; Streams as Signals, p.343
+;; -------------------------------------------------------
+
+(define (integral integrand initial-value dt)
+  (define int
+    (cons-stream initial-value
+                 (add-streams (scale-stream integrand dt)
+                              int)))
+  int)
+
+;; Exercise 3.73, p.344
+
+(define ((RC R C dt) i v0)
+  (add-streams (scale-stream i R)
+               (integral (scale-stream i (/ C))
+                         v0 dt)))
+
+(define RC1 (RC 5 1 0.5))
+
+;(stream-first (RC1 ones 2.0) 10)
+
+;; Exercise 3.74, p.344
+
+(define (sign-change-detector a b)
+  (let ((p (* a b)))
+    (if (< p 0) (sign b) 0)))
+
+(define (zero-crossings-1 sense-data)
+  (stream-map sign-change-detector sense-data (stream-cdr sense-data)))
+
+;(stream-first (zero-crossings-1 (ln2-summands 1)) 10)
+
+;; Exercise 3.76, p.346
+
+(define (smooth s)
+  (stream-map average s (stream-cdr s)))
+
+(define (zero-crossings sense-data)
+  (zero-crossings-1 (smooth sense-data)))
+
+;(stream-first (zero-crossings (ln2-summands 1)) 10)
