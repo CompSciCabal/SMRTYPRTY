@@ -1,4 +1,4 @@
-#lang planet neil/sicp
+#lang racket
 
 (define (square x) (* x x))
 
@@ -23,6 +23,16 @@
 ;; -------------------------------------------------------
 ;; Streams, p.316
 ;; -------------------------------------------------------
+
+(define the-empty-stream '())
+
+(define (stream-null? stream)
+  (null? stream))
+
+(define-syntax cons-stream
+  (syntax-rules ()
+    ((cons-stream head tail)
+     (cons head (delay tail)))))
 
 (define (stream-car s) (car s))
 (define (stream-cdr s) (force (cdr s)))
