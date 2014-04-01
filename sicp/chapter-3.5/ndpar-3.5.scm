@@ -29,9 +29,9 @@
 (define (stream-null? stream)
   (null? stream))
 
-(define-syntax cons-stream
+(define-syntax stream-cons
   (syntax-rules ()
-    ((cons-stream head tail)
+    ((stream-cons head tail)
      (cons head (delay tail)))))
 
 (define (stream-car s) (car s))
@@ -42,7 +42,7 @@
 (define (stream-filter pred s)
   (cond ((stream-null? s) the-empty-stream)
         ((pred (stream-car s))
-         (cons-stream (stream-car s)
+         (stream-cons (stream-car s)
                       (stream-filter pred (stream-cdr s))))
         (else (stream-filter pred (stream-cdr s)))))
 
@@ -57,7 +57,7 @@
       (begin (proc (stream-car s))
              (stream-for-each proc (stream-cdr s)))))
 
-(define (display-stream s)
+(define (stream-display s)
   (stream-for-each display-line s))
 
 (define (stream-first s n)
@@ -71,20 +71,20 @@
 (define (stream-enumerate-interval low high)
   (if (> low high)
       the-empty-stream
-      (cons-stream low (stream-enumerate-interval (+ low 1) high))))
+      (stream-cons low (stream-enumerate-interval (+ low 1) high))))
 
 ;; Exercise 3.50, p.324
 
 (define (stream-map proc . streams)
   (if (stream-null? (car streams))
       the-empty-stream
-      (cons-stream (apply proc (map stream-car streams))
+      (stream-cons (apply proc (map stream-car streams))
                    (apply stream-map (cons proc (map stream-cdr streams))))))
 
-(define (add-streams s1 s2)
+(define (stream-add s1 s2)
   (stream-map + s1 s2))
 
-(define (mul-streams s1 s2)
+(define (stream-mul s1 s2)
   (stream-map * s1 s2))
 
 ;; Exercise 3.51, p.325
@@ -98,43 +98,43 @@
 ;; Infinite Streams, p.326
 ;; -------------------------------------------------------
 
-(define (scale-stream s factor)
+(define (stream-scale s factor)
   (stream-map (lambda (x) (* x factor)) s))
 
 ;; Explicit definition of integers
 
 (define (integers-starting-from n)
-  (cons-stream n (integers-starting-from (+ n 1))))
+  (stream-cons n (integers-starting-from (+ n 1))))
 
 (define integers (integers-starting-from 1))
 
 ;; Implicit definition of integers
 
-(define ones (cons-stream 1 ones))
+(define ones (stream-cons 1 ones))
 
-(define integers2 (cons-stream 1 (add-streams ones integers2)))
+(define integers2 (stream-cons 1 (stream-add ones integers2)))
 
 ;; Fibonacci stream
 
 (define (fibgen a b)
-  (cons-stream a (fibgen b (+ a b))))
+  (stream-cons a (fibgen b (+ a b))))
 
 (define fibs (fibgen 0 1))
 
 ;; Exercise 3.53, p.330
 
-(define powers2 (cons-stream 1 (add-streams powers2 powers2)))
+(define powers2 (stream-cons 1 (stream-add powers2 powers2)))
 
 ;; Exercise 3.54, p.331
 
-(define factorials (cons-stream 1 (mul-streams integers factorials)))
+(define factorials (stream-cons 1 (stream-mul integers factorials)))
 
 ;; Exercise 3.55, p.331
 ;; See also integral procedure below
 
 (define (partial-sums s)
   (define sum
-    (cons-stream 0 (add-streams s sum)))
+    (stream-cons 0 (stream-add s sum)))
   (stream-cdr sum))
 
 ;(stream-first (partial-sums integers) 5)
@@ -148,22 +148,22 @@
          (let ((s1car (stream-car s1))
                (s2car (stream-car s2)))
            (cond ((< s1car s2car)
-                  (cons-stream s1car (merge (stream-cdr s1) s2)))
+                  (stream-cons s1car (merge (stream-cdr s1) s2)))
                  ((> s1car s2car)
-                  (cons-stream s2car (merge s1 (stream-cdr s2))))
+                  (stream-cons s2car (merge s1 (stream-cdr s2))))
                  (else
-                  (cons-stream s1car (merge (stream-cdr s1) (stream-cdr s2)))))))))
+                  (stream-cons s1car (merge (stream-cdr s1) (stream-cdr s2)))))))))
 
-(define s (cons-stream 1 (merge (scale-stream s 2)
-                                (merge (scale-stream s 3)
-                                       (scale-stream s 5)))))
+(define s (stream-cons 1 (merge (stream-scale s 2)
+                                (merge (stream-scale s 3)
+                                       (stream-scale s 5)))))
 
 ;(stream-first s 15)
 
 ;; Exercise 3.58, p.332
 
 (define (expand num den radix)
-  (cons-stream (quotient (* num radix) den)
+  (stream-cons (quotient (* num radix) den)
                (expand (remainder (* num radix) den)
                        den radix)))
 
@@ -176,18 +176,18 @@
 ;; Exercise 3.59, p.332
 
 (define (integrate-series s)
-  (mul-streams s (stream-map / integers)))
+  (stream-mul s (stream-map / integers)))
 
 (define exp-series
-  (cons-stream 1 (integrate-series exp-series)))
+  (stream-cons 1 (integrate-series exp-series)))
 
 ;(stream-first exp-series 5)
 
 (define cos-series
-  (cons-stream 1 (scale-stream (integrate-series sin-series) -1)))
+  (stream-cons 1 (stream-scale (integrate-series sin-series) -1)))
 
 (define sin-series
-  (cons-stream 0 (integrate-series cos-series)))
+  (stream-cons 0 (integrate-series cos-series)))
 
 ;(stream-first cos-series 5)
 ;(stream-first sin-series 6)
@@ -195,24 +195,24 @@
 ;; Exercise 3.60, p.333
 
 (define (mul-series s1 s2)
-  (cons-stream (* (stream-car s1) (stream-car s2))
-               (add-streams (scale-stream (stream-cdr s2) (stream-car s1))
-                            (mul-series s2 (stream-cdr s1)))))
+  (stream-cons (* (stream-car s1) (stream-car s2))
+               (stream-add (stream-scale (stream-cdr s2) (stream-car s1))
+                           (mul-series s2 (stream-cdr s1)))))
 
 ; 1 0 -1 0 1/3 0 -2/45 0 1/315
 ;(stream-first (mul-series cos-series cos-series) 7)
 ; 0 0 1 0 -1/3 0 2/45 0 -1/315
 ;(stream-first (mul-series sin-series sin-series) 7)
 
-(define one (add-streams (mul-series sin-series sin-series)
-                         (mul-series cos-series cos-series)))
+(define one (stream-add (mul-series sin-series sin-series)
+                        (mul-series cos-series cos-series)))
 
 ;(stream-first one 5)
 
 ;; Exercise 3.61, p.333
 
 (define (invert-unit-series s)
-  (cons-stream 1 (scale-stream (mul-series (stream-cdr s)
+  (stream-cons 1 (stream-scale (mul-series (stream-cdr s)
                                            (invert-unit-series s))
                                -1)))
 
@@ -221,7 +221,7 @@
 (define (div-series n d)
   (if (= 0 (stream-car d))
       (error "Division by zero")
-      (mul-series n (invert-unit-series (scale-stream d (/ (stream-car d)))))))
+      (mul-series n (invert-unit-series (stream-scale d (/ (stream-car d)))))))
 
 (define tan-series
   (div-series sin-series cos-series))
@@ -240,22 +240,22 @@
 
 (define (sqrt-stream x)
   (define guesses
-    (cons-stream 1.0 (stream-map (lambda (guess)
+    (stream-cons 1.0 (stream-map (lambda (guess)
                                    (sqrt-improve guess x))
                                  guesses)))
   guesses)
 
-;(display-stream (sqrt-stream 2))
+;(stream-display (sqrt-stream 2))
 
 ;; Approximation of π
 
 (define (π-summands n)
-  (cons-stream (/ 1.0 n) (stream-map - (π-summands (+ n 2)))))
+  (stream-cons (/ 1.0 n) (stream-map - (π-summands (+ n 2)))))
 
 (define π-stream
-  (scale-stream (partial-sums (π-summands 1)) 4))
+  (stream-scale (partial-sums (π-summands 1)) 4))
 
-;(display-stream π-stream)
+;(stream-display π-stream)
 
 ;; Sequence accelerator for alternating partial sums
 
@@ -263,14 +263,14 @@
   (let ((s0 (stream-ref s 0))
         (s1 (stream-ref s 1))
         (s2 (stream-ref s 2)))
-    (cons-stream (- s2 (/ (square (- s2 s1))
+    (stream-cons (- s2 (/ (square (- s2 s1))
                           (+ s0 (* -2 s1) s2)))
                  (euler-transform (stream-cdr s)))))
 
-;(display-stream (euler-transform π-stream))
+;(stream-display (euler-transform π-stream))
 
 (define (make-tableau transform s)
-  (cons-stream s (make-tableau transform
+  (stream-cons s (make-tableau transform
                                (transform s))))
 
 (define (accelerated-sequence transform s)
@@ -296,14 +296,14 @@
 ;; Exercise 3.65, p.338
 
 (define (ln2-summands n)
-  (cons-stream (/ 1.0 n)
+  (stream-cons (/ 1.0 n)
                (stream-map - (ln2-summands (+ n 1)))))
 
 (define ln2-stream
   (partial-sums (ln2-summands 1)))
 
-;(display-stream ln2-stream)
-;(display-stream (euler-transform ln2-stream))
+;(stream-display ln2-stream)
+;(stream-display (euler-transform ln2-stream))
 ;(stream-first (accelerated-sequence euler-transform ln2-stream) 10)
 
 ;; -------------------------------------------------------
@@ -311,7 +311,7 @@
 ;; -------------------------------------------------------
 
 (define (pairs s t)
-  (cons-stream
+  (stream-cons
    (list (stream-car s) (stream-car t))
    (interleave
     (stream-map (lambda (x) (list (stream-car s) x))
@@ -321,7 +321,7 @@
 (define (interleave s1 s2)
   (if (stream-null? s1)
       s2
-      (cons-stream (stream-car s1)
+      (stream-cons (stream-car s1)
                    (interleave s2 (stream-cdr s1)))))
 
 (define int-pairs (pairs integers integers))
@@ -391,12 +391,12 @@
                 (w1 (w (car s1car) (cadr s1car)))
                 (w2 (w (car s2car) (cadr s2car))))
            (cond ((< w1 w2)
-                  (cons-stream s1car (merge-weighted (stream-cdr s1) s2 w)))
+                  (stream-cons s1car (merge-weighted (stream-cdr s1) s2 w)))
                  (else
-                  (cons-stream s2car (merge-weighted s1 (stream-cdr s2) w))))))))
+                  (stream-cons s2car (merge-weighted s1 (stream-cdr s2) w))))))))
 
 (define (weighted-pairs s t w)
-  (cons-stream
+  (stream-cons
    (list (stream-car s) (stream-car t))
    (merge-weighted
     (stream-map (lambda (x) (list (stream-car s) x))
@@ -446,7 +446,7 @@
       (let ((a (sum-of-cubes-pair (stream-car s)))
             (b (sum-of-cubes-pair (stream-cadr s))))
         (if (= a b)
-            (cons-stream a (ramanujan-filter
+            (stream-cons a (ramanujan-filter
                             (stream-next (stream-cdr s)
                                          sum-of-cubes-pair
                                          a)))
@@ -498,17 +498,17 @@
 
 (define (integral integrand initial-value dt)
   (define int
-    (cons-stream initial-value
-                 (add-streams (scale-stream integrand dt)
-                              int)))
+    (stream-cons initial-value
+                 (stream-add (stream-scale integrand dt)
+                             int)))
   int)
 
 ;; Exercise 3.73, p.344
 
 (define ((RC R C dt) i v0)
-  (add-streams (scale-stream i R)
-               (integral (scale-stream i (/ C))
-                         v0 dt)))
+  (stream-add (stream-scale i R)
+              (integral (stream-scale i (/ C))
+                        v0 dt)))
 
 (define RC1 (RC 5 1 0.5))
 
@@ -541,10 +541,10 @@
 
 (define (delayed-integral delayed-integrand initial-value dt)
   (define int
-    (cons-stream initial-value
+    (stream-cons initial-value
                  (let ((integrand (force delayed-integrand)))
-                   (add-streams (scale-stream integrand dt)
-                                int))))
+                   (stream-add (stream-scale integrand dt)
+                               int))))
   int)
 
 (define (solve f y0 dt)
@@ -562,8 +562,8 @@
 (define (solve-2nd-linear a b y0 dy0 dt)
   (define y (delayed-integral (delay dy) y0 dt))
   (define dy (delayed-integral (delay ddy) dy0 dt))
-  (define ddy (add-streams (scale-stream dy a)
-                           (scale-stream y b)))
+  (define ddy (stream-add (stream-scale dy a)
+                          (stream-scale y b)))
   y)
 
 ;; y = e^3t + e^-2t => y' = 3e^3t - 2e^-2t
@@ -589,9 +589,9 @@
 (define ((RLC R L C dt) vC0 iL0)
   (define iL (delayed-integral (delay diL) iL0 dt))
   (define vC (delayed-integral (delay dvC) vC0 dt))
-  (define dvC (scale-stream iL (/ -1 C)))
-  (define diL (add-streams (scale-stream vC (/ L))
-                           (scale-stream iL (* -1 R (/ L)))))
+  (define dvC (stream-scale iL (/ -1 C)))
+  (define diL (stream-add (stream-scale vC (/ L))
+                          (stream-scale iL (* -1 R (/ L)))))
   (cons vC iL))
 
 (define RLC1 (RLC 1 1 0.2 0.1))
