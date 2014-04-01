@@ -91,6 +91,8 @@
 ;; Memoization is implemented indeed!
 
 ;(define x (stream-map show (stream-enumerate-interval 0 100)))
+;(stream-ref x 5)
+;(stream-ref x 7)
 
 ;; -------------------------------------------------------
 ;; Infinite Streams, p.326
@@ -128,11 +130,12 @@
 (define factorials (cons-stream 1 (mul-streams integers factorials)))
 
 ;; Exercise 3.55, p.331
+;; See also integral procedure below
 
 (define (partial-sums s)
-  (define (iter s)
-    (cons-stream 0 (add-streams s (iter s))))
-  (stream-cdr (iter s)))
+  (define sum
+    (cons-stream 0 (add-streams s sum)))
+  (stream-cdr sum))
 
 ;(stream-first (partial-sums integers) 5)
 
@@ -285,10 +288,10 @@
           (iter (stream-cdr s) head))))
   (iter (stream-cdr s) (stream-car s)))
 
-(define (sqrt x tolerance)
+(define (sqrt2 x tolerance)
   (stream-limit (sqrt-stream x) tolerance))
 
-;(sqrt 2 1e-6)
+;(sqrt2 2 1e-6)
 
 ;; Exercise 3.65, p.338
 
