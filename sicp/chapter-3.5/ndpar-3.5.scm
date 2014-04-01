@@ -549,9 +549,50 @@
 
 (define (solve f y0 dt)
   (define y (delayed-integral (delay dy) y0 dt))
-  ; WARN: Does not work in Racket SICP: y is undefined.
-  ; See footnote 71, p.348
   (define dy (stream-map f y))
   y)
 
-;(stream-ref (solve identity 1 0.001) 1000)
+;; y' = y => y = e^t, y(0) = 1
+;; 1 = 1e-4 * 1e4: y(1) = e
+;(stream-ref (solve identity 1 1e-4) 1e4)
+
+;; Exercise 3.78, p.348
+;; 2nd-order linear differential equation
+
+(define (solve-2nd-linear a b y0 dy0 dt)
+  (define y (delayed-integral (delay dy) y0 dt))
+  (define dy (delayed-integral (delay ddy) dy0 dt))
+  (define ddy (add-streams (scale-stream dy a)
+                           (scale-stream y b)))
+  y)
+
+;; y = e^3t + e^-2t => y' = 3e^3t - 2e^-2t
+;; y'' - y' - 6y = 0, y0 = 2, y'(0) = 1
+
+;; y(1) = e^3 + e^-2 = 20.2208722
+;(stream-ref (solve-2nd-linear 1 6 2 1 1e-4) 1e4)
+
+;; Exercise 3.79, p.349
+;; 2nd-order differential equation
+
+(define (solve-2nd f y0 dy0 dt)
+  (define y (delayed-integral (delay dy) y0 dt))
+  (define dy (delayed-integral (delay ddy) dy0 dt))
+  (define ddy (stream-map f dy y))
+  y)
+
+;; Same equation as above: y'' = y' + 6y
+;(stream-ref (solve-2nd (lambda (s t) (+ s (* 6 t))) 2 1 1e-4) 1e4)
+
+;; Exercise 3.80, p.349
+
+(define ((RLC R L C dt) vC0 iL0)
+  (define iL (delayed-integral (delay diL) iL0 dt))
+  (define vC (delayed-integral (delay dvC) vC0 dt))
+  (define dvC (scale-stream iL (/ -1 C)))
+  (define diL (add-streams (scale-stream vC (/ L))
+                           (scale-stream iL (* -1 R (/ L)))))
+  (cons vC iL))
+
+(define RLC1 (RLC 1 1 0.2 0.1))
+;(stream-first (RLC1 10 0) 10)
