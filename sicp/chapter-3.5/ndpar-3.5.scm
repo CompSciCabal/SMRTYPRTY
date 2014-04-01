@@ -2,6 +2,9 @@
 
 (define (square x) (* x x))
 
+(define (sum-of-squares a b)
+  (+ (square a) (square b)))
+
 (define (cube x) (* x x x))
 
 (define (average a b)
@@ -380,6 +383,44 @@
 (equal? '(8 10) (stream-ref int-pairs 638))
 (equal? '(8 11) (stream-ref int-pairs 894))
 
+;; Exercise 3.67, p.341
+
+(define (all-pairs s t)
+  (stream-cons
+   (list (stream-car s) (stream-car t))
+   (interleave
+    (interleave
+     (stream-map (lambda (x) (list (stream-car s) x))
+                 (stream-cdr t))
+     (stream-map (lambda (x) (list x (stream-car t)))
+                 (stream-cdr s)))
+    (all-pairs (stream-cdr s) (stream-cdr t)))))
+
+(define all-int-pairs (all-pairs integers integers))
+
+;(stream-first all-int-pairs 50)
+
+;; Exercise 3.69, p.342
+
+(define (triplets s t u)
+  (stream-cons
+   (list (stream-car s) (stream-car t) (stream-car u))
+   (interleave
+    (stream-map (lambda (x) (append (list (stream-car s)) x))
+                (stream-cdr (pairs t u)))
+    (triplets (stream-cdr s) (stream-cdr t) (stream-cdr u)))))
+
+(define int-triplets (triplets integers integers integers))
+
+(define (pythagorean? triplet)
+  (= (square (caddr triplet))
+     (sum-of-squares (car triplet) (cadr triplet))))
+
+(define pythagorean-triplets
+  (stream-filter pythagorean? int-triplets))
+
+;(stream-first pythagorean-triplets 5)
+
 ;; Exercise 3.70, p.342
 
 (define (merge-weighted s1 s2 w)
@@ -468,9 +509,6 @@
 
 ;; Exercise 3.72, p. 343
 
-(define (sum-of-squares a b)
-  (+ (square a) (square b)))
-
 (define (sum-of-squares-pair p)
   (sum-of-squares (car p) (cadr p)))
 
@@ -479,12 +517,12 @@
    (lambda (x) (list (sum-of-squares-pair x) x))
    (weighted-pairs integers integers sum-of-squares)))
 
-(define (triplets a b c)
+(define (triplet a b c)
   (let ((ls (list a b c)))
     (list (apply = (map car ls)) ls)))
 
 (define sum-of-squares-numbers
-  (let ((s (stream-map triplets
+  (let ((s (stream-map triplet
                        sum-of-squares-stream
                        (stream-cdr sum-of-squares-stream)
                        (stream-cddr sum-of-squares-stream))))
