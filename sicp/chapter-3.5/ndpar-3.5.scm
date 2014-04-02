@@ -113,7 +113,11 @@
 
 ;; Implicit definition of integers
 
-(define ones (stream-cons 1 ones))
+(define (const-stream i)
+  (define s (stream-cons i s))
+  s)
+
+(define ones (const-stream 1))
 
 (define integers2 (stream-cons 1 (stream-add ones integers2)))
 
@@ -634,3 +638,87 @@
 
 (define RLC1 (RLC 1 1 0.2 0.1))
 ;(stream-first (RLC1 10 0) 10)
+
+;; -------------------------------------------------------
+;; Streams and State, p.352
+;; -------------------------------------------------------
+
+(define random-numbers
+  (stream-map random (const-stream 4294967087)))
+
+(define (map-successive-pairs f s)
+  (stream-cons
+   (f (stream-car s) (stream-cadr s))
+   (map-successive-pairs f (stream-cddr s))))
+
+(define cesaro-stream
+  (map-successive-pairs (lambda (r1 r2) (= (gcd r1 r2) 1))
+                        random-numbers))
+
+(define (monte-carlo experiment-stream)
+  (define (monte-carlo-1 experiment-stream passed failed)
+    (define (next passed failed)
+      (stream-cons
+       (/ passed (+ passed failed))
+       (monte-carlo-1
+        (stream-cdr experiment-stream) passed failed)))
+    (if (stream-car experiment-stream)
+        (next (+ passed 1) failed)
+        (next passed (+ failed 1))))
+  (monte-carlo-1 experiment-stream 0 0))
+
+(define π-stream-2
+  (stream-map (lambda (p) (if (zero? p) 0 (sqrt (/ 6 p))))
+              (monte-carlo cesaro-stream)))
+
+;(stream-ref π-stream-2 1e5)
+
+;; Exercise 3.81, p.353
+
+(define rand-init 100)
+
+(define (rand-update n)
+  (remainder (+ (* 103 n) 701) 101))
+
+(define (random-numbers-1 events)
+  (define number-seq
+    (stream-cons rand-init
+                 (stream-map rand-update number-seq)))
+  (define (iter events rand-stream)
+    (let* ((e (stream-car events))
+           (s (if (eq? 'generate e)
+                  (stream-cdr rand-stream)
+                  number-seq))) ; assuming 'reset
+      (stream-cons (stream-car rand-stream)
+                   (iter (stream-cdr events) s))))
+  (iter events number-seq))
+
+(define rand-events
+  (stream-map (lambda (i)
+                (if (= 0 (remainder i 5)) 'reset 'generate))
+              integers))
+
+;(stream-first (random-numbers-1 rand-events) 10)
+
+;; Exercise 3.82, p.354
+
+(define (estimate-integral trials x1 y1 x2 y2)
+  (stream-scale (monte-carlo trials)
+                (* (- x2 x1) (- y2 y1))))
+
+;; Copied from Exercise 3.5
+
+(define (random-in-range low high)
+  (let ((range (- high low)))
+    (+ low (* (random) range))))
+
+(define (unit-circle . _)
+  (<= (sum-of-squares (random-in-range -1 1)
+                      (random-in-range -1 1))
+      1))
+
+(define π-stream-3
+  (estimate-integral (stream-map unit-circle ones)
+                     -1.0 -1.0 1.0 1.0))
+
+;(stream-ref π-stream-3 1e5)
