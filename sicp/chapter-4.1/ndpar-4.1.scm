@@ -63,11 +63,18 @@
                     env)
   'ok)
 
+;; Exercise 4.1, p.368
+;; Operands evaluation order
+
 (define (list-of-values exps env)
   (if (no-operands? exps)
       '()
-      (cons (eval (first-operand exps) env)
-            (list-of-values (rest-operands exps) env))))
+      ; Swap 'first' and 'rest' to make evaluation left-to-right
+      (let* ((rest (list-of-values (rest-operands exps) env))
+             (first (eval (first-operand exps) env)))
+        (cons first rest))))
+
+;(list-of-values (list 1 2 3) nil)
 
 ;; -------------------------------------------------------
 ;; Representing Expressions, p.368
@@ -307,5 +314,15 @@
                      (procedure-body object)
                      '<procedure-env>))
       (display object)))
+
+;; -------------------------------------------------------
+;; Exercises
+;; -------------------------------------------------------
+
+;; Exercise 4.2.b, p.374
+
+;(define (application? exp) (tagged-list? exp 'call))
+;(define (operator exp) (cadr exp))
+;(define (operands exp) (cddr exp))
 
 (driver-loop)
