@@ -13,6 +13,8 @@
         ((assignment? exp) (eval-assignment exp env))
         ((definition? exp) (eval-definition exp env))
         ((if? exp) (eval-if exp env))
+        ((and? exp) (eval (and->if exp) env))
+        ((or? exp) (eval (or->if exp) env))
         ((lambda? exp)
          (make-procedure (lambda-parameters exp)
                          (lambda-body exp)
@@ -172,6 +174,28 @@
             (make-if (cond-predicate first)
                      (sequence->exp (cond-actions first))
                      (expand-clauses rest))))))
+
+;; Exercise 4.4, p.374
+
+(define (and? exp) (tagged-list? exp 'and))
+(define (and->if exp) (expand-and-operands (operands exp)))
+
+(define (expand-and-operands ops)
+  (if (no-operands? ops)
+      'true
+      (make-if (first-operand ops)
+               (expand-and-operands (rest-operands ops))
+               'false)))
+
+(define (or? exp) (tagged-list? exp 'or))
+(define (or->if exp) (expand-or-operands (operands exp)))
+
+(define (expand-or-operands ops)
+  (if (no-operands? ops)
+      'false
+      (make-if (first-operand ops)
+               'true
+               (expand-or-operands (rest-operands ops)))))
 
 ;; -------------------------------------------------------
 ;; Evaluator Data Structures, p.376
