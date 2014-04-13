@@ -251,15 +251,16 @@
 (define (first-frame env) (car env))
 (define the-empty-environment '())
 
-(define (make-frame variables values)
-  (cons variables values))
+;; Exercise 4.11, p.380
 
-(define (frame-variables frame) (car frame))
-(define (frame-values frame) (cdr frame))
+(define (make-frame variables values)
+  (cons 'frame (map cons variables values)))
+
+(define (frame-bindings frame) (cdr frame))
 
 (define (add-binding-to-frame! var val frame)
-  (set-car! frame (cons var (car frame)))
-  (set-cdr! frame (cons val (cdr frame))))
+  (set-cdr! frame (cons (cons var val)
+                        (frame-bindings frame))))
 
 (define (extend-environment vars vals base-env)
   (if (= (length vars) (length vals))
@@ -270,40 +271,32 @@
 
 (define (lookup-variable-value var env)
   (define (env-loop env)
-    (define (scan vars vals)
-      (cond ((null? vars)
-             (env-loop (enclosing-environment env)))
-            ((eq? var (car vars)) (car vals))
-            (else (scan (cdr vars) (cdr vals)))))
     (if (eq? env the-empty-environment)
-        (error "Unbound variable" var)
-        (let ((frame (first-frame env)))
-          (scan (frame-variables frame)
-                (frame-values frame)))))
+        (error "Unbound variable: LOOKUP" var)
+        (let* ((frame (first-frame env))
+               (binding (assoc var (frame-bindings frame))))
+          (if binding
+              (cdr binding)
+              (env-loop (enclosing-environment env))))))
   (env-loop env))
 
 (define (set-variable-value! var val env)
   (define (env-loop env)
-    (define (scan vars vals)
-      (cond ((null? vars)
-             (env-loop (enclosing-environment env)))
-            ((eq? var (car vars)) (set-car! vals val))
-            (else (scan (cdr vars) (cdr vals)))))
     (if (eq? env the-empty-environment)
         (error "Unbound variable: SET!" var)
-        (let ((frame (first-frame env)))
-          (scan (frame-variables frame)
-                (frame-values frame)))))
+        (let* ((frame (first-frame env))
+               (binding (assoc var (frame-bindings frame))))
+          (if binding
+              (set-cdr! binding val)
+              (env-loop (enclosing-environment env))))))
   (env-loop env))
 
 (define (define-variable! var val env)
-  (let ((frame (first-frame env)))
-    (define (scan vars vals)
-      (cond ((null? vars)
-             (add-binding-to-frame! var val frame))
-            ((eq? var (car vars)) (set-car! vals val))
-            (else (scan (cdr vars) (cdr vals)))))
-    (scan (frame-variables frame) (frame-values frame))))
+  (let* ((frame (first-frame env))
+         (binding (assoc var (frame-bindings frame))))
+    (if binding
+        (set-cdr! binding val)
+        (add-binding-to-frame! var val frame))))
 
 ;; -------------------------------------------------------
 ;; Running Evaluator, p.381
