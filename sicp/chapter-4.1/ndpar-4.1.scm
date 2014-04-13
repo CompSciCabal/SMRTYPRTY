@@ -19,6 +19,7 @@
          (make-procedure (lambda-parameters exp)
                          (lambda-body exp)
                          env))
+        ((let? exp) (eval (let->combination exp) env))
         ((begin? exp)
          (eval-sequence (begin-actions exp) env))
         ((cond? exp) (eval (cond->if exp) env))
@@ -196,6 +197,17 @@
       (make-if (first-operand ops)
                'true
                (expand-or-operands (rest-operands ops)))))
+
+;; Exercise 4.6, p.375
+
+(define (let? exp) (tagged-list? exp 'let))
+(define (let-vars exp) (map car (cadr exp)))
+(define (let-vals exp) (map cadr (cadr exp)))
+(define (let-body exp) (cddr exp))
+
+(define (let->combination exp)
+  (cons (make-lambda (let-vars exp) (let-body exp))
+        (let-vals exp)))
 
 ;; -------------------------------------------------------
 ;; Evaluator Data Structures, p.376
