@@ -20,6 +20,7 @@
                          (lambda-body exp)
                          env))
         ((let? exp) (eval (let->combination exp) env))
+        ((let*? exp) (eval (let*->nested-lets exp) env))
         ((begin? exp)
          (eval-sequence (begin-actions exp) env))
         ((cond? exp) (eval (cond->if exp) env))
@@ -208,6 +209,23 @@
 (define (let->combination exp)
   (cons (make-lambda (let-vars exp) (let-body exp))
         (let-vals exp)))
+
+;; Exercise 4.7, p.375
+
+(define (let*? exp) (tagged-list? exp 'let*))
+
+(define (let*->nested-lets exp)
+  (let ((let-bindings (cadr exp))
+        (let-body (caddr exp)))
+    (define (expand-let-bindings bindings)
+      (if (null? bindings)
+          let-body
+          (list 'let
+                (list (car bindings))
+                (expand-let-bindings (cdr bindings)))))
+    (expand-let-bindings let-bindings)))
+
+;> (let* ((x 3) (y (+ x 2)) (z (+ x y 5))) (* x z))
 
 ;; -------------------------------------------------------
 ;; Evaluator Data Structures, p.376
