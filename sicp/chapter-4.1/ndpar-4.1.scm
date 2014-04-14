@@ -269,34 +269,36 @@
           (error "Too many arguments supplied" vars vals)
           (error "Too few arguments supplied" vars vals))))
 
+;; Exercise 4.12, p.380
+
+(define ((set-val! val) var) (set-cdr! var val))
+
+(define (do-in-frame var frame then-proc else-proc)
+  (let ((binding (assoc var (frame-bindings frame))))
+    (if binding
+        (then-proc binding)
+        (else-proc binding))))
+
+(define (env-loop var env action)
+  (if (eq? env the-empty-environment)
+      (error "Unbound variable" var)
+      (let ((frame (first-frame env))
+            (try-next-frame
+             (lambda (_)
+               (env-loop var (enclosing-environment env) action))))
+        (do-in-frame var frame action try-next-frame))))
+
 (define (lookup-variable-value var env)
-  (define (env-loop env)
-    (if (eq? env the-empty-environment)
-        (error "Unbound variable: LOOKUP" var)
-        (let* ((frame (first-frame env))
-               (binding (assoc var (frame-bindings frame))))
-          (if binding
-              (cdr binding)
-              (env-loop (enclosing-environment env))))))
-  (env-loop env))
+  (env-loop var env cdr))
 
 (define (set-variable-value! var val env)
-  (define (env-loop env)
-    (if (eq? env the-empty-environment)
-        (error "Unbound variable: SET!" var)
-        (let* ((frame (first-frame env))
-               (binding (assoc var (frame-bindings frame))))
-          (if binding
-              (set-cdr! binding val)
-              (env-loop (enclosing-environment env))))))
-  (env-loop env))
+  (env-loop var env (set-val! val)))
 
 (define (define-variable! var val env)
   (let* ((frame (first-frame env))
-         (binding (assoc var (frame-bindings frame))))
-    (if binding
-        (set-cdr! binding val)
-        (add-binding-to-frame! var val frame))))
+         (bind (lambda (_)
+                 (add-binding-to-frame! var val frame))))
+  (do-in-frame var frame (set-val! val) bind)))
 
 ;; -------------------------------------------------------
 ;; Running Evaluator, p.381
