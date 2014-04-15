@@ -1,5 +1,10 @@
 #lang planet neil/sicp
 
+(define (remove v ls)
+  (cond ((null? ls) '())
+        ((equal? v (car ls)) (remove v (cdr ls)))
+        (else (cons (car ls) (remove v (cdr ls))))))
+
 (define apply-in-underlying-scheme apply)
 
 ;; -------------------------------------------------------
@@ -12,6 +17,7 @@
         ((quoted? exp) (text-of-quotation exp))
         ((assignment? exp) (eval-assignment exp env))
         ((definition? exp) (eval-definition exp env))
+        ((unbind? exp) (eval-unbind exp env))
         ((if? exp) (eval-if exp env))
         ((and? exp) (eval (and->if exp) env))
         ((or? exp) (eval (or->if exp) env))
@@ -299,6 +305,22 @@
          (bind (lambda (_)
                  (add-binding-to-frame! var val frame))))
   (do-in-frame var frame (set-val! val) bind)))
+
+;; Exercise 4.13, p.380
+
+(define (unbind? exp) (tagged-list? exp 'forget))
+(define (unbind-var exp) (cadr exp))
+
+(define (eval-unbind exp env)
+  (unbind-variable! (unbind-var exp) env)
+  'ok)
+
+(define (unbind-variable! var env)
+  (let* ((frame (first-frame env))
+         (unbind
+          (lambda (binding)
+            (set-cdr! frame (remove binding (frame-bindings frame))))))
+    (do-in-frame var frame unbind identity)))
 
 ;; -------------------------------------------------------
 ;; Running Evaluator, p.381
