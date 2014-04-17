@@ -231,8 +231,6 @@
                 (expand-let-bindings (cdr bindings)))))
     (expand-let-bindings let-bindings)))
 
-;> (let* ((x 3) (y (+ x 2)) (z (+ x y 5))) (* x z))
-
 ;; -------------------------------------------------------
 ;; Evaluator Data Structures, p.376
 ;; -------------------------------------------------------
@@ -397,3 +395,10 @@
 ;(define (operands exp) (cddr exp))
 
 (driver-loop)
+
+;> (define x 5)
+;> (set! x 6)
+;> (let* ((x 3) (y (+ x 2)) (z (+ x y 5))) (* x z))
+;> (forget x)
+;> (define (append x y) (if (null? x) y (cons (car x) (append (cdr x) y))))
+;> (append '(a b c) '(d e f))
