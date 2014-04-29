@@ -27,6 +27,7 @@
                          env))
         ((let? exp) (eval (let->combination exp) env))
         ((let*? exp) (eval (let*->nested-lets exp) env))
+        ((letrec? exp) (eval (letrec->let exp) env))
         ((begin? exp)
          (eval-sequence (begin-actions exp) env))
         ((cond? exp) (eval (cond->if exp) env))
@@ -394,6 +395,23 @@
 ;(define (operator exp) (cadr exp))
 ;(define (operands exp) (cddr exp))
 
+;; Exercise 4.20, p.391
+
+(define (letrec? exp) (tagged-list? exp 'letrec))
+(define (letrec-bindings exp) (cadr exp))
+(define (letrec-body exp) (cddr exp))
+(define (letrec-declarations exp)
+  (map (lambda (b) (list (car b) '*unassigned*))
+       (letrec-bindings exp)))
+(define (letrec-sets exp)
+  (map (lambda (b) (list 'set! (car b) (cadr b)))
+       (letrec-bindings exp)))
+
+(define (letrec->let exp)
+  (append (list 'let (letrec-declarations exp))
+          (letrec-sets exp)
+          (letrec-body exp)))
+
 (driver-loop)
 
 ;> (define x 5)
@@ -402,3 +420,5 @@
 ;> (forget x)
 ;> (define (append x y) (if (null? x) y (cons (car x) (append (cdr x) y))))
 ;> (append '(a b c) '(d e f))
+;> (define (f) (letrec ((fact (lambda (n) (if (= n 1) 1 (* n (fact (- n 1))))))) (fact 10)))
+;> (f)
