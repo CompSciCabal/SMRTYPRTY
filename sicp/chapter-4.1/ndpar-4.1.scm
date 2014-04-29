@@ -422,3 +422,36 @@
 ;> (append '(a b c) '(d e f))
 ;> (define (f) (letrec ((fact (lambda (n) (if (= n 1) 1 (* n (fact (- n 1))))))) (fact 10)))
 ;> (f)
+
+;; Exercise 4.21, p.392
+;; Y-combinator hurts my brain!
+
+((lambda (n)
+   ((lambda (fact)
+      (fact fact n))
+    (lambda (ft k)
+      (if (= k 1)
+          1
+          (* k (ft ft (- k 1)))))))
+ 10)
+
+((lambda (n)
+   ((lambda (fib)
+      (fib fib n))
+    (lambda (fb k)
+      (cond ((= k 0) 0)
+            ((= k 1) 1)
+            (else (+ (fb fb (- k 1))
+                     (fb fb (- k 2))))))))
+ 10)
+
+(define (f x)
+  ((lambda (even? odd?)
+     (even? even? odd? x))
+   (lambda (ev? od? n)
+     (if (= n 0) true (od? ev? od? (- n 1))))
+   (lambda (ev? od? n)
+     (if (= n 0) false (ev? ev? od? (- n 1))))))
+
+(f 4)
+(not (f 5))
