@@ -238,9 +238,6 @@
 (define (false? x) (eq? x false))
 (define (true? x) (not (false? x)))
 
-;(apply-primitive-procedure proc args)
-;(primitive-procedure? proc)
-
 (define (make-procedure parameters body env)
   (list 'procedure parameters body env))
 
@@ -329,7 +326,9 @@
         (list 'cdr cdr)
         (list 'cons cons)
         (list 'null? null?)
+        (list '= =)
         (list '+ +)
+        (list '- -)
         (list '* *)))
 
 (define (primitive-procedure-names)
@@ -346,6 +345,7 @@
                              the-empty-environment)))
     (define-variable! 'true true initial-env)
     (define-variable! 'false false initial-env)
+    (define-variable! '*unassigned* '*unassigned* initial-env)
     initial-env))
 
 (define the-global-environment (setup-environment))
