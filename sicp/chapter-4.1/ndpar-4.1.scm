@@ -12,67 +12,28 @@
 ;; -------------------------------------------------------
 
 (define (eval exp env)
-  (cond ((self-evaluating? exp) exp)
-        ((variable? exp) (lookup-variable-value exp env))
-        ((quoted? exp) (text-of-quotation exp))
-        ((assignment? exp) (eval-assignment exp env))
-        ((definition? exp) (eval-definition exp env))
-        ((unbind? exp) (eval-unbind exp env))
-        ((if? exp) (eval-if exp env))
-        ((and? exp) (eval (and->if exp) env))
-        ((or? exp) (eval (or->if exp) env))
-        ((lambda? exp)
-         (make-procedure (lambda-parameters exp)
-                         (lambda-body exp)
-                         env))
-        ((let? exp) (eval (let->combination exp) env))
-        ((let*? exp) (eval (let*->nested-lets exp) env))
-        ((letrec? exp) (eval (letrec->let exp) env))
-        ((begin? exp)
-         (eval-sequence (begin-actions exp) env))
-        ((cond? exp) (eval (cond->if exp) env))
-        ((application? exp)
-         (apply1 (eval (operator exp) env)
-                 (list-of-values (operands exp) env)))
+  ((analyze exp) env))
+
+(define (analyze exp)
+  (cond ((self-evaluating? exp)
+         (analyze-self-evaluating exp))
+        ((variable? exp) (analyze-variable exp))
+        ((quoted? exp) (analyze-quoted exp))
+        ((assignment? exp) (analyze-assignment exp))
+        ((definition? exp) (analyze-definition exp))
+        ((unbind? exp) (analyze-unbind exp))
+        ((if? exp) (analyze-if exp))
+        ((and? exp) (analyze (and->if exp)))
+        ((or? exp) (analyze (or->if exp)))
+        ((lambda? exp) (analyze-lambda exp))
+        ((let? exp) (analyze (let->combination exp)))
+        ((let*? exp) (analyze (let*->nested-lets exp)))
+        ((letrec? exp) (analyze (letrec->let exp)))
+        ((begin? exp) (analyze-sequence (begin-actions exp)))
+        ((cond? exp) (analyze (cond->if exp)))
+        ((application? exp) (analyze-application exp))
         (else
          (error "Unknown expression type -- EVAL" exp))))
-
-; If we call it 'apply', Racket overrides standard 'apply',
-; so 'apply-in-underlying-scheme' wouldn't work.
-(define (apply1 procedure arguments)
-  (cond ((primitive-procedure? procedure)
-         (apply-primitive-procedure procedure arguments))
-        ((compound-procedure? procedure)
-         (eval-sequence
-          (procedure-body procedure)
-          (extend-environment
-           (procedure-parameters procedure)
-           arguments
-           (procedure-environment procedure))))
-        (else
-         (error "Unknown procedure type -- APPLY" procedure))))
-
-(define (eval-if exp env)
-  (if (true? (eval (if-predicate exp) env))
-      (eval (if-consequent exp) env)
-      (eval (if-alternative exp) env)))
-
-(define (eval-sequence exps env)
-  (cond ((last-exp? exps) (eval (first-exp exps) env))
-        (else (eval (first-exp exps) env)
-              (eval-sequence (rest-exps exps) env))))
-
-(define (eval-assignment exp env)
-  (set-variable-value! (assignment-variable exp)
-                       (eval (assignment-value exp) env)
-                       env)
-  'ok)
-
-(define (eval-definition exp env)
-  (define-variable! (definition-variable exp)
-                    (eval (definition-value exp) env)
-                    env)
-  'ok)
 
 ;; Exercise 4.1, p.368
 ;; Operands evaluation order
@@ -307,10 +268,6 @@
 (define (unbind? exp) (tagged-list? exp 'forget))
 (define (unbind-var exp) (cadr exp))
 
-(define (eval-unbind exp env)
-  (unbind-variable! (unbind-var exp) env)
-  'ok)
-
 (define (unbind-variable! var env)
   (let* ((frame (first-frame env))
          (unbind
@@ -385,6 +342,86 @@
                      (procedure-body object)
                      '<procedure-env>))
       (display object)))
+
+;; -------------------------------------------------------
+;; Syntactic Analysis, p.393
+;; -------------------------------------------------------
+
+(define (analyze-self-evaluating exp)
+  (lambda (env) exp))
+
+(define (analyze-variable exp)
+  (lambda (env) (lookup-variable-value exp env)))
+
+(define (analyze-quoted exp)
+  (let ((qval (text-of-quotation exp)))
+    (lambda (env) qval)))
+
+(define (analyze-assignment exp)
+  (let ((var (assignment-variable exp))
+        (vproc (analyze (assignment-value exp))))
+    (lambda (env)
+      (set-variable-value! var (vproc env) env)
+      'ok)))
+
+(define (analyze-definition exp)
+  (let ((var (definition-variable exp))
+        (vproc (analyze (definition-value exp))))
+    (lambda (env)
+      (define-variable! var (vproc env) env)
+      'ok)))
+
+(define (analyze-unbind exp)
+  (let ((var (unbind-var exp)))
+    (lambda (env)
+      (unbind-variable! var env)
+      'ok)))
+
+(define (analyze-if exp)
+  (let ((pproc (analyze (if-predicate exp)))
+        (cproc (analyze (if-consequent exp)))
+        (aproc (analyze (if-alternative exp))))
+    (lambda (env)
+      (if (true? (pproc env))
+          (cproc env)
+          (aproc env)))))
+
+(define (analyze-lambda exp)
+  (let ((vars (lambda-parameters exp))
+        (bproc (analyze-sequence (lambda-body exp))))
+    (lambda (env) (make-procedure vars bproc env))))
+
+(define (analyze-sequence exps)
+  (define (sequentially proc1 proc2)
+    (lambda (env) (proc1 env) (proc2 env)))
+  (define (loop first-proc rest-procs)
+    (if (null? rest-procs)
+        first-proc
+        (loop (sequentially first-proc (car rest-procs))
+              (cdr rest-procs))))
+  (let ((procs (map analyze exps)))
+    (if (null? procs)
+        (error "Empty sequence -- ANALYZE"))
+    (loop (car procs) (cdr procs))))
+
+(define (analyze-application exp)
+  (let ((fproc (analyze (operator exp)))
+        (aprocs (map analyze (operands exp))))
+    (lambda (env)
+      (execute-application (fproc env)
+                           (map (lambda (aproc) (aproc env))
+                                aprocs)))))
+
+(define (execute-application proc args)
+  (cond ((primitive-procedure? proc)
+         (apply-primitive-procedure proc args))
+        ((compound-procedure? proc)
+         ((procedure-body proc)
+          (extend-environment (procedure-parameters proc)
+                              args
+                              (procedure-environment proc))))
+        (else
+         (error "Unknown procedure type -- EXECUTE-APPLICATION" proc))))
 
 ;; -------------------------------------------------------
 ;; Exercises
@@ -470,4 +507,4 @@
 (define start (runtime))
 (eval fibs the-global-environment)
 (eval (list 'fib 30) the-global-environment)
-(/ (- (runtime) start) 1e6) ;= ~17 seconds
+(/ (- (runtime) start) 1e6) ;= ~8 seconds
