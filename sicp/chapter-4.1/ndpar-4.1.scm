@@ -328,6 +328,7 @@
         (list 'cons cons)
         (list 'null? null?)
         (list '= =)
+        (list '< <)
         (list '+ +)
         (list '- -)
         (list '* *)))
@@ -455,3 +456,18 @@
 
 (f 4)
 (not (f 5))
+
+;; Exercise 4.24, p.398
+
+(define fibs
+  (list 'define (list 'fib 'n)
+        (list 'if (list '< 'n 3)
+              1
+              (list '+
+                    (list 'fib (list '- 'n 1))
+                    (list 'fib (list '- 'n 2))))))
+
+(define start (runtime))
+(eval fibs the-global-environment)
+(eval (list 'fib 30) the-global-environment)
+(/ (- (runtime) start) 1e6) ;= ~17 seconds
