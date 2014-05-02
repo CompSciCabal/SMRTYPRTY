@@ -64,16 +64,70 @@
 
 ;; Exercise 3.5
 ;; TODO
-;(define rand
-;  (let ((x random-init))
-;    (lambda ()
-;      (set! x (rand-update x))
-;      x)))
+
+;(define (estimate-pi trials)
+;  (sqrt (/ 6 (monte-carlo trials cesaro-test))))
+;(define (cesaro-test)
+;  (= (gcd (rand) (rand)) 1))
+;(define (monte-carlo trials experiment)
+;  (define (iter trials-remaining trials-passed)
+;    (cond ((= trials-remaining 0)
+;           (/ trials-passed trials))
+;          ((experiment)
+;           (iter (- trials-remaining 1) (+ trials-passed 1)))
+;          (else
+;           (iter (- trials-remaining 1) trials-passed))))
+;  (iter trials 0))
+
+
+(define (random-in-range low high)
+  (let ((range (- high low)))
+    (+ low (random range))))
+
+;(define (estimate-integral P x1 y1 x2 y2 num-trials)
+; )
+
 
 ;; Exercise 3.6
-;; TODO
+;; I can't figure out how to make seed an internal state variable while 
+;; new-rand is a procedure.
+(define seed 1)
+(define (new-rand s)
+  (define (rand-gen)
+    (set! seed (+ 1 seed))
+    (modulo (* 3847583 seed) 27343)) ;; fake randomness
+  (define dispatch
+    (cond
+      ((eq? s 'generate) (rand-gen))
+      ((eq? s 'reset) (lambda (n) (set! seed n)))))
+  dispatch)
 
 ;; Exercise 3.8
 ;; Define a simple procedure f such that evaluating (+ (f 0) (f 1)) will return 0 if the arguments to + are
 ;; evaluated from left to right but will return 1 if the arguments are evaluated from right to left.
+;; Note: scheme evaluates left to right 
 
+(define f
+  (let ((c 1))
+    (lambda (n) (set! c (* c n)) c)))
+
+;; Why f works:
+;; f is defined as a variable, not as a function, so it can have a "state" c.
+;; Suppose we are evaluating left to right. (f 0) is called first, and so
+;; c remains as 0, as c=1 and n=0, and c is set! to (* 0 0). Then, (f 1)
+;; results in c=0, n=1, and c is set! to (* 0 1).
+
+;; In reverse order, when (f 1) is called first, the value of c is set! to 1,
+;; and then (f 0) sets the value of c to 0.
+
+;; I tried doing this by using make-accumulator and make-monitored, but
+;; the above solution which is due to bendersky is much better
+;; than my earlier attempts.
+
+;; Potentially confusing consequence, but is correct behaviour:
+;> (+ (f 1) (f 0))
+;1
+;> (+ (f 0) (f 1))
+;0
+;> (+ (f 1) (f 0))
+;0
