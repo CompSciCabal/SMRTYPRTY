@@ -387,3 +387,14 @@
 ;; Works as expected in normal-order language,
 ;; or with 'unless' as a special form.
 ; (factorial 5)
+
+;; Exercise 4.27, p.406
+;; Lazy evaluation and side effects
+
+(define (id x)
+  (set! count (+ count 1))
+  x)
+
+(define count 0)
+
+(define w (id (id 10))) ; 1st 'id' is evaluated, 2nd not
