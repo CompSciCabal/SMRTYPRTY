@@ -319,3 +319,18 @@
 ;> (set! x 6)
 ;> (define (append x y) (if (null? x) y (cons (car x) (append (cdr x) y))))
 ;> (append '(a b c) '(d e f))
+
+;; Exercise 4.25, p.400
+;; Applicative order vs. normal order evaluation
+
+(define (unless condition usual-value exceptional-value)
+  (if condition exceptional-value usual-value))
+
+(define (factorial n)
+  (unless (= n 1)
+          (* n (factorial (- n 1)))
+          1))
+
+;; Runs infinitely in applicative-order language.
+;; Works as expected in normal-order language.
+; (factorial 5)
