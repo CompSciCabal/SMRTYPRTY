@@ -336,10 +336,25 @@
 (define (thunk-exp thunk) (cadr thunk))
 (define (thunk-env thunk) (caddr thunk))
 
+(define (evaluated-thunk? obj)
+  (tagged-list? obj 'evaluated-thunk))
+
+(define (thunk-value evaluated-thunk)
+  (cadr evaluated-thunk))
+
 (define (force-it obj)
-  (if (thunk? obj)
-      (actual-value (thunk-exp obj) (thunk-env obj))
-      obj))
+  (cond ((thunk? obj)
+         (let ((result (actual-value
+                        (thunk-exp obj)
+                        (thunk-env obj))))
+           (set-car! obj 'evaluated-thunk)
+           ; oops. abstraction leak
+           (set-car! (cdr obj) result)
+           (set-cdr! (cdr obj) '())
+           result))
+        ((evaluated-thunk? obj)
+         (thunk-value obj))
+        (else obj)))
 
 ;; -------------------------------------------------------
 ;; Normal order and Applicative order
@@ -427,7 +442,7 @@
   (times 20 (fib 20))
   (/ (- (runtime) start) 1e6))
 
-(test) ;= ~14 sec
+(test) ;= ~0.2 sec
 
 ;; Without forcing the result is negative!
 (let ((start (runtime)))
