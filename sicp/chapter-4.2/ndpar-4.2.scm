@@ -310,6 +310,27 @@
       (display object)))
 
 ;; -------------------------------------------------------
+;; Normal order and Applicative order
+;; -------------------------------------------------------
+
+;; Exercise 4.26, p.401
+;; Implementing 'unless' as a special form,
+;; namely, deriving it from 'if'.
+
+(define (unless? exp) (tagged-list? exp 'unless))
+(define (unless-predicate exp) (cadr exp))
+(define (unless-usual exp) (caddr exp))
+(define (unless-exceptional exp) (cadddr exp))
+
+(define (unless->if exp)
+  (make-if (unless-predicate exp)
+           (unless-exceptional exp)
+           (unless-usual exp)))
+
+;; Add this clause to 'eval' function:
+;; ((unless? exp) (eval (unless->if exp) env))
+
+;; -------------------------------------------------------
 ;; Exercises
 ;; -------------------------------------------------------
 
@@ -321,7 +342,6 @@
 ;> (append '(a b c) '(d e f))
 
 ;; Exercise 4.25, p.400
-;; Applicative order vs. normal order evaluation
 
 (define (unless condition usual-value exceptional-value)
   (if condition exceptional-value usual-value))
@@ -332,5 +352,6 @@
           1))
 
 ;; Runs infinitely in applicative-order language.
-;; Works as expected in normal-order language.
+;; Works as expected in normal-order language,
+;; or with 'unless' as a special form.
 ; (factorial 5)
