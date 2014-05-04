@@ -448,3 +448,15 @@
 (let ((start (runtime)))
   (times 20 (fib 20))
   (/ (- (runtime) start) 1e6))
+
+;; Exercise 4.28, p.407
+;; Forcing evaluation of operator
+
+(define (fold op acc ls)
+  (if (null? ls)
+      acc
+      (fold op (op acc (car ls)) (cdr ls))))
+;              ^
+;; Without forcing there would be an error:
+;; Unknown procedure type (thunk op ...)
+(fold + 0 '(1 2 3))
