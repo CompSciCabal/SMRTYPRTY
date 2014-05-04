@@ -263,10 +263,12 @@
         (list 'cdr cdr)
         (list 'cons cons)
         (list 'null? null?)
+        (list 'runtime runtime)
         (list '= =)
         (list '< <)
         (list '+ +)
         (list '- -)
+        (list '/ /)
         (list '* *)))
 
 (define (primitive-procedure-names)
@@ -398,3 +400,36 @@
 (define count 0)
 
 (define w (id (id 10))) ; 1st 'id' is evaluated, 2nd not
+
+;; Exercise 4.29, p.407
+;; Memoization
+
+(define (square x) (* x x))
+(square (id 10)) ;= 100
+;; with memo: count = 1
+;; without memo: count = 2
+
+(define (times n x)
+  (if (= n 0)
+      0
+      (+ x (times (- n 1) x))))
+
+(define (fib n)
+  (if (< n 3)
+      1
+      (+ (fib (- n 1))
+         (fib (- n 2)))))
+
+;; Profiling lazy evaluator is tricky:
+;; You need to force the evaluation of runtime
+(define (test)
+  (define start (runtime))
+  (times 20 (fib 20))
+  (/ (- (runtime) start) 1e6))
+
+(test) ;= ~14 sec
+
+;; Without forcing the result is negative!
+(let ((start (runtime)))
+  (times 20 (fib 20))
+  (/ (- (runtime) start) 1e6))
