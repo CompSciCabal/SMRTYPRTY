@@ -264,6 +264,8 @@
         (list 'cons cons)
         (list 'null? null?)
         (list 'runtime runtime)
+        (list 'newline newline)
+        (list 'display display)
         (list '= =)
         (list '< <)
         (list '+ +)
@@ -460,3 +462,49 @@
 ;; Without forcing there would be an error:
 ;; Unknown procedure type (thunk op ...)
 (fold + 0 '(1 2 3))
+
+;; Exercise 4.30, p.407
+;; Side-effects and lazy evaluation of sequences
+
+(define (for-each proc items)
+  (if (null? items)
+      'done
+      (begin (proc (car items))
+             (for-each proc (cdr items)))))
+
+(for-each (lambda (x) (newline) (display x))
+          '(57 321 88))
+
+;; a. eval-sequence is called few times:
+
+;; - Evaluating single-exp body of for-each.
+
+;; - Evaluating (begin (proc (car items)) ...)
+;; where proc is thunked lambda.
+;; proc is forced when applied, and (car items) is thunked.
+
+;; - Evaluating body of lambda ((newline)(display x)) with
+;; thunked x. While applying display, x is forced because
+;; display is primitive.
+
+(define (p1 x)
+  (set! x (cons x '(2)))
+  x)
+
+(p1 1) ;= (1 2)
+
+(define (p2 x)
+  (define (p e)
+    e
+    x)
+  (p (set! x (cons x '(2)))))
+;    ^
+;; b. This sexp is passed as a thunk to procedure p.
+;; Within the body of p, e as a variable
+;; is evaluated to thunk (and discarded) in Ben's case,
+;; is forced (and changes x) in Cy's case.
+
+(p2 1) ;= Ben: 1; Cy: (1 2)
+
+;; c. The final result obtained by eval will be the same
+;; as obtained by actual-value. The converse may not be true.
