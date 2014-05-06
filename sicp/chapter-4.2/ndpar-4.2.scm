@@ -7,7 +7,7 @@
 (define (eval exp env)
   (cond ((self-evaluating? exp) exp)
         ((variable? exp) (lookup-variable-value exp env))
-        ((quoted? exp) (text-of-quotation exp))
+        ((quoted? exp) (eval-quotation exp env))
         ((assignment? exp) (eval-assignment exp env))
         ((definition? exp) (eval-definition exp env))
         ((if? exp) (eval-if exp env))
@@ -96,6 +96,18 @@
 
 (define (quoted? exp) (tagged-list? exp 'quote))
 (define (text-of-quotation exp) (cadr exp))
+
+;; Exercise 4.33, p.411
+
+(define (eval-quotation exp env)
+  (define (list->conses e)
+    (if (null? e)
+        (list 'quote '())
+        (list 'cons (car e) (list->conses (cdr e)))))
+  (let ((text (text-of-quotation exp)))
+    (if (null? text)
+        '()
+        (eval (list->conses text) env))))
 
 (define (assignment? exp) (tagged-list? exp 'set!))
 (define (assignment-variable exp) (cadr exp))
