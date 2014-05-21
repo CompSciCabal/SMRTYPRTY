@@ -1,5 +1,16 @@
+;; The first few lines are entered as normal, 
+;; the rest need to all be entered into the 
+;; driver-loop once you are there.
+
+;; You need the files ch4-mceval.scm and
+;; ch4-ambeval.scm from the sicp website.
+;; The load paths in both will probably have to be modified.
+
+(load "workspace/sicp/ch4/ch4-ambeval.scm")
 (define the-global-environment (setup-environment))
 (driver-loop)
+
+;; From here out enter everything into the driver loop
 
 (define (require p)
   (if (not p) (amb)))
