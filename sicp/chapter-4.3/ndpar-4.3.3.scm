@@ -1,11 +1,11 @@
 #lang planet neil/sicp
 
 ;; -------------------------------------------------------
-;; The Analyzing Evaluator
+;; The AMB Evaluator
 ;; -------------------------------------------------------
 
-(define (eval exp env)
-  ((analyze exp) env))
+(define (ambeval exp env succeed fail)
+  ((analyze exp) env succeed fail))
 
 (define (analyze exp)
   (cond ((self-evaluating? exp)
@@ -14,6 +14,7 @@
         ((quoted? exp) (analyze-quoted exp))
         ((assignment? exp) (analyze-assignment exp))
         ((definition? exp) (analyze-definition exp))
+        ((amb? exp) (analyze-amb exp))
         ((if? exp) (analyze-if exp))
         ((and? exp) (analyze (and->if exp)))
         ((or? exp) (analyze (or->if exp)))
@@ -52,6 +53,9 @@
   (if (symbol? (cadr exp))
       (caddr exp)
       (make-lambda (cdadr exp) (cddr exp))))
+
+(define (amb? exp) (tagged-list? exp 'amb))
+(define (amb-choices exp) (cdr exp))
 
 (define (lambda? exp) (tagged-list? exp 'lambda))
 (define (lambda-parameters exp) (cadr exp))
@@ -231,46 +235,69 @@
 ;; -------------------------------------------------------
 
 (define (analyze-self-evaluating exp)
-  (lambda (env) exp))
+  (lambda (env succeed fail)
+    (succeed exp fail)))
 
 (define (analyze-variable exp)
-  (lambda (env) (lookup-variable-value exp env)))
+  (lambda (env succeed fail)
+    (succeed (lookup-variable-value exp env)
+             fail)))
 
 (define (analyze-quoted exp)
   (let ((qval (cadr exp)))
-    (lambda (env) qval)))
+    (lambda (env succeed fail)
+      (succeed qval fail))))
 
 (define (analyze-assignment exp)
   (let ((var (assignment-variable exp))
         (vproc (analyze (assignment-value exp))))
-    (lambda (env)
-      (set-variable-value! var (vproc env) env)
-      'ok)))
+    (lambda (env succeed fail)
+      (vproc env
+             (lambda (val fail2)
+               (let ((old-val (lookup-variable-value var env)))
+                 (set-variable-value! var val env)
+                 (succeed 'ok
+                          (lambda ()
+                            (set-variable-value! var old-val env)
+                            (fail2)))))
+             fail))))
 
 (define (analyze-definition exp)
   (let ((var (definition-variable exp))
         (vproc (analyze (definition-value exp))))
-    (lambda (env)
-      (define-variable! var (vproc env) env)
-      'ok)))
+    (lambda (env succeed fail)
+      (vproc env
+             (lambda (val fail2)
+               (define-variable! var val env)
+               (succeed 'ok fail2))
+             fail))))
 
 (define (analyze-if exp)
   (let ((pproc (analyze (if-predicate exp)))
         (cproc (analyze (if-consequent exp)))
         (aproc (analyze (if-alternative exp))))
-    (lambda (env)
-      (if (true? (pproc env))
-          (cproc env)
-          (aproc env)))))
+    (lambda (env succeed fail)
+      (pproc env
+             (lambda (pred-value fail2)
+               (if (true? pred-value)
+                   (cproc env succeed fail2)
+                   (aproc env succeed fail2)))
+             fail))))
 
 (define (analyze-lambda exp)
   (let ((vars (lambda-parameters exp))
         (bproc (analyze-sequence (lambda-body exp))))
-    (lambda (env) (make-procedure vars bproc env))))
+    (lambda (env succeed fail)
+      (succeed (make-procedure vars bproc env)
+               fail))))
 
 (define (analyze-sequence exps)
   (define (sequentially proc1 proc2)
-    (lambda (env) (proc1 env) (proc2 env)))
+    (lambda (env succeed fail)
+      (proc1 env
+             (lambda (value1 fail2)
+               (proc2 env succeed fail2))
+             fail)))
   (define (loop first-proc rest-procs)
     (if (null? rest-procs)
         first-proc
@@ -284,19 +311,39 @@
 (define (analyze-application exp)
   (let ((fproc (analyze (operator exp)))
         (aprocs (map analyze (operands exp))))
-    (lambda (env)
-      (execute-application (fproc env)
-                           (map (lambda (aproc) (aproc env))
-                                aprocs)))))
+    (lambda (env succeed fail)
+      (fproc env
+             (lambda (proc fail2)
+               (get-args aprocs
+                         env
+                         (lambda (args fail3)
+                           (execute-application
+                            proc args succeed fail3))
+                         fail2))
+             fail))))
 
-(define (execute-application proc args)
+(define (get-args aprocs env succeed fail)
+  (if (null? aprocs)
+      (succeed nil fail)
+      ((car aprocs) env
+                    (lambda (arg fail2)
+                      (get-args (cdr aprocs)
+                                env
+                                (lambda (args fail3)
+                                  (succeed (cons arg args)
+                                           fail3))
+                                fail2))
+                    fail)))
+
+(define (execute-application proc args succeed fail)
   (cond ((primitive-procedure? proc)
-         (apply-primitive-procedure proc args))
+         (succeed (apply-primitive-procedure proc args) fail))
         ((compound-procedure? proc)
          ((procedure-body proc)
           (extend-environment (procedure-parameters proc)
                               args
-                              (procedure-environment proc))))
+                              (procedure-environment proc))
+          succeed fail))
         (else
          (error "Unknown procedure type -- EXECUTE-APPLICATION" proc))))
 
@@ -307,6 +354,18 @@
 
 (define (apply-primitive-procedure proc args)
   (apply (primitive-implementation proc) args))
+
+(define (analyze-amb exp)
+  (let ((cprocs (map analyze (amb-choices exp))))
+    (lambda (env succeed fail)
+      (define (try-next choices)
+        (if (null? choices)
+            (fail)
+            ((car choices) env
+                           succeed
+                           (lambda ()
+                             (try-next (cdr choices))))))
+      (try-next cprocs))))
 
 ;; -------------------------------------------------------
 ;; Global Environment
@@ -352,8 +411,8 @@
 ;; REPL
 ;; -------------------------------------------------------
 
-(define input-prompt ";;; M-Eval input:")
-(define output-prompt ";;; M-Eval value:")
+(define input-prompt ";;; Amb-Eval input:")
+(define output-prompt ";;; Amb-Eval value:")
 
 (define (prompt-for-input string)
   (newline) (newline) (display string) (newline))
@@ -370,11 +429,28 @@
       (display object)))
 
 (define (driver-loop)
-  (prompt-for-input input-prompt)
-  (let* ((input (read))
-         (output (eval input the-global-environment)))
-    (announce-output output-prompt)
-    (user-print output))
-  (driver-loop))
+  (define (internal-loop try-again)
+    (prompt-for-input input-prompt)
+    (let ((input (read)))
+      (if (eq? input 'try-again)
+          (try-again)
+          (begin
+            (newline)
+            (display ";;; Starting a new problem ")
+            (ambeval input
+                     the-global-environment
+                     (lambda (val next-alternative)
+                       (announce-output output-prompt)
+                       (user-print val)
+                       (internal-loop next-alternative))
+                     (lambda ()
+                       (announce-output ";;; There are no more values of")
+                       (user-print input)
+                       (driver-loop)))))))
+  (internal-loop
+   (lambda ()
+     (newline)
+     (display ";;; There is no current problem")
+     (driver-loop))))
 
 (driver-loop)
