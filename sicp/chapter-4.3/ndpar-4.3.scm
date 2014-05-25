@@ -4,24 +4,18 @@
 (define (amb) 'this-is-placeholder-do-not-evaluate)
 
 ;; -------------------------------------------------------
-;; Helper functions
+;; Helper functions (provided by the evaluator)
 ;; -------------------------------------------------------
 
 (define (require p)
   (if (not p) (amb)))
 
+(define (amb-list items)
+  (if (null? items)
+      (amb)
+      (amb (car items) (amb-list (cdr items)))))
+
 (define (!= a b) (not (= a b)))
-
-(define (<= a b)
-  (or (< a b) (= a b)))
-
-(define (abs x)
-  (if (< x 0) (- x) x))
-
-(define (member x items)
-  (cond ((null? items) false)
-        ((equal? x (car items)) true)
-        (else (member x (cdr items)))))
 
 (define (distinct? items)
   (cond ((null? items) true)
@@ -29,18 +23,13 @@
         ((member (car items) (cdr items)) false)
         (else (distinct? (cdr items)))))
 
-(define (map f items)
-  (if (null? items)
-      '()
-      (cons (f (car items)) (map f (cdr items)))))
-
 (define (foldr f init seq)
   (if (null? seq)
       init
       (f (car seq) (foldr f init (cdr seq)))))
 
-(define (append seq1 seq2)
-  (foldr cons seq2 seq1))
+(define (flatmap f items)
+  (foldr append '() (map f items)))
 
 ;; -------------------------------------------------------
 ;; Examples of Nondeterministic Programs
@@ -124,9 +113,6 @@
   (map (lambda (i)
          (cons i (remove i items)))
        items))
-
-(define (flatmap f items)
-  (foldr append '() (map f items)))
 
 (define (permutations items)
   (cond ((null? items) '())
@@ -218,11 +204,6 @@
 ;; Eight-queens puzzle
 
 ;; Load: require, map, foldr, append, remove, shuffle, flatmap, permutations, !=
-
-(define (amb-list items)
-  (if (null? items)
-      (amb)
-      (amb (car items) (amb-list (cdr items)))))
 
 (define (safe-pos? pos others)
   (define (safe-right? idx right-cells)
