@@ -408,6 +408,78 @@
 (define the-global-environment (setup-environment))
 
 ;; -------------------------------------------------------
+;; "Built-in" Compound Procedures
+;; -------------------------------------------------------
+
+(define (eval exp)
+  (ambeval exp
+           the-global-environment
+           (lambda (val next-alternative) val)
+           (lambda () (newline) (display "fail") (newline))))
+
+(eval
+ '(define (amb-list items)
+    (if (null? items)
+        (amb)
+        (amb (car items) (amb-list (cdr items))))))
+
+(eval
+ '(define (require p)
+    (if (not p) (amb))))
+
+(eval
+ '(define (!= a b) (not (= a b))))
+
+(eval
+ '(define (<= a b)
+    (or (< a b) (= a b))))
+
+(eval
+ '(define (abs x)
+    (if (< x 0) (- x) x)))
+
+(eval
+ '(define (in x items f)
+    (cond ((null? items) false)
+          ((f x (car items)) true)
+          (else (member x (cdr items))))))
+
+(eval
+ '(define (memq x items)
+    (in x items eq?)))
+
+(eval
+ '(define (member x items)
+    (in x items equal?)))
+
+(eval
+ '(define (distinct? items)
+    (cond ((null? items) true)
+          ((null? (cdr items)) true)
+          ((member (car items) (cdr items)) false)
+          (else (distinct? (cdr items))))))
+
+(eval
+ '(define (map f items)
+    (if (null? items)
+        '()
+        (cons (f (car items)) (map f (cdr items))))))
+
+(eval
+ '(define (foldr f init seq)
+    (if (null? seq)
+        init
+        (f (car seq) (foldr f init (cdr seq))))))
+
+(eval
+ '(define (append seq1 seq2)
+    (foldr cons seq2 seq1)))
+
+(eval
+ '(define (flatmap f items)
+    (foldr append '() (map f items))))
+
+;; -------------------------------------------------------
 ;; REPL
 ;; -------------------------------------------------------
 
