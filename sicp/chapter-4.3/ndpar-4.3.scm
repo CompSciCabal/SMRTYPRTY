@@ -293,3 +293,25 @@
 
 ; (parse '(the cat eats))
 ; (parse '(the professor lectures to the student with the cat))
+
+;; Exercise 4.45, p.425
+; (parse '(the professor lectures to the student in the class with the cat))
+
+;; Questions:
+;; 1. who owns the cat?
+;; 2. who is in the class?
+
+;; 1. prof, 2. prof
+; ((the professor) (((lectures (to (the student))) (in (the class))) (with (the cat))))
+
+;; 1. class, 2. prof and cat
+; ((the professor) ((lectures (to (the student))) (in ((the class) (with (the cat))))))
+
+;; 1. prof, 2. student
+; ((the professor) ((lectures (to ((the student) (in (the class))))) (with (the cat))))
+
+;; 1. student, 2. student
+; ((the professor) (lectures (to (((the student) (in (the class))) (with (the cat))))))
+
+;; 1. class, 2. student
+; ((the professor) (lectures (to ((the student) (in ((the class) (with (the cat))))))))
