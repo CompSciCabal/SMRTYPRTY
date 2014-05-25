@@ -213,3 +213,44 @@
           (list 'lorna lorna))))
 
 ;= (lorna downing)
+
+;; Exercise 4.44, p.420
+;; Eight-queens puzzle
+
+;; Load: require, map, foldr, append, remove, shuffle, flatmap, permutations, !=
+
+(define (amb-list items)
+  (if (null? items)
+      (amb)
+      (amb (car items) (amb-list (cdr items)))))
+
+(define (safe-pos? pos others)
+  (define (safe-right? idx right-cells)
+    (or (null? right-cells)
+        (let ((i (car idx))
+              (d (cdr idx))
+              (r (car right-cells)))
+          (and (!= i r)
+               (!= d r)
+               (safe-right? (cons (+ i 1) (- d 1))
+                            (cdr right-cells))))))
+  (safe-right? (cons pos pos) (cons 0 others)))
+
+(define (safe? positions)
+  (cond ((null? positions) true)
+        ((null? (cdr positions)) true)
+        (else (and (safe-pos? (car positions) (cdr positions))
+                   (safe? (cdr positions))))))
+
+; this implementation builds all permutations first, ~30sec
+; lazy evaluator would be very handy here
+(define (8-queens)
+  (let ((positions (amb-list (permutations '(1 2 3 4 5 6 7 8)))))
+    (require (safe? positions))
+    positions))
+
+;= (1 5 8 6 3 7 2 4)
+;= (1 6 8 3 7 4 2 5)
+;= (1 7 4 6 8 2 5 3)
+;= (1 7 5 8 2 4 6 3)
+;...
