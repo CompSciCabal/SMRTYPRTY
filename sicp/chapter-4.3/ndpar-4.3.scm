@@ -241,7 +241,9 @@
 ;; -------------------------------------------------------
 
 (define nouns '(noun student professor cat class))
+(define adjectives '(adjective lazy smart cute emypty))
 (define verbs '(verb studies lectures eats sleeps))
+(define adverbs '(adverb slowly))
 (define articles '(article the a))
 (define prepositions '(prep for to in by with))
 
@@ -256,7 +258,14 @@
          (maybe-extend (list 'verb-phrase
                              verb-phrase
                              (parse-prepositional-phrase)))))
-  (maybe-extend (parse-word verbs)))
+  (maybe-extend (parse-simple-verb-phrase)))
+
+(define (parse-simple-verb-phrase)
+  (amb (list 'simple-verb-phrase
+             (parse-word verbs))
+       (list 'siple-verb-phrase
+             (parse-word verbs)
+             (parse-word adverbs))))
 
 (define (parse-noun-phrase)
   (define (maybe-extend noun-phrase)
@@ -267,9 +276,13 @@
   (maybe-extend (parse-simple-noun-phrase)))
 
 (define (parse-simple-noun-phrase)
-  (list 'simple-noun-phrase
-        (parse-word articles)
-        (parse-word nouns)))
+  (amb (list 'simple-noun-phrase
+             (parse-word articles)
+             (parse-word nouns))
+       (list 'simple-noun-phrase
+             (parse-word articles)
+             (parse-word adjectives)
+             (parse-word nouns))))
 
 (define (parse-prepositional-phrase)
   (list 'prep-phrase
@@ -315,3 +328,6 @@
 
 ;; 1. class, 2. student
 ; ((the professor) (lectures (to ((the student) (in ((the class) (with (the cat))))))))
+
+;; Exercise 4.48, p.426
+; (parse '(the cute cat eats slowly))
