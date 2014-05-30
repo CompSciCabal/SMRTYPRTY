@@ -331,3 +331,33 @@
 
 ;; Exercise 4.48, p.426
 ; (parse '(the cute cat eats slowly))
+
+;; Exercise 4.51, p.436
+
+(define count 0)
+
+(let ((x (amb-list '(a b c)))
+      (y (amb-list '(a b c))))
+  (permanent-set! count (+ count 1))
+  (require (not (eq? x y)))
+  (list x y count))
+
+;= (a b 2)
+;= (a c 3)
+;= (b a 4)
+;= (b c 6)
+;= (c a 7)
+;= (c b 8)
+
+(let ((x (amb-list '(a b c)))
+      (y (amb-list '(a b c))))
+  (set! count (+ count 1))
+  (require (not (eq? x y)))
+  (list x y count))
+
+;= (a b 1)
+;= (a c 1)
+;= (b a 1)
+;= (b c 1)
+;= (c a 1)
+;= (c b 1)
