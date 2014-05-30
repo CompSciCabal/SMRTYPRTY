@@ -15,6 +15,7 @@
         ((assignment? exp) (analyze-assignment exp))
         ((definition? exp) (analyze-definition exp))
         ((amb? exp) (analyze-amb exp))
+        ((ramb? exp) (analyze-ramb exp))
         ((if? exp) (analyze-if exp))
         ((and? exp) (analyze (and->if exp)))
         ((or? exp) (analyze (or->if exp)))
@@ -56,6 +57,8 @@
 
 (define (amb? exp) (tagged-list? exp 'amb))
 (define (amb-choices exp) (cdr exp))
+
+(define (ramb? exp) (tagged-list? exp 'ramb))
 
 (define (lambda? exp) (tagged-list? exp 'lambda))
 (define (lambda-parameters exp) (cadr exp))
@@ -367,6 +370,33 @@
                              (try-next (cdr choices))))))
       (try-next cprocs))))
 
+(define (analyze-ramb expr)
+  (analyze-amb (cons 'amb (shuffle (amb-choices expr)))))
+
+(define (shuffle items)
+  (if (null? items)
+      '()
+      (let ((ls (take-random items)))
+        (cons (car ls) (shuffle (cdr ls))))))
+
+(define (take-random items)
+  (take-at (random (length items)) items))
+
+(define (take-at index items)
+  (define (prepend list1 list2)
+    (if (null? list2)
+        list1
+        (prepend (cons (car list2) list1)
+                 (cdr list2))))
+  (define (drop i items discarded)
+    (if (= i 0)
+        (cons (car items)
+              (prepend (cdr items) discarded))
+        (drop (- i 1)
+              (cdr items)
+              (cons (car items) discarded))))
+  (drop index items '()))
+
 ;; -------------------------------------------------------
 ;; Global Environment
 ;; -------------------------------------------------------
@@ -411,11 +441,11 @@
 ;; "Built-in" Compound Procedures
 ;; -------------------------------------------------------
 
-(define (eval exp)
+(define (eval exp) ; p.429
   (ambeval exp
            the-global-environment
-           (lambda (val next-alternative) val)
-           (lambda () (newline) (display "fail") (newline))))
+           (lambda (value fail) value)
+           (lambda () 'failed)))
 
 (eval
  '(define (amb-list items)
