@@ -17,6 +17,7 @@
         ((definition? exp) (analyze-definition exp))
         ((amb? exp) (analyze-amb exp))
         ((ramb? exp) (analyze-ramb exp))
+        ((if-fail? exp) (analyze-if-fail exp))
         ((if? exp) (analyze-if exp))
         ((and? exp) (analyze (and->if exp)))
         ((or? exp) (analyze (or->if exp)))
@@ -61,6 +62,8 @@
 (define (amb-choices exp) (cdr exp))
 
 (define (ramb? exp) (tagged-list? exp 'ramb))
+
+(define (if-fail? exp) (tagged-list? exp 'if-fail))
 
 (define (lambda? exp) (tagged-list? exp 'lambda))
 (define (lambda-parameters exp) (cadr exp))
@@ -287,6 +290,16 @@
                (succeed 'ok fail2))
              fail))))
 
+(define (analyze-if-fail exp)
+  (let ((sproc (analyze (cadr exp)))
+        (fproc (analyze (caddr exp))))
+    (lambda (env succeed fail)
+      (sproc env
+             (lambda (value fail2)
+               (succeed value fail2))
+             (lambda ()
+               (fproc env succeed fail))))))
+
 (define (analyze-if exp)
   (let ((pproc (analyze (if-predicate exp)))
         (cproc (analyze (if-consequent exp)))
@@ -423,6 +436,7 @@
         (list 'equal? equal?)
         (list 'eq? eq?)
         (list 'not not)
+        (list 'even? even?)
         (list '= =)
         (list '< <)
         (list '> >)

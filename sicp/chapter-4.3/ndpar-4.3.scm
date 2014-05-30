@@ -361,3 +361,15 @@
 ;= (b c 1)
 ;= (c a 1)
 ;= (c b 1)
+
+;; Exercise 4.52, p.436
+
+(if-fail (let ((x (amb 1 3 5)))
+           (require (even? x))
+           x)
+         'all-odd)
+
+(if-fail (let ((x (amb 1 3 5 6 8)))
+           (require (even? x))
+           x)
+         'all-odd)
