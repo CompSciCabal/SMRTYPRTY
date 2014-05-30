@@ -407,6 +407,7 @@
         (list 'cons cons)
         (list 'car car)
         (list 'cdr cdr)
+        (list 'shuffle shuffle)
         (list 'equal? equal?)
         (list 'eq? eq?)
         (list 'not not)
@@ -452,6 +453,10 @@
     (if (null? items)
         (amb)
         (amb (car items) (amb-list (cdr items))))))
+
+(eval
+ '(define (ramb-list items)
+    (amb-list (shuffle items))))
 
 (eval
  '(define (require p)

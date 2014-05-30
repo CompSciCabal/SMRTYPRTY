@@ -5,7 +5,7 @@
 ;; -------------------------------------------------------
 
 (define nouns '(noun student professor cat class))
-(define adjectives '(adjective lazy smart cute emypty))
+(define adjectives '(adjective lazy smart cute empty))
 (define verbs '(verb studies lectures eats sleeps))
 (define adverbs '(adverb slowly))
 (define articles '(article the a))
@@ -52,7 +52,7 @@
   (require (memq (car *unparsed*) (cdr words)))
   (let ((found (car *unparsed*)))
     (set! *unparsed* (cdr *unparsed*))
-    (amb-list (cdr words))))
+    (ramb-list (cdr words))))
 
 (define (parse input)
   (set! *unparsed* input)
@@ -74,4 +74,29 @@
 ;(the lazy student studies for (the student) for (the cute student))
 ;(the lazy student studies for (the student) for (the cute professor))
 ;(the lazy student studies for (the student) for (the cute cat))
+;...
+
+;; Exercise 4.50.b, p.436
+
+;(the empty class lectures with (the cat) with (the empty professor))
+;(the empty class lectures with (the cat) with (the empty cat))
+;(the empty class lectures with (the cat) with (the empty student))
+;(the empty class lectures with (the cat) with (the empty class))
+;(the empty class lectures with (the cat) with (the cute student))
+;(the empty class lectures with (the cat) with (the cute professor))
+;(the empty class lectures with (the cat) with (the cute class))
+;(the empty class lectures with (the cat) with (the cute cat))
+;(the empty class lectures with (the cat) with (the lazy professor))
+;(the empty class lectures with (the cat) with (the lazy cat))
+;(the empty class lectures with (the cat) with (the lazy student))
+;(the empty class lectures with (the cat) with (the lazy class))
+;(the empty class lectures with (the cat) with (the smart cat))
+;(the empty class lectures with (the cat) with (the smart professor))
+;(the empty class lectures with (the cat) with (the smart student))
+;(the empty class lectures with (the cat) with (the smart class))
+;(the empty class lectures with (the cat) with (a lazy professor))
+;(the empty class lectures with (the cat) with (a lazy cat))
+;(the empty class lectures with (the cat) with (a lazy class))
+;(the empty class lectures with (the cat) with (a lazy student))
+;(the empty class lectures with (the cat) with (a smart student))
 ;...
