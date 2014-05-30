@@ -398,6 +398,10 @@
 (define (analyze-ramb expr)
   (analyze-amb (cons 'amb (shuffle (amb-choices expr)))))
 
+;; -------------------------------------------------------
+;; "Built-in" Primitive Procedures
+;; -------------------------------------------------------
+
 (define (shuffle items)
   (if (null? items)
       '()
@@ -422,6 +426,25 @@
               (cons (car items) discarded))))
   (drop index items '()))
 
+(define (smallest-divisor n)
+  (find-divisor n 2))
+
+(define (square x) (* x x))
+
+(define (find-divisor n test-divisor)
+  (define (next td)
+    (if (= td 2) 3 (+ td 2)))
+  (cond ((> (square test-divisor) n) n)
+        ((divides? test-divisor n) test-divisor)
+        (else (find-divisor n (next test-divisor)))))
+
+(define (divides? a b)
+  (= (remainder b a) 0))
+
+(define (prime? n)
+  (and (> n 1)
+       (= (smallest-divisor n) n)))
+
 ;; -------------------------------------------------------
 ;; Global Environment
 ;; -------------------------------------------------------
@@ -437,6 +460,7 @@
         (list 'eq? eq?)
         (list 'not not)
         (list 'even? even?)
+        (list 'prime? prime?)
         (list '= =)
         (list '< <)
         (list '> >)
