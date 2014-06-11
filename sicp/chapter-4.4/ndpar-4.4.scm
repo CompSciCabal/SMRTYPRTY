@@ -236,3 +236,90 @@
 (grandson Cain ?x)
 (son Lamech ?x) ; wow!
 (grandson Methushael ?x)
+
+;; -------------------------------------------------------
+;; Logic Programming and Mathematical Logic
+;; -------------------------------------------------------
+
+;; Infinite loops
+
+(assert! (married Minnie Mickey))
+(assert! (rule (married ?x ?y)
+               (married ?y ?x)))
+
+(married ?x Minnie)
+
+;; not
+
+(not (baseball-fan (Bitdiddle Ben)))
+(not (raining outside))
+(not (equal 4 (add 2 2)))
+
+;; Exercise 4.64, p.466
+;; Quering this rule works
+
+(rule (outranked-by ?staff-person ?boss)
+      (or (supervisor ?staff-person ?boss)
+          (and (supervisor ?staff-person ?middle-manager)
+               (outranked-by ?middle-manager ?boss))))
+
+;; Quering this rule stuck in infinite loop
+;; because ?middle-manager in line *** is unbound
+
+(rule (outranked-by ?staff-person ?boss)
+      (or (supervisor ?staff-person ?boss)
+          (and (outranked-by ?middle-manager ?boss) ;***
+               (supervisor ?staff-person ?middle-manager))))
+
+;; Exercise 4.65, p.467
+;; Both vars in line *** are unbound
+
+(rule (wheel ?person)
+      (and (supervisor ?middle-manager ?person) ;***
+           (supervisor ?x ?middle-manager)))
+
+;; 2 middle managers, Scrooge Eben and Bitdiddle Ben,
+
+(supervisor (Cratchet Robert) (Scrooge Eben))
+(supervisor (Hacker Alyssa P) (Bitdiddle Ben))
+
+;; reporting to Warbucks Oliver,
+
+(supervisor (Bitdiddle Ben) (Warbucks Oliver))
+(supervisor (Scrooge Eben) (Warbucks Oliver))
+
+;; have 4 subordinates
+
+(supervisor (Cratchet Robert) (Scrooge Eben))
+(supervisor (Hacker Alyssa P) (Bitdiddle Ben))
+(supervisor (Tweakit Lem E) (Bitdiddle Ben))
+(supervisor (Fect Cy D) (Bitdiddle Ben))
+
+;; Exercise 4.68, p.468
+;; Install append-to-form rule
+
+(assert! (rule (reverse () ())))
+(assert! (rule (reverse (?u . ?v) ?z)
+               (and (reverse ?v ?y)
+                    (append-to-form ?y (?u) ?z))))
+
+(reverse (1 2 3) ?x) ;= (reverse (1 2 3) (3 2 1))
+(reverse ?x (1 2 3)) ; infinite loop
+
+;; Exercise 4.69, p.468
+;; Install grandson and son rules
+
+(assert! (rule (ends-in-grandson (grandson))))
+(assert! (rule (ends-in-grandson (?g . ?gs))
+               (ends-in-grandson ?gs)))
+
+(assert! (rule ((grandson) ?x ?y)
+               (grandson ?x ?y)))
+(assert! (rule ((great . ?rel) ?x ?y)
+               (and (son ?x ?z)
+                    (?rel ?z ?y)
+                    (ends-in-grandson ?rel))))
+
+((great grandson) Adam Irad)
+((great grandson) ?g ?ggs)
+(?relationship Adam Irad)
