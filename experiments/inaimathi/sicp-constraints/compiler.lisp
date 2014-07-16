@@ -12,12 +12,12 @@
 ;;;;;;;;;; Synthesizing new facts
 (defmethod synthesize ((base list))
   (label-line-cluster
-   (label-connection-endpoints
-    (label-top-inputs
-     (label-arguments-and-name
-      (label-labels
-       (label-constants
-	(label-line-connections
+   (label-line-connections
+    (label-connection-endpoints
+     (label-top-inputs
+      (label-arguments-and-name
+       (label-labels
+	(label-constants
 	 (label-constraints base)))))))))
 
 (defmethod label-constraints ((base list))
@@ -26,7 +26,7 @@
   base)
 
 (defmethod label-constants ((base list))
-  "A rounded rectangle with a perfectly overlapping text box is a constatn."
+  "A rounded rectangle with a perfectly overlapping text box is a constant."
   (for-all (and (?id :rounded-rectangle nil)
 		(?id :start ?start) (?id :end ?end)
 		(?text :text nil)
@@ -81,17 +81,6 @@ Text boxes contained by constraints but not on their edges are constraint names.
 	   :in base :do (push (list ?id :sicp-top-connection nil) base))
   base)
 
-(defmethod label-line-connections ((base list))
-  "Some lines connect to other lines. Connecting lines will be a single connection rather than multiple connections."
-  (for-all (and (?id :line-segment nil)
-		(?id :start ?start) (?id :end ?end)
-		(?id2 :line-segment nil)
-		(lisp (not (equal ?id ?id2)))
-		(or (?id2 :start ?end) (?id2 :end ?start)
-		    (?id2 :start ?start) (?id2 :end ?end)))
-	   :in base :do (push (list ?id :line-connects-to-line ?id2) base))
-  base)
-
 (defmethod label-connection-endpoints ((base list))
   "Some line-segments connect to arguments, constants or top-connections, and this needs to be stated explicitly."
   (for-all (and (?id :line-segment nil)
@@ -105,6 +94,17 @@ Text boxes contained by constraints but not on their edges are constraint names.
 			  (and (point-inside? ?x2 ?y2 ?ax ?ay ?ax2 ?ay2) 
 			       (on-edge? ?x2 ?y2 ?ax ?ay ?ax2 ?ay2)))))
 	   :in base :collect (push (list ?id :connects-to ?id2) base))
+  base)
+
+(defmethod label-line-connections ((base list))
+  "Some lines connect to other lines. Connecting lines will be a single connection rather than multiple connections."
+  (for-all (and (?id :line-segment nil)
+		(?id :start ?start) (?id :end ?end)
+		(?id2 :line-segment nil)
+		(lisp (not (equal ?id ?id2)))
+		(or (?id2 :start ?end) (?id2 :end ?start)
+		    (?id2 :start ?start) (?id2 :end ?end)))
+	   :in base :do (push (list ?id :line-connects-to-line ?id2) base))
   base)
 
 (defun walk-segment-graph (base src &key (explored (list src)))
@@ -122,8 +122,8 @@ Text boxes contained by constraints but not on their edges are constraint names.
     (for-all (and (?id :line-segment nil)
 		  (not (?cluster :contains ?id)))
 	     :in base
-	     :collect (let ((cluster (sort (walk-segment-graph base ?id) #'string< :key #'symbol-name)))
-			(setf (gethash cluster res) t)))
+	     :do (let ((cluster (sort (walk-segment-graph base ?id) #'string< :key #'symbol-name)))
+		   (setf (gethash cluster res) t)))
     (loop for clst being the hash-keys of res
        do (let ((id (intern (symbol-name (gensym)))))
 	    (push (list id :cluster nil) base)
@@ -187,6 +187,17 @@ Text boxes contained by constraints but not on their edges are constraint names.
 		      (:* `(make-multiplier ,@(generate-arguments base ?id)))
 		      (:+ `(make-adder ,@(generate-arguments base ?id))))))
 
+(defmethod generate-constraints ((base list))
+  (for-all (and (?id :sicp-constraint nil)
+		(?id :constraint-of ?txt)
+		(?txt :sicp-constraint-name nil)
+		(?txt :contents ?name))
+	   :in base
+	   :collect `(,(case (intern (sanitize ?name) :keyword)
+			     (:* make-multiplier)
+			     (:+ make-adder))
+		       ,@(generate-arguments base ?id))))
+
 (defmethod generate-internal-connections ((base list))
   (for-all (and (?id :cluster nil)
 		(not (and (?id :contains ?line)
@@ -232,6 +243,9 @@ Text boxes contained by constraints but not on their edges are constraint names.
     
     `(define-closing-handler (,uri-sym) ,(loop for n in top-level-names collect `(,n :number))
        "Hello!")))
+
+(defmethod generate-code (target (base list))
+  (error "Unsupported target: ~s" target))
 
 (defmethod generate-code ((target (eql :repl)) (base list))
   (generate-repl-app base))
