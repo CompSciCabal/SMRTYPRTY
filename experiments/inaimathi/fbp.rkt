@@ -61,49 +61,30 @@
 			      (,fn))))
 	     (thread ,setup)))))))
 
+(define (make-counter parent)
+  (let ((count 0))
+    (make-part parent
+	       (set! count (+ 1 count))
+	       (out! 'out count))))
+
+(define (make-greeter parent template)
+  (make-part parent (out! 'out (format template msg))))
+
 (define test 
   (make-proxy #f
-	      ((pr (make-part self (displayln (format "Printing: ~a" msg))))
-	       (ct (let ((count 0))
-		     (make-part self 
-				(set! count (+ 1 count))
-				(out! 'out count))))
-	       (greet (make-part self 
-				 (out! 'out (format "Hello there, ~a!" msg)))))
-	      ((self in) -> (ct in) (pr in) (greet in))
-	      ((ct out) -> (pr in))
-	      ((greet out) -> (pr in))))
+   ((pr (make-part self (displayln (format "Printing: ~a" msg))))
+    (ct (make-counter self))
+    (greet (make-greeter self "Hello there, ~a!")))
+   ((self in) -> (ct in) (pr in) (greet in))
+   ((ct out) -> (pr in))
+   ((greet out) -> (pr in))))
+
+(define (load-test num)
+  (unless (zero? num)
+    (send! test 'in (format "Name-~a" num))
+    (load-test (- num 1))))
 
 ;; (enter! "fbp.rkt")
-;; (send! test 'in "Leo")
-
-;; (make-proxy parent
-;;  ((pr (new-printer))
-;;   (ct (new-counter))
-;;   (greet (new-greeter)))
-;;  ((self in) -> (ct in) (pr in) (greet in))
-;;  ((greet out) -> (pr in)))
-
-;; (thread
-;;  (let ((self (current-thread))
-;;        (pr (new-printer))
-;;        (ct (new-counter))
-;;        (greet (new-greeter)))
-;;    (let ((connections
-;; 	  (list (cons (list self 'in) (list (list ct 'in) (list pr 'in) (list greet 'in)))
-;; 		(cons (list greet 'out) (list (list pr 'in)))))
-;; 	 (launch
-;; 	  (lambda (msg)
-;; 	    (lambda (part/pin)
-;; 	      (cond ((and parent (eq? (first part/pin) self))
-;; 		     (thread-send parent (list (current-thread) (second part/pin) msg)))
-;; 		    ((not (eq? (first part/pin) self))
-;; 		     (thread-send (first part/pin) (cons (second part/pin) msg))))))))
-;;      (lambda ()
-;;        (match (thread-receive)
-;; 	 [(cons pin msg)
-;; 	  (let ((targets (assoc (list self pin) connections)))
-;; 	    (map (launch msg) targets))]
-;; 	 [(list src pin msg) 
-;; 	  (let ((targets (assoc (list src pin) connections)))
-;; 	    (map (launch msg) targets))])))))
+(send! test 'in "Inaimathi")
+(send! test 'in "Garamond")
+(send! test 'in "Corsiva")
