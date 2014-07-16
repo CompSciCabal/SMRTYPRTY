@@ -1,87 +1,111 @@
 #lang racket
 
-(require racket/stxparam)
+(require compatibility/defmacro)
 
-(define part%
-  (class object%
-    (super-new)
-    (field (part-name #f))
-    (field (parent #f))
-    (field (thread #f))))
+(define-macro (send! to pin message)
+  `(thread-send ,to (cons ,pin ,message)))
 
-(define reactor%
-  (class part%
-    (super-new)
-    (field (body #f))))
+(define-macro (make-part parent . body)
+  (let ((fn (gensym))
+	(pr (gensym)))
+    `(letrec ((,pr ,parent)
+	      (out! (lambda (pin msg)
+		      (let ((m (list (current-thread) pin msg)))
+			(if ,pr
+			    (thread-send ,pr m)
+			    (displayln m)))))
+	      (,fn (lambda ()
+		     (displayln (format "Reactor ~a waiting for input with parent ~a..." (current-thread) ,pr))
+		     (match (thread-receive)
+		       [(cons pin msg) ,@body]
+		       [junk (out! 'error "Malformed message")])
+		     (,fn))))
+       (thread ,fn))))
 
-(define container%
-  (class part%
-    (super-new)
-    (field (parts '()))
-    (field (connections (hash)))
+(define-macro (make-proxy parent parts . system-map)
+  (define (convert-item itm)
+    `(list ,(car itm) ',(cadr itm)))
+  (define (convert-line conn-line)
+    `(cons ,(convert-item (car conn-line)) (list ,@(map convert-item (cddr conn-line)))))
+  (let ((pt (gensym))
+	(launch (gensym))
+	(fn (gensym)))
+    `(thread
+      (letrec ((,fn (lambda ()      
+		      (let ((,pt ,parent)
+			    (self (current-thread))) ;; that's the problem, I think. We need self set inside of the function for this thread, not outside
+			(displayln (format "Started container: ~s" self))
+			(let ,parts
+			  (let ((connections
+				 (list ,@(map convert-line system-map)))
+				(,launch
+				 (lambda (msg)
+				   (lambda (part/pin)
+				     (displayln (format "Launching '~a' at ~s" msg part/pin))
+				     (cond ((and ,pt (eq? (first part/pin) self))
+					    (displayln "Launching at parent...")
+					    (thread-send ,pt (list (current-thread) (second part/pin) msg)))
+					   ((not (eq? (first part/pin) self))
+					    (displayln (format "Launching at ~s..." (first part/pin)))
+					    (thread-send (first part/pin) (cons (second part/pin) msg))))))))
+			    (match (thread-receive)
+			      [(cons pin msg)
+			       (displayln (format "Got message ~a::~s..." pin msg))
+			       (let ((targets (or (assoc (list self pin) connections) '())))
+				 
+				 (map (,launch msg) targets))]
+			      [(list src pin msg)
+			       (displayln "Got internal message...")
+			       (let ((targets (or (assoc (list src pin) connections) '())))
+				 (map (,launch msg) targets))])
+			    (,fn)))))))
+	,fn))))
 
-    (define/public (decide-targets sender pin)
-      (printf "Options : ~a" connections)
-      (printf "Decided on ::~a\n" (hash-ref connections (list sender pin) (list)))
-      (hash-ref connections (list sender pin) (list)))))
+(define test 
+  (make-proxy #f
+	      ((pr (make-part self (displayln (format "Printing: ~a" msg))))
+	       (ct (let ((count 0))
+		     (make-part self 
+				(displayln "Counting...")
+				(set! count (+ 1 count))
+				(out! 'out count))))
+	       (greet (make-part self 
+				 (displayln "Greeting...")
+				 (out! 'out (format "Hello there, ~a!" msg)))))
+	      ((self in) -> (ct in) (pr in) (greet in))
+	      ((ct out) -> (pr in))
+	      ((greet out) -> (pr in))))
 
-(define (send! target pin message)
-  (printf "~a -> ~a::~a\n" message target pin)
-  (thread-send (get-field thread target) (cons pin message)))
+;; (enter! "fbp.rkt")
+;; (send! test 'in "Leo")
 
-(define-syntax-rule (forever body)
-  (begin
-    (define (rec) body (rec))
-    (rec)))
+;; (make-proxy parent
+;;  ((pr (new-printer))
+;;   (ct (new-counter))
+;;   (greet (new-greeter)))
+;;  ((self in) -> (ct in) (pr in) (greet in))
+;;  ((greet out) -> (pr in)))
 
-(define-syntax-parameter out!
-  (lambda (stx)
-    (raise-syntax-error (syntax-e stx)
-                        "for use inside of the `define-reactor` macro")))
-
-(define-syntax-rule (define-reactor name body)
-  (define name
-    (letrec ((self (new reactor%))
-             (out!-fn (lambda (pin . message)
-                        (let ((targets (send (get-field parent self) decide-targets self pin)))
-                          (for-each
-                           (lambda (target)
-                             (send! target pin message))
-                           targets)))))
-      (set-field! 
-       thread self
-       (thread
-        (lambda ()
-          (forever
-           (syntax-parameterize ((out! (make-rename-transformer #'out!)))
-                                body)))))
-      (set-field! part-name self 'name)
-      self)))
-
-(define-reactor printer
-  (displayln (format "PRINTER :: ~a" (thread-receive))))
-
-(define-reactor adder
-  (out! 'sum (+ (cdr (thread-receive))
-                (cdr (thread-receive)))))
-
-(define box
-  (let ((self-internal (new container%)))
-    (set-field! parts self-internal (hash 'adder adder 'printer printer))
-    (set-field! connections self-internal
-                (hash (list self-internal 'in) (list adder)
-                      (list adder 'sum) (list printer)))
-    (for-each (lambda (part) (set-field! parent part self-internal))
-              (hash-values (get-field parts self-internal)))
-    (set-field!
-     thread self-internal
-     (thread
-      (lambda ()
-        (forever
-         (let ((incoming (thread-receive)))
-           (for-each (lambda (target)
-                       (send! target 'in (cdr incoming)))
-                     (hash-ref (get-field connections self-internal)
-                               (list self-internal (car incoming))
-                               (list))))))))
-    self-internal))
+;; (thread
+;;  (let ((self (current-thread))
+;;        (pr (new-printer))
+;;        (ct (new-counter))
+;;        (greet (new-greeter)))
+;;    (let ((connections
+;; 	  (list (cons (list self 'in) (list (list ct 'in) (list pr 'in) (list greet 'in)))
+;; 		(cons (list greet 'out) (list (list pr 'in)))))
+;; 	 (launch
+;; 	  (lambda (msg)
+;; 	    (lambda (part/pin)
+;; 	      (cond ((and parent (eq? (first part/pin) self))
+;; 		     (thread-send parent (list (current-thread) (second part/pin) msg)))
+;; 		    ((not (eq? (first part/pin) self))
+;; 		     (thread-send (first part/pin) (cons (second part/pin) msg))))))))
+;;      (lambda ()
+;;        (match (thread-receive)
+;; 	 [(cons pin msg)
+;; 	  (let ((targets (assoc (list self pin) connections)))
+;; 	    (map (launch msg) targets))]
+;; 	 [(list src pin msg) 
+;; 	  (let ((targets (assoc (list src pin) connections)))
+;; 	    (map (launch msg) targets))])))))
