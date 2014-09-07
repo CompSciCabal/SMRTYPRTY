@@ -16,3 +16,34 @@
    (goto (label test-c))
  done
    (perform (op print) (reg p)))
+
+;; Exercise 5.3, p.502
+
+; With primitive good-enough? and improve
+(controller
+   (assign x (op read))
+   (assign g (const 1.0))
+ sqrt-iter
+   (test (op good-enough?) (reg g) (reg x))
+   (branch (label done))
+   (assign g (op improve) (reg g) (reg x))
+   (goto (label sqrt-iter))
+ done
+   (perform (op print) (reg g)))
+
+; With implemented good-enough? and improve
+(controller
+   (assign x (op read))
+   (assign g (const 1.0))
+ sqrt-iter
+   (assign a (op *) (reg g) (reg g))
+   (assign a (op -) (reg a) (reg x))
+   (assign a (op abs) (reg a))
+   (test (op <) (reg a) (const 0.001))
+   (branch (label done))
+   (assign a (op /) (reg x) (reg g))
+   (assign b (op +) (reg g) (reg a))
+   (assign g (op /) (reg b) (const 2))
+   (goto (label sqrt-iter))
+ done
+   (perform (op print) (reg g)))
