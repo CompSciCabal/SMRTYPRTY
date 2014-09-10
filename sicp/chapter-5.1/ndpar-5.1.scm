@@ -37,6 +37,8 @@
    (assign g (const 1.0))
  sqrt-iter
    (assign a (op *) (reg g) (reg g))
+   ; input for operation can be only reg or const
+   ; see Chapter 5.1.5
    (assign a (op -) (reg a) (reg x))
    (assign a (op abs) (reg a))
    (test (op <) (reg a) (const 0.001))
