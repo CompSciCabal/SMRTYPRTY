@@ -50,6 +50,33 @@
  done
    (perform (op print) (reg g)))
 
+; Implementation in assembly language
+(define newton-machine
+  (make-machine
+    '(x g a b)
+    (list (list '< <)
+          (list '- -)
+          (list '* *)
+          (list '+ +)
+          (list '/ /)
+          (list 'abs abs))
+    '(sqrt-iter
+      (assign a (op *) (reg g) (reg g))
+      (assign a (op -) (reg a) (reg x))
+      (assign a (op abs) (reg a))
+      (test (op <) (reg a) (const 0.001))
+      (branch (label done))
+      (assign a (op /) (reg x) (reg g))
+      (assign b (op +) (reg g) (reg a))
+      (assign g (op /) (reg b) (const 2))
+      (goto (label sqrt-iter))
+      done)))
+
+(set-register-contents! newton-machine 'x 4)
+(set-register-contents! newton-machine 'g 1.0)
+(start newton-machine)
+(get-register-contents newton-machine 'g) ;=> 2.0000000929222947
+
 ;; Exercise 5.4, p.510
 
 ; a. Recursive exponentiation
