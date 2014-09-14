@@ -125,9 +125,11 @@
        (lambda (insts labels)
          (let ((next-inst (car text)))
            (if (symbol? next-inst)
-               (receive insts
-                        (cons (make-label-entry next-inst insts)
-                              labels))
+               (if (assoc next-inst labels)
+                   (error "Duplicate label -- ASSEMBLE" next-inst)
+                   (receive insts
+                            (cons (make-label-entry next-inst insts)
+                                  labels)))
                (receive (cons (make-instruction next-inst)
                               insts)
                         labels)))))))
@@ -380,3 +382,23 @@
 (set-register-contents! expt-2-machine 'b 3)
 (start expt-2-machine)
 (get-register-contents expt-2-machine 'p)
+
+;; Exercise 5.8, p.523
+;; Ambiguous labels
+
+(define ex-5-8-machine
+  (make-machine
+    '(a)
+    (list)
+    '(start
+      (goto (label here))
+      here
+      (assign a (const 3))
+      (goto (label there))
+      here-modified
+      (assign a (const 4))
+      (goto (label there))
+      there)))
+
+(start ex-5-8-machine)
+(get-register-contents ex-5-8-machine 'a) ;=> 3
