@@ -109,15 +109,6 @@
             (else (error "Unknown request -- MACHINE" message))))
     dispatch))
 
-(define (start machine)
-  (machine 'start))
-
-(define (get-register-contents machine register-name)
-  (get-contents (get-register machine register-name)))
-
-(define (set-register-contents! machine register-name val)
-  (set-contents! (get-register machine register-name) val))
-
 (define (get-register machine register-name)
   ((machine 'get-register) register-name))
 
@@ -323,6 +314,19 @@
     (if val
         (cadr val)
         (error "Unknown operation -- ASSEMBLE" symbol))))
+
+;; -------------------------------------------------------
+;; Client API
+;; -------------------------------------------------------
+
+(define (start machine)
+  (machine 'start))
+
+(define (set-register-contents! machine register-name val)
+  (set-contents! (get-register machine register-name) val))
+
+(define (get-register-contents machine register-name)
+  (get-contents (get-register machine register-name)))
 
 ;; -------------------------------------------------------
 ;; Tests
