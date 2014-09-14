@@ -297,7 +297,7 @@
   (let ((op (lookup-prim (operation-exp-op exp) operations))
         (aprocs
          (map (lambda (e)
-                (make-primitive-exp e machine labels))
+                (make-operand-exp e machine labels))
               (operation-exp-operands exp))))
     (lambda ()
       (apply op (map (lambda (p) (p)) aprocs)))))
@@ -316,6 +316,16 @@
     (if val
         (cadr val)
         (error "Unknown operation -- ASSEMBLE" symbol))))
+
+(define (make-operand-exp exp machine labels)
+  (cond ((constant-exp? exp)
+         (let ((c (constant-exp-value exp)))
+           (lambda () c)))
+        ((register-exp? exp)
+         (let ((r (get-register machine (register-exp-reg exp))))
+           (lambda () (get-contents r))))
+        (else
+         (error "Invalid operand expression -- ASSEMBLE" exp))))
 
 ;; -------------------------------------------------------
 ;; Client API
@@ -402,3 +412,12 @@
 
 (start ex-5-8-machine)
 (get-register-contents ex-5-8-machine 'a) ;=> 3
+
+;; Exercise 5.9, p.529
+;; Labels cannot be used as operands
+
+(make-machine
+ '(a)
+ (list (list '+ +))
+ '((assign a (op +) (const 1) (label done))
+   done))
