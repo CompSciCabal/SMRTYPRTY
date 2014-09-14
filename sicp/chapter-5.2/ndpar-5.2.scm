@@ -405,13 +405,13 @@
       here
       (assign a (const 3))
       (goto (label there))
-      here-modified
+      here
       (assign a (const 4))
       (goto (label there))
       there)))
 
-(start ex-5-8-machine)
-(get-register-contents ex-5-8-machine 'a) ;=> 3
+;(start ex-5-8-machine)
+;(get-register-contents ex-5-8-machine 'a) ;=> 3
 
 ;; Exercise 5.9, p.529
 ;; Labels cannot be used as operands
