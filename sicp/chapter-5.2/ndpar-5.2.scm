@@ -248,14 +248,19 @@
 (define (make-save inst machine stack pc)
   (let ((reg (get-register machine (stack-inst-reg-name inst))))
     (lambda ()
-      (push stack (get-contents reg))
+      (push stack (cons (stack-inst-reg-name inst) (get-contents reg)))
       (advance-pc pc))))
 
 (define (make-restore inst machine stack pc)
-  (let ((reg (get-register machine (stack-inst-reg-name inst))))
+  (let* ((reg-name (stack-inst-reg-name inst))
+         (reg (get-register machine reg-name)))
     (lambda ()
-      (set-contents! reg (pop stack))
-      (advance-pc pc))))
+      (let ((head (pop stack)))
+        (if (eq? reg-name (car head))
+            (begin
+              (set-contents! reg (cdr head))
+              (advance-pc pc))
+            (error "Restoring wrong register" reg-name (car head)))))))
 
 (define (stack-inst-reg-name stack-instruction)
   (cadr stack-instruction))
@@ -421,3 +426,18 @@
  (list (list '+ +))
  '((assign a (op +) (const 1) (label done))
    done))
+
+;; Exercise 5.11, p.529
+;; Restoring wrong register
+
+(define ex-5-11-machine
+  (make-machine
+    '(x y)
+    (list)
+    '((assign x (const 5))
+      (assign y (const 6))
+      (save y)
+      (save x)
+      (restore y))))
+
+(start ex-5-11-machine)
