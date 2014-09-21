@@ -7,6 +7,52 @@
 (define (tagged-list? exp tag)
   (and (pair? exp) (eq? (car exp) tag)))
 
+(define (unique lst)
+  (define (u l acc)
+    (if (null? l)
+        acc
+        (let ((i (car l)))
+          (if (assoc i acc)
+              (u (cdr l) acc)
+              (u (cdr l) (cons (cons i i) acc))))))
+  (map car (u lst (list))))
+
+(define (sort compare key lst)
+  (define (partition pivot ls before after)
+    (if (null? ls)
+        (cons before after)
+        (if (compare (key (car ls)) (key pivot))
+            (partition pivot (cdr ls) (cons (car ls) before) after)
+            (partition pivot (cdr ls) before (cons (car ls) after)))))
+  (if (or (null? lst) (null? (cdr lst)))
+      lst
+      (let* ((pivot (car lst))
+             (parts (partition pivot (cdr lst) nil nil)))
+        (append (sort compare key (car parts))
+                (list pivot)
+                (sort compare key (cdr parts))))))
+
+(define (map-filter mapf pred lst)
+  (if (null? lst)
+      lst
+      (if (pred (car lst))
+          (cons (mapf (car lst))
+                (map-filter mapf pred (cdr lst)))
+          (map-filter mapf pred (cdr lst)))))
+
+(define (group-by keyf valuef coll)
+  (define (iter ls acc)
+    (if (null? ls)
+        acc
+        (let* ((key (keyf (car ls)))
+               (entry (assoc key acc)))
+          (if entry
+              (begin
+                (set-cdr! entry (cons (valuef (car ls)) (cdr entry)))
+                (iter (cdr ls) acc))
+              (iter (cdr ls) (cons (cons key (list (valuef (car ls)))) acc))))))
+  (iter coll nil))
+
 ;; -------------------------------------------------------
 ;; A Register-Machine Simulator
 ;; -------------------------------------------------------
@@ -75,6 +121,31 @@
           (list (list 'pc pc)
                 (list 'flag flag)
                 (list 'continue continue))))
+    (define (get-all-instructions)
+      (sort string<?
+            (lambda (x) (symbol->string (car x)))
+            (unique (map car instruction-sequence))))
+    (define (get-entry-points insts)
+      (map-filter cadadr
+                  (lambda (inst) (and (eq? (car inst) 'goto)
+                                      (eq? (caadr inst) 'reg)))
+                  insts))
+    (define (get-stack-regs insts)
+      (map-filter cadr
+                  (lambda (inst) (or (eq? (car inst) 'save)
+                                     (eq? (car inst) 'restore)))
+                  insts))
+    (define (get-sources insts)
+      (group-by car cdr
+                (map-filter cdr
+                            (lambda (inst) (eq? (car inst) 'assign))
+                            insts)))
+    (define (info)
+      (let ((insts (get-all-instructions)))
+        (list (cons 'instructions insts)
+              (cons 'entry-points (get-entry-points insts))
+              (cons 'stack-regs (unique (get-stack-regs insts)))
+              (cons 'sources (get-sources insts)))))
     (define (allocate-register name)
       (if (assoc name register-table)
           (error "Multiply defined register: " name)
@@ -100,6 +171,7 @@
              (execute))
             ((eq? message 'install-instruction-sequence)
              (lambda (seq) (set! instruction-sequence seq)))
+            ((eq? message 'info) (info))
             ((eq? message 'allocate-register) allocate-register)
             ((eq? message 'get-register) lookup-register)
             ((eq? message 'install-operations)
@@ -108,6 +180,9 @@
             ((eq? message 'operations) the-ops)
             (else (error "Unknown request -- MACHINE" message))))
     dispatch))
+
+(define (get-info machine)
+  (machine 'info))
 
 (define (get-register machine register-name)
   ((machine 'get-register) register-name))
