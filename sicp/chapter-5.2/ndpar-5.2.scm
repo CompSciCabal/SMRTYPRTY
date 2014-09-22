@@ -108,7 +108,6 @@
 
 (define (make-new-machine)
   (let* ((pc (make-register 'pc))
-         (flag (make-register 'flag))
          (continue (make-register 'continue))
          (stack (make-stack))
          (instruction-sequence '())
@@ -116,7 +115,6 @@
                               (lambda () (stack 'initialize)))))
          (register-table
           (list (list 'pc pc)
-                (list 'flag flag)
                 (list 'continue continue))))
     (define (get-all-instructions)
       (sort string<?
@@ -207,7 +205,6 @@
 
 (define (update-insts! insts labels machine)
   (let ((pc (get-register machine 'pc))
-        (flag (get-register machine 'flag))
         (stack (machine 'stack))
         (ops (machine 'operations)))
     (for-each
@@ -216,7 +213,7 @@
         inst
         (make-execution-procedure
          (instruction-text inst)
-         labels machine pc flag stack ops)))
+         labels machine pc stack ops)))
      insts)))
 
 (define (make-instruction text)
@@ -240,13 +237,11 @@
         (cdr val)
         (error "Undefined label -- ASSEMBLE" label-name))))
 
-(define (make-execution-procedure inst labels machine pc flag stack ops)
+(define (make-execution-procedure inst labels machine pc stack ops)
   (cond ((eq? (car inst) 'assign)
          (make-assign inst machine labels ops pc))
-        ((eq? (car inst) 'test)
-         (make-test inst machine labels ops flag pc))
-        ((eq? (car inst) 'branch)
-         (make-branch inst machine labels flag pc))
+        ((eq? (car inst) 'if)
+         (make-test inst machine labels ops pc))
         ((eq? (car inst) 'goto)
          (make-goto inst machine labels pc))
         ((eq? (car inst) 'save)
@@ -277,31 +272,26 @@
 (define (advance-pc pc)
   (set-contents! pc (cdr (get-contents pc))))
 
-(define (make-test inst machine labels operations flag pc)
-  (let ((condition (test-condition inst)))
+(define (make-test inst machine labels operations pc)
+  (let ((condition (test-condition inst))
+        (dest (branch-dest inst)))
     (if (operation-exp? condition)
         (let ((condition-proc
                (make-operation-exp condition machine labels operations)))
-          (lambda ()
-            (set-contents! flag (condition-proc))
-            (advance-pc pc)))
+          (if (label-exp? dest)
+              (let ((insts (lookup-label labels (label-exp-label dest))))
+                (lambda ()
+                  (if (condition-proc)
+                      (set-contents! pc insts)
+                      (advance-pc pc))))
+              (error "Bad BRANCH instruction -- ASSEMBLE" inst)))
         (error "Bad TEST instruction -- ASSEMBLE" inst))))
 
 (define (test-condition test-instruction)
-  (cdr test-instruction))
-
-(define (make-branch inst machine labels flag pc)
-  (let ((dest (branch-dest inst)))
-    (if (label-exp? dest)
-        (let ((insts (lookup-label labels (label-exp-label dest))))
-          (lambda ()
-            (if (get-contents flag)
-                (set-contents! pc insts)
-                (advance-pc pc))))
-        (error "Bad BRANCH instruction -- ASSEMBLE" inst))))
+  (cadr test-instruction))
 
 (define (branch-dest branch-instruction)
-  (cadr branch-instruction))
+  (caddr branch-instruction))
 
 (define (make-goto inst machine labels pc)
   (let ((dest (goto-dest inst)))
@@ -428,8 +418,7 @@
    (list (list '= =) (list '- -) (list '* *))
    '((assign continue (label done))
      expt-loop
-     (test (op =) (reg n) (const 0))
-     (branch (label base-case))
+     (if ((op =) (reg n) (const 0)) (label base-case))
      (save continue)
      (assign n (op -) (reg n) (const 1))
      (assign continue (label after-expt))
@@ -455,8 +444,7 @@
    '((assign c (reg n))
      (assign p (const 1))
      expt-iter
-     (test (op =) (reg c) (const 0))
-     (branch (label done))
+     (if ((op =) (reg c) (const 0)) (label done))
      (assign c (op -) (reg c) (const 1))
      (assign p (op *) (reg b) (reg p))
      (goto (label expt-iter))
