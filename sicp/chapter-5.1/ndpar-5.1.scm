@@ -53,7 +53,6 @@
 ; Implementation in assembly language
 (define newton-machine
   (make-machine
-    '(x g a b)
     (list (list '< <)
           (list '- -)
           (list '* *)
@@ -118,7 +117,6 @@
 
 (define fib-machine
   (make-machine
-    '(n val)
     (list (list '< <) (list '- -) (list '+ +))
     '((assign continue (label fib-done))
       fib-loop
