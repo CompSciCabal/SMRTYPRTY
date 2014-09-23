@@ -145,6 +145,7 @@
 (set-register-contents! fib-machine 'n 6)
 (start fib-machine)
 (get-register-contents fib-machine 'val) ;=> 8
+(print-statistics fib-machine)
 
 ;; Exercise 5.12, p.530
 

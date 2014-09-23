@@ -81,22 +81,37 @@
   ((register 'set) val))
 
 (define (make-stack)
-  (let ((s '()))
+  (let ((s '())
+        (number-pushes 0)
+        (max-depth 0)
+        (current-depth 0))
     (define (push x)
-      (set! s (cons x s)))
+      (set! s (cons x s))
+      (set! number-pushes (+ 1 number-pushes))
+      (set! current-depth (+ 1 current-depth))
+      (set! max-depth (max current-depth max-depth)))
     (define (pop)
       (if (null? s)
           (error "Empty stack -- POP")
           (let ((top (car s)))
             (set! s (cdr s))
+            (set! current-depth (- current-depth 1))
             top)))
     (define (initialize)
       (set! s '())
+      (set! number-pushes 0)
+      (set! max-depth 0)
+      (set! current-depth 0)
       'done)
+    (define (print-statistics)
+      (newline)
+      (display (list 'total-pushes '= number-pushes
+                     'maximum-depth '= max-depth)))
     (define (dispatch message)
       (cond ((eq? message 'push) push)
             ((eq? message 'pop) (pop))
             ((eq? message 'initialize) (initialize))
+            ((eq? message 'print-statistics) (print-statistics))
             (else (error "Unknown request -- STACK" message))))
     dispatch))
 
@@ -112,7 +127,9 @@
          (stack (make-stack))
          (instruction-sequence '())
          (the-ops (list (list 'initialize-stack
-                              (lambda () (stack 'initialize)))))
+                              (lambda () (stack 'initialize)))
+                        (list 'print-stack-statistics
+                              (lambda () (stack 'print-statistics)))))
          (register-table
           (list (list 'pc pc)
                 (list 'continue continue))))
@@ -406,6 +423,9 @@
 (define (get-register-contents machine register-name)
   (get-contents (get-register machine register-name)))
 
+(define (print-statistics machine)
+  ((machine 'stack) 'print-statistics))
+
 ;; -------------------------------------------------------
 ;; Tests
 ;; -------------------------------------------------------
@@ -436,6 +456,7 @@
 (set-register-contents! expt-1-machine 'b 3)
 (start expt-1-machine)
 (get-register-contents expt-1-machine 'val)
+(print-statistics expt-1-machine)
 
 ; b. Iterative exponentiation
 (define expt-2-machine
@@ -454,6 +475,7 @@
 (set-register-contents! expt-2-machine 'b 3)
 (start expt-2-machine)
 (get-register-contents expt-2-machine 'p)
+(print-statistics expt-2-machine)
 
 ;; Exercise 5.8, p.523
 ;; Ambiguous labels
