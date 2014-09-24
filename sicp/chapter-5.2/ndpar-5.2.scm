@@ -129,6 +129,7 @@
          (continue (make-register 'continue))
          (stack (make-stack))
          (instruction-sequence '())
+         (trace false)
          (instructions-executed 0)
          (the-ops (list (list 'initialize-stack
                               (lambda () (stack 'initialize)))
@@ -180,8 +181,9 @@
       (let ((insts (get-contents pc)))
         (if (null? insts)
             'done
-            (begin
-              ((instruction-execution-proc (car insts)))
+            (let ((inst (car insts)))
+              (if trace (print (instruction-text inst)))
+              ((instruction-execution-proc inst))
               (set! instructions-executed (+ 1 instructions-executed))
               (execute)))))
     (define (dispatch message)
@@ -189,6 +191,8 @@
              (set-contents! pc instruction-sequence)
              (execute))
             ((eq? message 'initialize) (initialize))
+            ((eq? message 'trace-on) (set! trace true))
+            ((eq? message 'trace-off) (set! trace false))
             ((eq? message 'install-instruction-sequence)
              (lambda (seq) (set! instruction-sequence seq)))
             ((eq? message 'info) (info))
@@ -467,6 +471,7 @@
      (goto (reg continue))
      done)))
 
+(expt-1-machine 'trace-on)
 (set-register-contents! expt-1-machine 'n 5)
 (set-register-contents! expt-1-machine 'b 3)
 (start expt-1-machine)
