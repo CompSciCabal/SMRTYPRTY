@@ -129,6 +129,7 @@
          (continue (make-register 'continue))
          (stack (make-stack))
          (instruction-sequence '())
+         (instructions-executed 0)
          (the-ops (list (list 'initialize-stack
                               (lambda () (stack 'initialize)))
                         (list 'print-stack-statistics
@@ -155,12 +156,15 @@
                 (map-filter cdr
                             (lambda (inst) (eq? (car inst) 'assign))
                             insts)))
+    (define (initialize)
+      (set! instructions-executed 0))
     (define (info)
       (let ((insts (get-all-instructions)))
         (list (cons 'instructions insts)
               (cons 'entry-points (get-entry-points insts))
               (cons 'stack-regs (unique (get-stack-regs insts)))
-              (cons 'sources (get-sources insts)))))
+              (cons 'sources (get-sources insts))
+              (cons 'instructions-executed instructions-executed))))
     (define (allocate-register name)
       (if (assoc name register-table)
           (error "Multiply defined register: " name)
@@ -178,11 +182,13 @@
             'done
             (begin
               ((instruction-execution-proc (car insts)))
+              (set! instructions-executed (+ 1 instructions-executed))
               (execute)))))
     (define (dispatch message)
       (cond ((eq? message 'start)
              (set-contents! pc instruction-sequence)
              (execute))
+            ((eq? message 'initialize) (initialize))
             ((eq? message 'install-instruction-sequence)
              (lambda (seq) (set! instruction-sequence seq)))
             ((eq? message 'info) (info))
@@ -417,6 +423,9 @@
 ;; Client API
 ;; -------------------------------------------------------
 
+(define (init-machine machine)
+  (machine 'initialize))
+
 (define (start machine)
   (machine 'start))
 
@@ -463,6 +472,7 @@
 (start expt-1-machine)
 (get-register-contents expt-1-machine 'val)
 (print-statistics expt-1-machine)
+(print (get-info expt-1-machine))
 
 ; b. Iterative exponentiation
 (define expt-2-machine
@@ -482,6 +492,7 @@
 (start expt-2-machine)
 (get-register-contents expt-2-machine 'p)
 (print-statistics expt-2-machine)
+(print (get-info expt-2-machine))
 
 ;; Exercise 5.8, p.523
 ;; Ambiguous labels
@@ -527,6 +538,12 @@
 ;; Exercise 5.14, p.532
 ;; Monitoring stack of recursive factorial machine
 
+(define (fact-init-machine)
+  (init-machine fact-machine))
+
+(define (fact-print-info)
+  (print (get-info fact-machine)))
+
 (define (fact-init-stack)
   (init-stack fact-machine))
 
@@ -537,9 +554,12 @@
   (make-machine
     (list (list '= =) (list '* *) (list '- -)
           (list 'read read) (list 'print print)
+          (list 'init-machine fact-init-machine)
+          (list 'print-info fact-print-info)
           (list 'fact-stats fact-print-stats)
           (list 'fact-init fact-init-stack))
     '(fact-start
+      (perform (op init-machine))
       (perform (op fact-init))
       (assign n (op read))
       (assign continue (label fact-done))
@@ -561,6 +581,7 @@
       fact-done
       (perform (op print) (reg val))
       (perform (op fact-stats))
+      (perform (op print-info))
       (goto (label fact-start)))))
 
 (start fact-machine)
