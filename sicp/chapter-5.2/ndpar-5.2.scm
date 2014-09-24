@@ -4,6 +4,10 @@
 ;; Utility functions
 ;; -------------------------------------------------------
 
+(define (print . x)
+  (apply display x)
+  (newline))
+
 (define (tagged-list? exp tag)
   (and (pair? exp) (eq? (car exp) tag)))
 
@@ -104,9 +108,8 @@
       (set! current-depth 0)
       'done)
     (define (print-statistics)
-      (newline)
-      (display (list 'total-pushes '= number-pushes
-                     'maximum-depth '= max-depth)))
+      (print (list 'total-pushes '= number-pushes
+                   'maximum-depth '= max-depth)))
     (define (dispatch message)
       (cond ((eq? message 'push) push)
             ((eq? message 'pop) (pop))
@@ -426,6 +429,9 @@
 (define (print-statistics machine)
   ((machine 'stack) 'print-statistics))
 
+(define (init-stack machine)
+  ((machine 'stack) 'initialize))
+
 ;; -------------------------------------------------------
 ;; Tests
 ;; -------------------------------------------------------
@@ -517,3 +523,44 @@
       (restore y))))
 
 (start ex-5-11-machine)
+
+;; Exercise 5.14, p.532
+;; Monitoring stack of recursive factorial machine
+
+(define (fact-init-stack)
+  (init-stack fact-machine))
+
+(define (fact-print-stats)
+  (print-statistics fact-machine))
+
+(define fact-machine
+  (make-machine
+    (list (list '= =) (list '* *) (list '- -)
+          (list 'read read) (list 'print print)
+          (list 'fact-stats fact-print-stats)
+          (list 'fact-init fact-init-stack))
+    '(fact-start
+      (perform (op fact-init))
+      (assign n (op read))
+      (assign continue (label fact-done))
+      fact-loop
+      (if ((op =) (reg n) (const 1)) (label base-case))
+      (save continue)
+      (save n)
+      (assign n (op -) (reg n) (const 1))
+      (assign continue (label after-fact))
+      (goto (label fact-loop))
+      after-fact
+      (restore n)
+      (restore continue)
+      (assign val (op *) (reg n) (reg val))
+      (goto (reg continue))
+      base-case
+      (assign val (const 1))
+      (goto (reg continue))
+      fact-done
+      (perform (op print) (reg val))
+      (perform (op fact-stats))
+      (goto (label fact-start)))))
+
+(start fact-machine)
