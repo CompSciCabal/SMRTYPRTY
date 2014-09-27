@@ -140,7 +140,7 @@
                 (list 'continue continue))))
     (define (get-all-instructions)
       (sort string<?
-            (lambda (x) (symbol->string (car x)))
+            (lambda (x) (symbol->string (instruction-text x)))
             (unique (map car instruction-sequence))))
     (define (get-entry-points insts)
       (map-filter cadadr
