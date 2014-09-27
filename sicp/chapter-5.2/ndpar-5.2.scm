@@ -126,7 +126,6 @@
 
 (define (make-new-machine)
   (let* ((pc (make-register 'pc))
-         (continue (make-register 'continue))
          (stack (make-stack))
          (instruction-sequence '())
          (trace false)
@@ -135,9 +134,7 @@
                               (lambda () (stack 'initialize)))
                         (list 'print-stack-statistics
                               (lambda () (stack 'print-statistics)))))
-         (register-table
-          (list (list 'pc pc)
-                (list 'continue continue))))
+         (register-table (list (list 'pc pc))))
     (define (get-all-instructions)
       (sort string<?
             (lambda (x) (symbol->string (instruction-text x)))
