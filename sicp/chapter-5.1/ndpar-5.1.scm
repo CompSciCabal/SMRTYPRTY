@@ -143,6 +143,8 @@
       fib-done)))
 
 (set-register-contents! fib-machine 'n 6)
+(trace-register fib-machine 'n)
+(trace-register fib-machine 'val)
 (start fib-machine)
 (get-register-contents fib-machine 'val) ;=> 8
 (print-statistics fib-machine)

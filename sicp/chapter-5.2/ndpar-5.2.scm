@@ -71,11 +71,16 @@
 ;; Registers
 
 (define (make-register name)
-  (let ((contents '*unassigned*))
+  (let ((contents '*unassigned*)
+        (trace false))
     (define (dispatch message)
       (cond ((eq? message 'get) contents)
             ((eq? message 'set)
-             (lambda (val) (set! contents val)))
+             (lambda (val)
+               (if trace (print (list "REG:" name ":" contents "->" val)))
+               (set! contents val)))
+            ((eq? message 'trace-on) (set! trace true))
+            ((eq? message 'trace-off) (set! trace false))
             (else
              (error "Unknown request -- REGISTER" message))))
     dispatch))
@@ -196,6 +201,10 @@
             ((eq? message 'initialize) (initialize))
             ((eq? message 'trace-on) (set! trace true))
             ((eq? message 'trace-off) (set! trace false))
+            ((eq? message 'trace-reg-on)
+             (lambda (reg-name) ((lookup-register reg-name) 'trace-on)))
+            ((eq? message 'trace-reg-off)
+             (lambda (reg-name) ((lookup-register reg-name) 'trace-off)))
             ((eq? message 'install-instruction-sequence)
              (lambda (seq) (set! instruction-sequence seq)))
             ((eq? message 'info) (info))
@@ -443,6 +452,9 @@
 
 (define (get-register-contents machine register-name)
   (get-contents (get-register machine register-name)))
+
+(define (trace-register machine reg-name)
+  ((machine 'trace-reg-on) reg-name))
 
 (define (print-statistics machine)
   ((machine 'stack) 'print-statistics))
