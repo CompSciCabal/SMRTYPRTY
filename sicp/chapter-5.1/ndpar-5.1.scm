@@ -142,12 +142,14 @@
       (goto (reg continue))
       fib-done)))
 
-(set-register-contents! fib-machine 'n 6)
+(fib-machine 'trace-on)
 (trace-register fib-machine 'n)
 (trace-register fib-machine 'val)
+(set-register-contents! fib-machine 'n 6)
 (start fib-machine)
 (get-register-contents fib-machine 'val) ;=> 8
 (print-statistics fib-machine)
+(print (get-info fib-machine))
 
 ;; Exercise 5.12, p.530
 

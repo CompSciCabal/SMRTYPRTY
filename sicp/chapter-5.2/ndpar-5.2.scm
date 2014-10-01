@@ -190,7 +190,7 @@
         (if (null? insts)
             'done
             (let ((inst (car insts)))
-              (if trace (print (instruction-text inst)))
+              (if trace (print (list (instruction-label inst) ":" (instruction-text inst))))
               ((instruction-execution-proc inst))
               (set! instructions-executed (+ 1 instructions-executed))
               (execute)))))
@@ -238,9 +238,14 @@
            (if (symbol? next-inst)
                (if (assoc next-inst labels)
                    (error "Duplicate label -- ASSEMBLE" next-inst)
-                   (receive insts
-                            (cons (make-label-entry next-inst insts)
-                                  labels)))
+                   (begin
+                     (for-each (lambda (inst)
+                                 (if (instruction-no-label? inst)
+                                     (set-instruction-label! inst next-inst)))
+                               insts)
+                     (receive insts
+                              (cons (make-label-entry next-inst insts)
+                                    labels))))
                (receive (cons (make-instruction next-inst)
                               insts)
                         labels)))))))
@@ -259,16 +264,25 @@
      insts)))
 
 (define (make-instruction text)
-  (cons text '()))
+  (list text '() '()))
 
 (define (instruction-text inst)
   (car inst))
 
+(define (instruction-label inst)
+  (cadr inst))
+
+(define (instruction-no-label? inst)
+  (empty? (instruction-label inst)))
+
+(define (set-instruction-label! inst label)
+  (set-car! (cdr inst) label))
+
 (define (instruction-execution-proc inst)
-  (cdr inst))
+  (cddr inst))
 
 (define (set-instruction-execution-proc! inst proc)
-  (set-cdr! inst proc))
+  (set-cdr! (cdr inst) proc))
 
 (define (make-label-entry label-name insts)
   (cons label-name insts))
