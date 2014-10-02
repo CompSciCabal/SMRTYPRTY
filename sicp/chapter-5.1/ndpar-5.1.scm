@@ -146,7 +146,15 @@
 (trace-register fib-machine 'n)
 (trace-register fib-machine 'val)
 (set-register-contents! fib-machine 'n 6)
+(set-breakpoint fib-machine 'afterfib-n-2 4)
 (start fib-machine)
+(get-register-contents fib-machine 'val) ;=> 1
+(proceed-machine fib-machine)
+;(set-register-contents! fib-machine 'val 6)
+(proceed-machine fib-machine)
+(cancel-breakpoint fib-machine 'afterfib-n-2 4)
+;(cancel-all-breakpoints fib-machine)
+(proceed-machine fib-machine) ;=> done
 (get-register-contents fib-machine 'val) ;=> 8
 (print-statistics fib-machine)
 (print (get-info fib-machine))

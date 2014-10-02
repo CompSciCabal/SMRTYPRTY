@@ -141,6 +141,7 @@
          (instruction-sequence '())
          (trace false)
          (instructions-executed 0)
+         (labels '())
          (the-ops (list (list 'initialize-stack
                               (lambda () (stack 'initialize)))
                         (list 'print-stack-statistics
@@ -165,6 +166,20 @@
                 (map-filter cdr
                             (lambda (inst) (eq? (car inst) 'assign))
                             insts)))
+    (define (set-breakpoint label n value)
+      (define (iter insts k)
+        (if (= k 1)
+            (if (car insts)
+                (set-instruction-breakpoint (car insts) value)
+                (error "Invalid place for breakpoint" label n))
+            (iter (cdr insts) (- k 1))))
+      (iter (cdr (assoc label labels)) n))
+    (define (cancel-all-breakpoints)
+      (for-each (lambda (label)
+                  (for-each (lambda (inst)
+                              (set-instruction-breakpoint inst false))
+                            (cdr label)))
+                labels))
     (define (initialize)
       (set! instructions-executed 0))
     (define (info)
@@ -185,19 +200,22 @@
         (if val
             (cadr val)
             (cadr (allocate-register name)))))
-    (define (execute)
+    (define (execute stop-at-breakpoint)
       (let ((insts (get-contents pc)))
         (if (null? insts)
             'done
             (let ((inst (car insts)))
-              (if trace (print (list (instruction-label inst) ":" (instruction-text inst))))
-              ((instruction-execution-proc inst))
-              (set! instructions-executed (+ 1 instructions-executed))
-              (execute)))))
+              (if (and (instruction-breakpoint inst) stop-at-breakpoint)
+                  (print (list "BREAKPOINT:" (instruction-label inst) (instruction-breakpoint inst)))
+                  (begin
+                    (if trace (print (list (instruction-label inst) ":" (instruction-text inst))))
+                    ((instruction-execution-proc inst))
+                    (set! instructions-executed (+ 1 instructions-executed))
+                    (execute true)))))))
     (define (dispatch message)
       (cond ((eq? message 'start)
              (set-contents! pc instruction-sequence)
-             (execute))
+             (execute true))
             ((eq? message 'initialize) (initialize))
             ((eq? message 'trace-on) (set! trace true))
             ((eq? message 'trace-off) (set! trace false))
@@ -207,6 +225,13 @@
              (lambda (reg-name) ((lookup-register reg-name) 'trace-off)))
             ((eq? message 'install-instruction-sequence)
              (lambda (seq) (set! instruction-sequence seq)))
+            ((eq? message 'set-labels)
+             (lambda (ls) (set! labels ls)))
+            ((eq? message 'set-breakpoint) set-breakpoint)
+            ((eq? message 'cancel-breakpoint)
+             (lambda (label n) (set-breakpoint label n false)))
+            ((eq? message 'cancel-all-breakpoints) (cancel-all-breakpoints))
+            ((eq? message 'proceed) (execute false))
             ((eq? message 'info) (info))
             ((eq? message 'allocate-register) allocate-register)
             ((eq? message 'get-register) lookup-register)
@@ -254,6 +279,7 @@
   (let ((pc (get-register machine 'pc))
         (stack (machine 'stack))
         (ops (machine 'operations)))
+    ((machine 'set-labels) labels)
     (for-each
      (lambda (inst)
        (set-instruction-execution-proc!
@@ -264,7 +290,7 @@
      insts)))
 
 (define (make-instruction text)
-  (list text '() '()))
+  (list text '() false '()))
 
 (define (instruction-text inst)
   (car inst))
@@ -278,11 +304,17 @@
 (define (set-instruction-label! inst label)
   (set-car! (cdr inst) label))
 
+(define (instruction-breakpoint inst)
+  (caddr inst))
+
+(define (set-instruction-breakpoint inst value)
+  (set-car! (cddr inst) value))
+
 (define (instruction-execution-proc inst)
-  (cddr inst))
+  (cdddr inst))
 
 (define (set-instruction-execution-proc! inst proc)
-  (set-cdr! (cdr inst) proc))
+  (set-cdr! (cddr inst) proc))
 
 (define (make-label-entry label-name insts)
   (cons label-name insts))
@@ -469,6 +501,18 @@
 
 (define (trace-register machine reg-name)
   ((machine 'trace-reg-on) reg-name))
+
+(define (set-breakpoint machine label n)
+  ((machine 'set-breakpoint) label n n))
+
+(define (cancel-breakpoint machine label n)
+  ((machine 'cancel-breakpoint) label n))
+
+(define (cancel-all-breakpoints machine)
+  (machine 'cancel-all-breakpoints))
+
+(define (proceed-machine machine)
+  (machine 'proceed))
 
 (define (print-statistics machine)
   ((machine 'stack) 'print-statistics))
