@@ -123,14 +123,14 @@
       (set! max-depth 0)
       (set! current-depth 0)
       'done)
-    (define (print-statistics)
-      (print (list 'total-pushes '= number-pushes
-                   'maximum-depth '= max-depth)))
+    (define (statistics)
+      (list (cons 'total-stack-pushes number-pushes)
+            (cons 'maximum-stack-depth max-depth)))
     (define (dispatch message)
       (cond ((eq? message 'push) push)
             ((eq? message 'pop) (pop))
             ((eq? message 'initialize) (initialize))
-            ((eq? message 'print-statistics) (print-statistics))
+            ((eq? message 'statistics) (statistics))
             (else (error "Unknown request -- STACK" message))))
     dispatch))
 
@@ -143,8 +143,8 @@
 (define (stack-init stack)
   (stack 'initialize))
 
-(define (stack-print-stats stack)
-  (stack 'print-statistics))
+(define (stack-stats stack)
+  (stack 'statistics))
 
 ;; Machine
 
@@ -158,7 +158,7 @@
          (the-ops (list (list 'initialize-stack
                               (lambda () (stack-init stack)))
                         (list 'print-stack-statistics
-                              (lambda () (stack-print-stats stack)))))
+                              (lambda () (stack-stats stack)))))
          (register-table (list (list 'pc pc))))
     (define (get-all-instructions)
       (sort string<?
@@ -200,8 +200,10 @@
         (list (cons 'instructions insts)
               (cons 'entry-points (get-entry-points insts))
               (cons 'stack-regs (unique (lambda (x) x) (get-stack-regs insts)))
-              (cons 'sources (get-sources insts))
-              (cons 'instructions-executed instructions-executed))))
+              (cons 'sources (get-sources insts)))))
+    (define (print-stats)
+      (print (cons (cons 'instructions-executed instructions-executed)
+                   (stack-stats stack))))
     (define (allocate-register name)
       (if (assoc name register-table)
           (error "Multiply defined register: " name)
@@ -246,6 +248,7 @@
             ((eq? message 'cancel-all-breakpoints) (cancel-all-breakpoints))
             ((eq? message 'proceed) (execute false))
             ((eq? message 'info) (info))
+            ((eq? message 'print-stats) (print-stats))
             ((eq? message 'allocate-register) allocate-register)
             ((eq? message 'get-register) lookup-register)
             ((eq? message 'install-operations)
@@ -521,7 +524,7 @@
   (machine 'proceed))
 
 (define (print-statistics machine)
-  (stack-print-stats (machine 'stack)))
+  (machine 'print-stats))
 
 (define (get-info machine)
   (machine 'info))
