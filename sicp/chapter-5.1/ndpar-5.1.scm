@@ -161,8 +161,6 @@
 
 ;; Exercise 5.12, p.530
 
-(display (get-info fib-machine))
-
 ((instructions (assign val (reg n))
                (assign continue (label fib-done))
                (assign val (op +) (reg val) (reg n))

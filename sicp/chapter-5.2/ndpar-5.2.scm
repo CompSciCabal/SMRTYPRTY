@@ -11,15 +11,16 @@
 (define (tagged-list? exp tag)
   (and (pair? exp) (eq? (car exp) tag)))
 
-(define (unique lst)
+(define (unique key lst)
   (define (u l acc)
     (if (null? l)
         acc
-        (let ((i (car l)))
-          (if (assoc i acc)
+        (let* ((i (car l))
+               (k (key i)))
+          (if (assoc k acc)
               (u (cdr l) acc)
-              (u (cdr l) (cons (cons i i) acc))))))
-  (map car (u lst (list))))
+              (u (cdr l) (cons (cons k i) acc))))))
+  (map car (u lst null)))
 
 (define (sort compare key lst)
   (define (partition pivot ls before after)
@@ -31,7 +32,7 @@
   (if (or (null? lst) (null? (cdr lst)))
       lst
       (let* ((pivot (car lst))
-             (parts (partition pivot (cdr lst) nil nil)))
+             (parts (partition pivot (cdr lst) null null)))
         (append (sort compare key (car parts))
                 (list pivot)
                 (sort compare key (cdr parts))))))
@@ -55,7 +56,7 @@
                 (set-cdr! entry (cons (valuef (car ls)) (cdr entry)))
                 (iter (cdr ls) acc))
               (iter (cdr ls) (cons (cons key (list (valuef (car ls)))) acc))))))
-  (iter coll nil))
+  (iter coll null))
 
 ;; -------------------------------------------------------
 ;; A Register-Machine Simulator
@@ -149,8 +150,9 @@
          (register-table (list (list 'pc pc))))
     (define (get-all-instructions)
       (sort string<?
-            (lambda (x) (symbol->string (instruction-text x)))
-            (unique (map car instruction-sequence))))
+            (lambda (inst) (symbol->string (car inst)))
+            (unique (lambda (inst) (inst 'text))
+                    instruction-sequence)))
     (define (get-entry-points insts)
       (map-filter cadadr
                   (lambda (inst) (and (eq? (car inst) 'goto)
@@ -170,14 +172,13 @@
       (define (iter insts k)
         (if (= k 1)
             (if (car insts)
-                (set-instruction-breakpoint (car insts) value)
+                (((car insts) 'set-breakpoint) value)
                 (error "Invalid place for breakpoint" label n))
             (iter (cdr insts) (- k 1))))
       (iter (cdr (assoc label labels)) n))
     (define (cancel-all-breakpoints)
       (for-each (lambda (label)
-                  (for-each (lambda (inst)
-                              (set-instruction-breakpoint inst false))
+                  (for-each (lambda (inst) (inst 'unset-breakpoint))
                             (cdr label)))
                 labels))
     (define (initialize)
@@ -186,7 +187,7 @@
       (let ((insts (get-all-instructions)))
         (list (cons 'instructions insts)
               (cons 'entry-points (get-entry-points insts))
-              (cons 'stack-regs (unique (get-stack-regs insts)))
+              (cons 'stack-regs (unique (lambda (x) x) (get-stack-regs insts)))
               (cons 'sources (get-sources insts))
               (cons 'instructions-executed instructions-executed))))
     (define (allocate-register name)
@@ -205,11 +206,11 @@
         (if (null? insts)
             'done
             (let ((inst (car insts)))
-              (if (and (instruction-breakpoint inst) stop-at-breakpoint)
-                  (print (list "BREAKPOINT:" (instruction-label inst) (instruction-breakpoint inst)))
+              (if (and (inst 'breakpoint) stop-at-breakpoint)
+                  (print (list "BREAKPOINT:" (inst 'label) (inst 'breakpoint)))
                   (begin
-                    (if trace (print (list (instruction-label inst) ":" (instruction-text inst))))
-                    ((instruction-execution-proc inst))
+                    (if trace (print (list (inst 'label) ":" (inst 'text))))
+                    ((inst 'procedure))
                     (set! instructions-executed (+ 1 instructions-executed))
                     (execute true)))))))
     (define (dispatch message)
@@ -242,11 +243,10 @@
             (else (error "Unknown request -- MACHINE" message))))
     dispatch))
 
-(define (get-info machine)
-  (machine 'info))
-
 (define (get-register machine register-name)
   ((machine 'get-register) register-name))
+
+;; Assembler
 
 (define (assemble controller-text machine)
   (extract-labels controller-text
@@ -265,8 +265,8 @@
                    (error "Duplicate label -- ASSEMBLE" next-inst)
                    (begin
                      (for-each (lambda (inst)
-                                 (if (instruction-no-label? inst)
-                                     (set-instruction-label! inst next-inst)))
+                                 (if (inst 'no-label?)
+                                     ((inst 'set-label)  next-inst)))
                                insts)
                      (receive insts
                               (cons (make-label-entry next-inst insts)
@@ -275,6 +275,9 @@
                               insts)
                         labels)))))))
 
+(define (make-label-entry label-name insts)
+  (cons label-name insts))
+
 (define (update-insts! insts labels machine)
   (let ((pc (get-register machine 'pc))
         (stack (machine 'stack))
@@ -282,48 +285,33 @@
     ((machine 'set-labels) labels)
     (for-each
      (lambda (inst)
-       (set-instruction-execution-proc!
-        inst
+       ((inst 'set-procedure)
         (make-execution-procedure
-         (instruction-text inst)
+         (inst 'text)
          labels machine pc stack ops)))
      insts)))
 
-(define (make-instruction text)
-  (list text '() false '()))
-
-(define (instruction-text inst)
-  (car inst))
-
-(define (instruction-label inst)
-  (cadr inst))
-
-(define (instruction-no-label? inst)
-  (empty? (instruction-label inst)))
-
-(define (set-instruction-label! inst label)
-  (set-car! (cdr inst) label))
-
-(define (instruction-breakpoint inst)
-  (caddr inst))
-
-(define (set-instruction-breakpoint inst value)
-  (set-car! (cddr inst) value))
-
-(define (instruction-execution-proc inst)
-  (cdddr inst))
-
-(define (set-instruction-execution-proc! inst proc)
-  (set-cdr! (cddr inst) proc))
-
-(define (make-label-entry label-name insts)
-  (cons label-name insts))
-
-(define (lookup-label labels label-name)
-  (let ((val (assoc label-name labels)))
-    (if val
-        (cdr val)
-        (error "Undefined label -- ASSEMBLE" label-name))))
+(define (make-instruction instruction-text)
+  (let ((text instruction-text)
+        (label '())
+        (breakpoint false)
+        (procedure '()))
+    (define (dispatch message)
+      (cond ((eq? message 'text) text)
+            ((eq? message 'set-label)
+             (lambda (new-label) (set! label new-label)))
+            ((eq? message 'label) label)
+            ((eq? message 'no-label?) (empty? label))
+            ((eq? message 'set-breakpoint)
+             (lambda (value) (set! breakpoint value)))
+            ((eq? message 'unset-breakpoint) (set! breakpoint false))
+            ((eq? message 'breakpoint) breakpoint)
+            ((eq? message 'set-procedure)
+             (lambda (proc) (set! procedure proc)))
+            ((eq? message 'procedure) procedure)
+            (else
+             (error "Unknown request -- INSTRUCTION" message))))
+    dispatch))
 
 ;; Instructions
 
@@ -361,6 +349,12 @@
 
 (define (advance-pc pc)
   (set-contents! pc (cdr (get-contents pc))))
+
+(define (lookup-label labels label-name)
+  (let ((val (assoc label-name labels)))
+    (if val
+        (cdr val)
+        (error "Undefined label -- ASSEMBLE" label-name))))
 
 (define (make-test inst machine labels operations pc)
   (let ((condition (test-condition inst))
@@ -516,6 +510,9 @@
 
 (define (print-statistics machine)
   ((machine 'stack) 'print-statistics))
+
+(define (get-info machine)
+  (machine 'info))
 
 (define (init-stack machine)
   ((machine 'stack) 'initialize))
