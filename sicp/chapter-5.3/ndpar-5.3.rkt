@@ -27,3 +27,112 @@
 ;;    free  p4
 ;;       x  p1
 ;;       y  p3
+
+
+;; Exercise 5.21 p.539
+;; count-leaves machines
+
+;; Recursive
+;; Analogous to Fibonacci machine
+(define count-leaves-1-machine
+  (make-machine
+   (list (list 'null? null?)
+         (list 'pair? pair?)
+         (list 'car car)
+         (list 'cdr cdr)
+         (list 'not not)
+         (list '+ +))
+   '((assign continue (label done))
+
+     loop
+     (if ((op null?) (reg t)) (label zero))
+     (assign z (op pair?) (reg t))
+     (if ((op not) (reg z)) (label one))
+     (save continue)
+     (assign continue (label after-car))
+     (save t)
+     (assign t (op car) (reg t))
+     (goto (label loop))
+
+     after-car
+     (restore t)
+     (assign t (op cdr) (reg t))
+     (assign continue (label after-cdr))
+     (save val)
+     (goto (label loop))
+
+     after-cdr
+     (assign t (reg val))
+     (restore val)
+     (restore continue)
+     (assign val (op +) (reg t) (reg val))
+     (goto (reg continue))
+
+     one
+     (assign val (const 1))
+     (goto (reg continue))
+
+     zero
+     (assign val (const 0))
+     (goto (reg continue))
+
+     done)))
+
+;(set-register-contents! count-leaves-1-machine 't null)
+;(set-register-contents! count-leaves-1-machine 't 5)
+;(set-register-contents! count-leaves-1-machine 't (cons 1 2))
+;(set-register-contents! count-leaves-1-machine 't (cons (cons 1 2) (cons 3 4)))
+(set-register-contents! count-leaves-1-machine 't (cons (cons (cons 1 2) 3) (cons 4 5)))
+(start count-leaves-1-machine)
+(get-register-contents count-leaves-1-machine 'val)
+(print-statistics count-leaves-1-machine)
+;=> ((instructions-executed . 98) (total-stack-pushes . 12) (maximum-stack-depth . 6))
+
+;; Recursive with explicit counter
+(define count-leaves-2-machine
+  (make-machine
+   (list (list 'null? null?)
+         (list 'pair? pair?)
+         (list 'car car)
+         (list 'cdr cdr)
+         (list 'not not)
+         (list '+ +))
+   '((assign n (const 0))
+     (assign continue (label done))
+
+     iter
+     (if ((op null?) (reg t)) (label empty))
+     (assign z (op pair?) (reg t))
+     (if ((op not) (reg z)) (label one))
+     (save continue)
+     (assign continue (label after-car))
+     (save t)
+     (assign t (op car) (reg t))
+     (goto (label iter))
+
+     after-car
+     (restore t)
+     (restore continue)
+     (assign t (op cdr) (reg t))
+     (assign n (reg val))
+     (goto (label iter))
+
+     one
+     (assign val (op +) (reg n) (const 1))
+     (goto (reg continue))
+
+     empty
+     (assign val (reg n))
+     (goto (reg continue))
+
+     done)))
+
+;(set-register-contents! count-leaves-2-machine 't null)
+;(set-register-contents! count-leaves-2-machine 't 5)
+;(set-register-contents! count-leaves-2-machine 't (cons 1 2))
+;(set-register-contents! count-leaves-2-machine 't (cons (cons 1 2) (cons 3 4)))
+(set-register-contents! count-leaves-2-machine 't (cons (cons (cons 1 2) 3) (cons 4 5)))
+(start count-leaves-2-machine)
+(get-register-contents count-leaves-2-machine 'val)
+(print-statistics count-leaves-2-machine)
+;=> ((instructions-executed . 79) (total-stack-pushes . 8) (maximum-stack-depth . 6))
