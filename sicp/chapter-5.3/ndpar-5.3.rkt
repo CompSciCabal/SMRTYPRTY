@@ -136,3 +136,65 @@
 (get-register-contents count-leaves-2-machine 'val)
 (print-statistics count-leaves-2-machine)
 ;=> ((instructions-executed . 79) (total-stack-pushes . 8) (maximum-stack-depth . 6))
+
+
+;; Exercise 5.22, p.539
+
+;; Append lists
+(define append-machine
+  (make-machine
+   (list (list 'null? null?)
+         (list 'cons cons)
+         (list 'car car)
+         (list 'cdr cdr))
+   '((assign continue (label done))
+
+     loop
+     (if ((op null?) (reg x)) (label base))
+     (save continue)
+     (assign continue (label after-cdr))
+     (save x)
+     (assign x (op cdr) (reg x))
+     (goto (label loop))
+
+     after-cdr
+     (restore x)
+     (restore continue)
+     (assign z (op car) (reg x))
+     (assign val (op cons) (reg z) (reg val))
+     (goto (reg continue))
+
+     base
+     (assign val (reg y))
+     (goto (reg continue))
+
+     done)))
+
+(set-register-contents! append-machine 'x (list 1 2 3))
+(set-register-contents! append-machine 'y (list 4 5 6))
+(start append-machine)
+(get-register-contents append-machine 'val)
+(print-statistics append-machine)
+
+;; Splice lists
+(define append!-machine
+  (make-machine
+   (list (list 'null? null?)
+         (list 'cdr cdr)
+         (list 'set-cdr! set-cdr!))
+   '((assign u (reg x))
+
+     iter
+     (assign v (op cdr) (reg u))
+     (if ((op null?) (reg v)) (label last-pair))
+     (assign u (reg v))
+     (goto (label iter))
+
+     last-pair
+     (perform (op set-cdr!) (reg u) (reg y)))))
+
+(set-register-contents! append!-machine 'x (list 1 2 3))
+(set-register-contents! append!-machine 'y (list 4 5 6))
+(start append!-machine)
+(get-register-contents append!-machine 'x)
+(print-statistics append!-machine)
