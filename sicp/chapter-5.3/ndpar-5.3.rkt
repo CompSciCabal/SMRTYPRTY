@@ -28,6 +28,10 @@
 ;;       x  p1
 ;;       y  p3
 
+;; -------------------------------------------------------
+;; Run the following exercises with
+;; the simulator from ndpar-5.2.scm
+;; -------------------------------------------------------
 
 ;; Exercise 5.21 p.539
 ;; count-leaves machines
