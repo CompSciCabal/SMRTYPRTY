@@ -69,6 +69,15 @@
       (caddr exp)
       (make-lambda (cdadr exp) (cddr exp))))
 
+(define (let? exp) (tagged-list? exp 'let))
+(define (let-vars exp) (map car (cadr exp)))
+(define (let-vals exp) (map cadr (cadr exp)))
+(define (let-body exp) (cddr exp))
+
+(define (let->combination exp)
+  (cons (make-lambda (let-vars exp) (let-body exp))
+        (let-vals exp)))
+
 (define (if? exp) (tagged-list? exp 'if))
 
 (define (make-procedure parameters body env)

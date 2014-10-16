@@ -15,6 +15,7 @@
         (list 'definition? definition?)
         (list 'if? if?)
         (list 'lambda? lambda?)
+        (list 'let? let?)
         (list 'begin? begin?)
         (list 'application? application?)
         (list 'lookup-variable-value lookup-variable-value)
@@ -51,6 +52,7 @@
         (list 'definition-variable definition-variable)
         (list 'definition-value definition-value)
         (list 'define-variable! define-variable!)
+        (list 'let->combination let->combination)
         (list 'prompt-for-input prompt-for-input)
         (list 'read read)
         (list 'announce-output announce-output)
@@ -82,6 +84,7 @@
      (if ((op definition?) (reg exp)) (label ev-definition))
      (if ((op if?) (reg exp)) (label ev-if))
      (if ((op lambda?) (reg exp)) (label ev-lambda))
+     (if ((op let?) (reg exp)) (label ev-let))
      (if ((op begin?) (reg exp)) (label ev-begin))
      (if ((op application?) (reg exp)) (label ev-application))
      (goto (label unknown-expression-type))
@@ -103,6 +106,10 @@
      (assign exp (op lambda-body) (reg exp))
      (assign val (op make-procedure) (reg unev) (reg exp) (reg env))
      (goto (reg continue))
+
+     ev-let
+     (assign exp (op let->combination) (reg exp))
+     (goto (label eval-dispatch))
 
      ev-application
      (save continue)
@@ -285,3 +292,11 @@
 
 (factorial 5)
 ; ((total-stack-pushes . 144) (maximum-stack-depth . 28))
+
+;; Exercise 5.23, p.560
+;; Syntax transformers
+
+(define (ex-5-23 x)
+  (let ((a 5)) (+ a x)))
+
+(ex-5-23 3)
