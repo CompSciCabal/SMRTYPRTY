@@ -110,7 +110,7 @@
          (the-ops (list (list 'initialize-stack
                               (λ () (stack-init stack)))
                         (list 'print-stack-statistics
-                              (λ () (stack-stats stack)))))
+                              (λ () (print (stack-stats stack))))))
          (register-table (list (list 'pc pc))))
     (define (set-breakpoint label n value)
       (define (iter insts k)

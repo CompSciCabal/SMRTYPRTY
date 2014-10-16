@@ -69,6 +69,7 @@
      (goto (label eval-dispatch))
 
      print-result
+     (perform (op print-stack-statistics)) ; defined in simulator
      (perform (op announce-output) (const ";;; EC-Eval value:"))
      (perform (op user-print) (reg val))
      (goto (label read-eval-print-loop))
@@ -271,5 +272,16 @@
       y
       (cons (car x)
             (append (cdr x) y))))
+; ((total-stack-pushes . 3) (maximum-stack-depth . 3))
 
 (append '(a b c) '(d e f))
+; ((total-stack-pushes . 118) (maximum-stack-depth . 17))
+
+(define (factorial n)
+  (if (= n 1)
+      1
+      (* (factorial (- n 1)) n)))
+; ((total-stack-pushes . 3) (maximum-stack-depth . 3))
+
+(factorial 5)
+; ((total-stack-pushes . 144) (maximum-stack-depth . 28))
