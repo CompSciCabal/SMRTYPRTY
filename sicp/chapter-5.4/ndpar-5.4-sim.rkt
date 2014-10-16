@@ -1,6 +1,7 @@
 #lang racket
 
 (require r5rs)
+(require (file "ndpar-prim.rkt"))
 
 ;; -------------------------------------------------------
 ;; Utility functions
@@ -10,11 +11,9 @@
   (apply display x)
   (newline))
 
-(define (tagged-list? exp tag)
-  (and (pair? exp) (eq? (car exp) tag)))
-
 ;; -------------------------------------------------------
 ;; A Register-Machine Simulator
+;; Copied from ndpar-5.2.scm
 ;; -------------------------------------------------------
 
 (define (make-machine ops controller-text)
