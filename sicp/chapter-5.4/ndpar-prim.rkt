@@ -79,6 +79,8 @@
         (let-vals exp)))
 
 (define (if? exp) (tagged-list? exp 'if))
+(define (if-predicate exp) (cadr exp))
+(define (if-consequent exp) (caddr exp))
 
 (define (cond? exp) (tagged-list? exp 'cond))
 (define (cond-clauses exp) (cdr exp))
@@ -116,9 +118,6 @@
 
 (define (last-operand? ops)
   (null? (cdr ops)))
-
-(define (if-predicate exp) (cadr exp))
-(define (if-consequent exp) (caddr exp))
 
 (define (if-alternative exp)
   (if (not (null? (cdddr exp)))

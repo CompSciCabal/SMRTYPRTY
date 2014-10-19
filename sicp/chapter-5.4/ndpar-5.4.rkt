@@ -346,8 +346,8 @@
 ;; cond as a special form
 
 (cond (else 1))
-(cond ((< 1 3) 2) ((< 5 7) 3) (else 4))
-(cond ((< 4 3) 2) ((< 5 7) 3) (else 4))
+(cond ((< 1 3) 2) ((/ 5 0) 3) (else (/ 4 0)))
+(cond ((< 4 3) 2) ((< 5 7) 3) (else (/ 4 0)))
 (cond ((< 4 3) 2) ((< 8 7) 3) (else 4))
 (cond ((< 4 3) 2) ((< 8 7) 0)) ; #f (non-determined)
 (cond) ; non-determined
