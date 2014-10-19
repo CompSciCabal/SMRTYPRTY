@@ -383,6 +383,31 @@
 ; │iterative│      10 │ 35n + 29 │
 ; └─────────┴─────────┴──────────┘
 
+;; Exercise 5.28, p.565
+;; No tail-call optimization
+
+; Iterative factorial
+; 1 17  70
+; 2 20 107
+; 3 23 144
+; 4 26 181
+; 5 29 218
+
+; Recursive factorial
+; 1 11  18
+; 2 19  52
+; 3 27  86
+; 4 35 120
+; 5 43 154
+
+; Factorials
+; ┌─────────┬─────────┬──────────┐
+; │         │max depth│ # pushes │
+; │         │ (space) │  (time)  │
+; ├─────────┼─────────┼──────────┤
+; │recursive│  3 + 8n │ 34n - 16 │
+; │iterative│ 14 + 3n │ 37n + 33 │
+; └─────────┴─────────┴──────────┘
 
 ;; Exercise 5.29, p.565
 
