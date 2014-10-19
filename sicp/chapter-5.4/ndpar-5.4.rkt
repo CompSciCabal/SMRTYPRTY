@@ -325,14 +325,6 @@
 (append '(a b c) '(d e f))
 ; ((total-stack-pushes . 118) (maximum-stack-depth . 17))
 
-(define (factorial n)
-  (if (= n 1)
-      1
-      (* (factorial (- n 1)) n)))
-; ((total-stack-pushes . 3) (maximum-stack-depth . 3))
-
-(factorial 5)
-; ((total-stack-pushes . 144) (maximum-stack-depth . 28))
 
 ;; Exercise 5.23, p.560
 ;; Syntax transformers
@@ -351,3 +343,42 @@
 (cond ((< 4 3) 2) ((< 8 7) 3) (else 4))
 (cond ((< 4 3) 2) ((< 8 7) 0)) ; #f (non-determined)
 (cond) ; non-determined
+
+
+;; Exercise 5.26, p.564
+
+(define (factorial-iter n)
+  (define (iter prod count)
+    (if (< n count)
+        prod
+        (iter (* count prod)
+              (+ count 1))))
+  (iter 1 1))
+
+; 1 10  64
+; 2 10  99
+; 3 10 134
+; 4 10 169
+; 5 10 204
+
+;; Exercise 5.27, p.564
+
+(define (factorial n)
+  (if (= n 1)
+      1
+      (* (factorial (- n 1)) n)))
+
+; 1  8  16
+; 2 13  48
+; 3 18  80
+; 4 23 112
+; 5 28 144
+
+; Factorials
+; ┌─────────┬─────────┬──────────┐
+; │         │max depth│ # pushes │
+; │         │ (space) │  (time)  │
+; ├─────────┼─────────┼──────────┤
+; │recursive│  3 + 5n │ 32n - 16 │
+; │iterative│      10 │ 35n + 29 │
+; └─────────┴─────────┴──────────┘
