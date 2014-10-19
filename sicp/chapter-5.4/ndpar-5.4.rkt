@@ -40,7 +40,7 @@
         (list 'procedure-environment procedure-environment)
         (list 'extend-environment extend-environment)
         (list 'begin-actions begin-actions)
-        (list 'last-exp? last-exp?)
+        (list 'no-more-exps? no-more-exps?)
         (list 'first-exp first-exp)
         (list 'rest-exps rest-exps)
         (list 'if-predicate if-predicate)
@@ -187,8 +187,8 @@
      (goto (label ev-sequence))
 
      ev-sequence
+     (if ((op no-more-exps?) (reg unev)) (label ev-sequence-end))
      (assign exp (op first-exp) (reg unev))
-     (if ((op last-exp?) (reg unev)) (label ev-sequence-last-exp))
      (save unev)
      (save env)
      (assign continue (label ev-sequence-continue))
@@ -200,9 +200,9 @@
      (assign unev (op rest-exps) (reg unev))
      (goto (label ev-sequence))
 
-     ev-sequence-last-exp
+     ev-sequence-end
      (restore continue)
-     (goto (label eval-dispatch))
+     (goto (reg continue))
 
      ev-if
      (save exp)
