@@ -14,6 +14,7 @@
         (list 'assignment? assignment?)
         (list 'definition? definition?)
         (list 'if? if?)
+        (list 'cond? cond?)
         (list 'lambda? lambda?)
         (list 'let? let?)
         (list 'begin? begin?)
@@ -46,6 +47,13 @@
         (list 'if-consequent if-consequent)
         (list 'if-alternative if-alternative)
         (list 'true? true?)
+        (list 'cond-clauses cond-clauses)
+        (list 'no-conds? no-conds?)
+        (list 'first-cond first-cond)
+        (list 'rest-conds rest-conds)
+        (list 'cond-predicate cond-predicate)
+        (list 'cond-actions cond-actions)
+        (list 'cond-else-clause? cond-else-clause?)
         (list 'assignment-variable assignment-variable)
         (list 'assignment-value assignment-value)
         (list 'set-variable-value! set-variable-value!)
@@ -83,6 +91,7 @@
      (if ((op assignment?) (reg exp)) (label ev-assignment))
      (if ((op definition?) (reg exp)) (label ev-definition))
      (if ((op if?) (reg exp)) (label ev-if))
+     (if ((op cond?) (reg exp)) (label ev-cond))
      (if ((op lambda?) (reg exp)) (label ev-lambda))
      (if ((op let?) (reg exp)) (label ev-let))
      (if ((op begin?) (reg exp)) (label ev-begin))
@@ -217,6 +226,38 @@
      (assign exp (op if-consequent) (reg exp))
      (goto (label eval-dispatch))
 
+     ev-cond
+     (assign unev (op cond-clauses) (reg exp))
+     (save unev)
+
+     ev-cond-next
+     (if ((op no-conds?) (reg unev)) (label ev-cond-done))
+     (assign exp (op first-cond) (reg unev))
+     (if ((op cond-else-clause?) (reg exp)) (label ev-cond-actions))
+     (save exp)
+     (save continue)
+     (assign exp (op cond-predicate) (reg exp))
+     (assign continue (label ev-cond-decide))
+     (goto (label eval-dispatch))
+
+     ev-cond-decide
+     (restore continue)
+     (restore exp)
+     (if ((op true?) (reg val)) (label ev-cond-actions))
+     (restore unev)
+     (assign unev (op rest-conds) (reg unev))
+     (save unev)
+     (goto (label ev-cond-next))
+
+     ev-cond-actions
+     (assign unev (op cond-actions) (reg exp))
+     (save continue)
+     (goto (label ev-sequence))
+
+     ev-cond-done
+     (restore unev)
+     (goto (reg continue))
+
      ev-assignment
      (assign unev (op assignment-variable) (reg exp))
      (save unev)
@@ -300,3 +341,13 @@
   (let ((a 5)) (+ a x)))
 
 (ex-5-23 3)
+
+;; Exercise 5.24, p.560
+;; cond as a special form
+
+(cond (else 1))
+(cond ((< 1 3) 2) ((< 5 7) 3) (else 4))
+(cond ((< 4 3) 2) ((< 5 7) 3) (else 4))
+(cond ((< 4 3) 2) ((< 8 7) 3) (else 4))
+(cond ((< 4 3) 2) ((< 8 7) 0)) ; #f (non-determined)
+(cond) ; non-determined

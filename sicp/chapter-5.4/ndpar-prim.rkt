@@ -80,6 +80,17 @@
 
 (define (if? exp) (tagged-list? exp 'if))
 
+(define (cond? exp) (tagged-list? exp 'cond))
+(define (cond-clauses exp) (cdr exp))
+(define (no-conds? exp) (null? exp))
+(define (first-cond exp) (car exp))
+(define (rest-conds exp) (cdr exp))
+(define (cond-predicate clause) (car clause))
+(define (cond-actions clause) (cdr clause))
+
+(define (cond-else-clause? clause)
+  (eq? (cond-predicate clause) 'else))
+
 (define (make-procedure parameters body env)
   (list 'procedure parameters body env))
 
