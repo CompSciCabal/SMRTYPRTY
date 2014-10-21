@@ -4,6 +4,8 @@
 ;; Exercise 5.25, p.560
 ;; Lazy Explicit-Control Evaluator
 ;;
+;; Compare the changes with commit ea9bed64
+;;
 ;; - Run ndpar-5.4-sim.rkt
 ;; - Evaluate following procedures in DrRacket REPL
 ;; -------------------------------------------------------
@@ -22,6 +24,10 @@
         (list 'text-of-quotation text-of-quotation)
         (list 'lambda-parameters lambda-parameters)
         (list 'lambda-body lambda-body)
+        (list 'delay-it delay-it)
+        (list 'thunk? thunk?)
+        (list 'thunk-exp thunk-exp)
+        (list 'thunk-env thunk-env)
         (list 'make-procedure make-procedure)
         (list 'operands operands)
         (list 'operator operator)
@@ -63,15 +69,15 @@
    eceval-operations
    '(read-eval-print-loop
      (perform (op initialize-stack)) ; defined in simulator
-     (perform (op prompt-for-input) (const ";;; EC-Eval input:"))
+     (perform (op prompt-for-input) (const ";;; LEC-Eval input:"))
      (assign exp (op read))
      (assign env (op get-global-environment))
      (assign continue (label print-result))
-     (goto (label eval-dispatch))
+     (goto (label actual-value))
 
      print-result
      (perform (op print-stack-statistics)) ; defined in simulator
-     (perform (op announce-output) (const ";;; EC-Eval value:"))
+     (perform (op announce-output) (const ";;; LEC-Eval value:"))
      (perform (op user-print) (reg val))
      (goto (label read-eval-print-loop))
 
@@ -105,6 +111,25 @@
      (assign val (op make-procedure) (reg unev) (reg exp) (reg env))
      (goto (reg continue))
 
+     actual-value
+     (save continue)
+     (assign continue (label force-it))
+     (goto (label eval-dispatch))
+
+     force-it
+     (if ((op thunk?) (reg val)) (label force-thunk))
+     (restore continue)
+     (goto (reg continue))
+
+     force-thunk
+     (assign exp (op thunk-exp) (reg val))
+     (assign env (op thunk-env) (reg val))
+     (goto (label actual-value))
+
+     delay-it
+     (assign val (op delay-it) (reg exp) (reg env))
+     (goto (reg continue))
+
      ev-application
      (save continue)
      (save env)
@@ -112,52 +137,76 @@
      (save unev)
      (assign exp (op operator) (reg exp))
      (assign continue (label ev-appl-did-operator))
-     (goto (label eval-dispatch))
+     (goto (label actual-value))
 
      ev-appl-did-operator
      (restore unev)
      (restore env)
      (assign argl (op empty-arglist))
      (assign proc (reg val))
-     (if ((op no-operands?) (reg unev)) (label apply-dispatch))
      (save proc)
+     (if ((op primitive-procedure?) (reg proc)) (label act-appl-operand-loop))
+     (if ((op compound-procedure?) (reg proc)) (label del-appl-operand-loop))
+     (goto (label unknown-procedure-type))
 
-     ev-appl-operand-loop
+     act-appl-operand-loop
      (save argl)
      (assign exp (op first-operand) (reg unev))
-     (if ((op last-operand?) (reg unev)) (label ev-appl-last-arg))
+     (if ((op last-operand?) (reg unev)) (label act-appl-last-arg))
      (save env)
      (save unev)
-     (assign continue (label ev-appl-accumulate-arg))
-     (goto (label eval-dispatch))
+     (assign continue (label act-appl-accumulate-arg))
+     (goto (label actual-value))
 
-     ev-appl-accumulate-arg
+     act-appl-accumulate-arg
      (restore unev)
      (restore env)
      (restore argl)
      (assign argl (op adjoin-arg) (reg val) (reg argl))
      (assign unev (op rest-operands) (reg unev))
-     (goto (label ev-appl-operand-loop))
+     (goto (label act-appl-operand-loop))
 
-     ev-appl-last-arg
-     (assign continue (label ev-appl-accum-last-arg))
-     (goto (label eval-dispatch))
+     act-appl-last-arg
+     (assign continue (label act-appl-accum-last-arg))
+     (goto (label actual-value))
 
-     ev-appl-accum-last-arg
+     act-appl-accum-last-arg
      (restore argl)
      (assign argl (op adjoin-arg) (reg val) (reg argl))
      (restore proc)
-     (goto (label apply-dispatch))
-
-     apply-dispatch
-     (if ((op primitive-procedure?) (reg proc)) (label primitive-apply))
-     (if ((op compound-procedure?) (reg proc)) (label compound-apply))
-     (goto (label unknown-procedure-type))
+     (goto (label primitive-apply))
 
      primitive-apply
      (assign val (op apply-primitive-procedure) (reg proc) (reg argl))
      (restore continue)
      (goto (reg continue))
+
+     del-appl-operand-loop
+     (save argl)
+     (assign exp (op first-operand) (reg unev))
+     (if ((op last-operand?) (reg unev)) (label del-appl-last-arg))
+     (save env)
+     (save unev)
+     (assign continue (label del-appl-accumulate-arg))
+     (goto (label delay-it))
+
+     del-appl-accumulate-arg
+     (restore unev)
+     (restore env)
+     (restore argl)
+     (assign argl (op adjoin-arg) (reg val) (reg argl))
+     (assign unev (op rest-operands) (reg unev))
+     (goto (label del-appl-operand-loop))
+
+     del-appl-last-arg
+     (assign continue (label del-appl-accum-last-arg))
+     (goto (label delay-it))
+
+     del-appl-accum-last-arg
+     (restore argl)
+     (assign argl (op adjoin-arg) (reg val) (reg argl))
+     (restore proc)
+     (goto (label compound-apply))
 
      compound-apply
      (assign unev (op procedure-parameters) (reg proc))
@@ -195,7 +244,7 @@
      (save continue)
      (assign continue (label ev-if-decide))
      (assign exp (op if-predicate) (reg exp))
-     (goto (label eval-dispatch))
+     (goto (label actual-value))
 
      ev-if-decide
      (restore continue)
