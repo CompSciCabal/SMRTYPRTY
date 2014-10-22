@@ -65,6 +65,7 @@
         (list 'read read)
         (list 'announce-output announce-output)
         (list 'user-print user-print)
+        (list 'eq? eq?)
         (list 'get-global-environment get-global-environment)))
 
 (define eceval
@@ -104,6 +105,7 @@
 
      ev-variable
      (assign val (op lookup-variable-value) (reg exp) (reg env))
+     (if ((op eq?) (reg val) (const _*unbound-variable*_)) (label unbound-variable))
      (goto (reg continue))
 
      ev-quoted
@@ -294,6 +296,11 @@
      (assign val (const ok))
      (goto (reg continue))
 
+     unbound-variable
+     (perform (op user-print) (reg exp))
+     (assign val (const unbound-variable))
+     (goto (label signal-error))
+
      unknown-expression-type
      (assign val (const unknown-expression-type-error))
      (goto (label signal-error))
@@ -344,6 +351,20 @@
 (cond ((< 4 3) 2) ((< 8 7) 0)) ; #f (non-determined)
 (cond) ; non-determined
 
+;; Exercise 5.25, p.560
+;; Applicative vs normal order of evaluation.
+;; With normal order the following is evaluated successfully.
+;; With applicative the error "Unbound variable" raised.
+
+(define (test a b)
+  (if (= a 0) 0 b))
+
+(test 0 (/ 1 0))
+
+;; Exercise 5.30.a, p.565
+;; Before the fix, the above test crashes the evaluator
+;; with "Unbound variable" error.
+;; After the fix, the evaluator signals the error.
 
 ;; Exercise 5.26, p.564
 

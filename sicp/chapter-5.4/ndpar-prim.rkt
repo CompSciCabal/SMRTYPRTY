@@ -152,6 +152,7 @@
         (list 'cdr cdr)
         (list 'cons cons)
         (list 'null? null?)
+        (list 'eq? eq?)
         (list '= =)
         (list '< <)
         (list '+ +)
@@ -201,7 +202,7 @@
 
 (define (env-loop var env action)
   (if (eq? env the-empty-environment)
-      (error "Unbound variable" var)
+      '_*unbound-variable*_
       (let ((frame (first-frame env))
             (try-next-frame
              (lambda (_)
