@@ -102,7 +102,9 @@
 (define (primitive-implementation proc) (cadr proc))
 
 (define (apply-primitive-procedure proc args)
-  (apply (primitive-implementation proc) args))
+  (with-handlers ([exn:fail:contract?
+                   (λ (e) '_*illegal-argument*_)])
+    (apply (primitive-implementation proc) args)))
 
 (define (compound-procedure? p)
   (tagged-list? p 'procedure))

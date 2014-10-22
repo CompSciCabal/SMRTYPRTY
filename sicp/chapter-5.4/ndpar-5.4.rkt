@@ -173,6 +173,7 @@
 
      primitive-apply
      (assign val (op apply-primitive-procedure) (reg proc) (reg argl))
+     (if ((op eq?) (reg val) (const _*illegal-argument*_)) (label illegal-argument))
      (restore continue)
      (goto (reg continue))
 
@@ -295,6 +296,11 @@
       (op define-variable!) (reg unev) (reg val) (reg env))
      (assign val (const ok))
      (goto (reg continue))
+
+     illegal-argument
+     (perform (op user-print) (reg argl))
+     (assign val (const illegal-argument))
+     (goto (label signal-error))
 
      unbound-variable
      (perform (op user-print) (reg exp))
@@ -452,3 +458,10 @@
 ; (%. S) (+/ .*) 240 408 688 NB. => 1 1 40
 ; (%. 2 2 $ 2 1 3 1) (+/ .*) 72 128x NB. => 56 _40
 ; 2 }. (_40 + 56&*) 1 1 2 3 5 8 13 21
+
+;; Exercise 5.30.b, p.566
+;; Before the fix, the following test crashes the evaluator
+;; with "contract violation" error.
+;; After the fix, the evaluator signals the error.
+
+(car 'test)
