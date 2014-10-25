@@ -465,3 +465,17 @@
 ;; After the fix, the evaluator signals the error.
 
 (car 'test)
+
+;; Exercise 5.31, p.574
+;; Redundant save-restore operations
+
+(define (f x y) 42)
+(define (g x) 27)
+(define y 13)
+
+(f 'x 'y) ; Redundant: env, env, argl, proc
+(f (g 'x) y) ; Redundant: env, env. Needed: argl (Too many arguments supplied {x y} {x 27 13}), proc (Too many arguments supplied {x} {27 13})
+(f (g 'x) 'y) ; Redundant: env, env. Needed: argl (Too many arguments supplied {x y} {x 27 13}), proc (Too many arguments supplied {x} {27 13})
+
+(define (f) (lambda (x y) 42))
+((f) 'x 'y) ; Redundant: env, env, argl, proc
