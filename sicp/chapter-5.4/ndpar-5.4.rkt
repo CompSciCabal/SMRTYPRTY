@@ -123,17 +123,21 @@
      (goto (label eval-dispatch))
 
      ev-application
-     (save continue)
-     (save env)
      (assign unev (op operands) (reg exp))
-     (save unev)
      (assign exp (op operator) (reg exp))
+     (save continue)
+     (assign continue (label ev-appl-did-sym-operator))
+     (if ((op variable?) (reg exp)) (label ev-variable))
+     (save env)
+     (save unev)
      (assign continue (label ev-appl-did-operator))
      (goto (label eval-dispatch))
 
      ev-appl-did-operator
      (restore unev)
      (restore env)
+
+     ev-appl-did-sym-operator
      (assign argl (op empty-arglist))
      (assign proc (reg val))
      (if ((op no-operands?) (reg unev)) (label apply-dispatch))
@@ -479,3 +483,15 @@
 
 (define (f) (lambda (x y) 42))
 ((f) 'x 'y) ; Redundant: env, env, argl, proc
+
+;; Exercise 5.32.a, p.574
+;; Special code for symbol operators.
+;; Total stack pushes before and after optimization
+; ┌──────────────────────────┬──────┬─────┐
+; │ expression               │before│after│
+; ├──────────────────────────┼──────┼─────┤
+; │(append '(a b c) '(d e f))│  118 │  84 │
+; │(factorial 5)             │  144 │ 108 │
+; │(factorial-iter 5)        │  204 │ 158 │
+; │(fib 7)                   │ 1136 │ 852 │
+; └──────────────────────────┴──────┴─────┘
