@@ -36,7 +36,12 @@
   (assign proc (op lookup-variable-value) (const *) (reg env))
   (save continue)
   (save proc)
-  (save env)
+
+  ;(assign val (op lookup-variable-value) (const n) (reg env))
+  ;(assign argl (op list) (reg val))
+  ;(save argl)
+  (save env) ; saving env instead of argl
+
   (assign proc (op lookup-variable-value) (const factorial) (reg env))
   (save proc)
   (assign proc (op lookup-variable-value) (const -) (reg env))
@@ -68,9 +73,12 @@
   (assign val (op apply-primitive-procedure) (reg proc) (reg argl))
 
   after-call14
+
+  ;(restore argl)
   (assign argl (op list) (reg val))
-  (restore env)
+  (restore env) ; restoring env instead of argl
   (assign val (op lookup-variable-value) (const n) (reg env))
+
   (assign argl (op cons) (reg val) (reg argl))
   (restore proc)
   (restore continue)
