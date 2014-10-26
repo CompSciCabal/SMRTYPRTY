@@ -1,0 +1,12 @@
+39,41c39
+<   (assign val (op lookup-variable-value) (const n) (reg env))
+<   (assign argl (op list) (reg val))
+<   (save argl)
+---
+>   (save env)
+73c71,73
+<   (restore argl)
+---
+>   (assign argl (op list) (reg val))
+>   (restore env)
+>   (assign val (op lookup-variable-value) (const n) (reg env))
