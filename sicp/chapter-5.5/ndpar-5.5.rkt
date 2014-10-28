@@ -18,9 +18,23 @@
 ;; Object program in factorial-alt.scm
 
 (display (compile
- '(define (factorial-alt n)
+ '(define (factorial n)
     (if (= n 1)
         1
         (* n (factorial (- n 1)))))
+ 'val
+ 'next))
+
+;; Exercise 5.34, p.594
+;; Object program in factorial-iter.scm
+
+(display (compile
+ '(define (factorial n)
+    (define (iter prod count)
+      (if (< n count)
+          prod
+          (iter (* count prod)
+                (+ count 1))))
+    (iter 1 1))
  'val
  'next))
