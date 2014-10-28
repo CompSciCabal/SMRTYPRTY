@@ -38,3 +38,11 @@
     (iter 1 1))
  'val
  'next))
+
+;; Exercise 5.35, p.595
+
+(display (compile
+ '(define (f x)
+    (+ x (g (+ x 2))))
+ 'val
+ 'next))
