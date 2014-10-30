@@ -1,9 +1,7 @@
 #lang racket
 
-(require (file "evaluator.rkt"))
-
 ;; -------------------------------------------------------
-;; Tests and Exercises
+;; Compiler Tests and Exercises
 ;; -------------------------------------------------------
 
 ;; Object program in factorial.scm
@@ -53,7 +51,7 @@
 ;; Compiler + Evaluator
 ;; -------------------------------------------------------
 
-(compile-and-go
+(compile
  '(define (factorial n)
     (if (= n 1)
         1

@@ -7,8 +7,21 @@
 
 (provide (all-defined-out))
 
+;; -------------------------------------------------------
+;; Helper functions
+;; -------------------------------------------------------
+
 (define the-global-environment (setup-environment))
 (define (get-global-environment) the-global-environment)
+
+(define (compile-and-go expression)
+  (let ((instructions
+         (assemble (statements (compile expression 'val 'return))
+                   eceval)))
+    (set! the-global-environment (setup-environment))
+    (set-register-contents! eceval 'val instructions)
+    (set-register-contents! eceval 'flag true)
+    (start eceval)))
 
 (define (compile-and-run expression)
   (assemble (statements (compile expression 'val 'return))
@@ -356,12 +369,3 @@
 
 (set-register-contents! eceval 'flag false)
 (start eceval)
-
-(define (compile-and-go expression)
-  (let ((instructions
-         (assemble (statements (compile expression 'val 'return))
-                   eceval)))
-    (set! the-global-environment (setup-environment))
-    (set-register-contents! eceval 'val instructions)
-    (set-register-contents! eceval 'flag true)
-    (start eceval)))
