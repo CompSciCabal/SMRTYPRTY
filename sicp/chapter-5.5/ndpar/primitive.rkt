@@ -146,6 +146,15 @@
 (define (last-operand? ops)
   (null? (cdr ops)))
 
+(define (make-compiled-procedure entry env)
+  (list 'compiled-procedure entry env))
+
+(define (compiled-procedure? proc)
+  (tagged-list? proc 'compiled-procedure))
+
+(define compiled-procedure-entry cadr)
+(define compiled-procedure-env caddr)
+
 (define (delay-it exp env)
   (list 'thunk exp env))
 

@@ -3,6 +3,8 @@
 (require r5rs)
 (require (file "primitive.rkt"))
 
+(provide (all-defined-out))
+
 ;; -------------------------------------------------------
 ;; Compiler
 ;; -------------------------------------------------------
@@ -133,15 +135,6 @@
       (preserving '(env continue)
        (compile (first-exp seq) target 'next)
        (compile-sequence (rest-exps seq) target linkage))))
-
-(define (make-compiled-procedure entry env)
-  (list 'compiled-procedure entry env))
-
-(define (compiled-procedure? proc)
-  (tagged-list? proc 'compiled-procedure))
-
-(define compiled-procedure-entry cadr)
-(define compiled-procedure-env caddr)
 
 (define (compile-lambda exp target linkage)
   (let ((proc-entry (make-label 'entry))
