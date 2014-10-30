@@ -41,10 +41,14 @@
         (list 'last-operand? last-operand?)
         (list 'primitive-procedure? primitive-procedure?)
         (list 'compound-procedure? compound-procedure?)
+        (list 'compiled-procedure? compiled-procedure?)
         (list 'apply-primitive-procedure apply-primitive-procedure)
         (list 'procedure-parameters procedure-parameters)
         (list 'procedure-body procedure-body)
         (list 'procedure-environment procedure-environment)
+        (list 'make-compiled-procedure make-compiled-procedure)
+        (list 'compiled-procedure-entry compiled-procedure-entry)
+        (list 'compiled-procedure-env compiled-procedure-env)
         (list 'extend-environment extend-environment)
         (list 'begin-actions begin-actions)
         (list 'last-exp? last-exp?)
@@ -54,6 +58,9 @@
         (list 'if-consequent if-consequent)
         (list 'if-alternative if-alternative)
         (list 'true? true?)
+        (list 'false? false?)
+        (list 'list list)
+        (list 'cons cons)
         (list 'cond-clauses cond-clauses)
         (list 'no-conds? no-conds?)
         (list 'first-cond first-cond)
@@ -78,7 +85,9 @@
 (define eceval
   (make-machine
    eceval-operations
-   '(read-eval-print-loop
+   '((branch (label external-entry))
+
+     read-eval-print-loop
      (perform (op initialize-stack)) ; defined in simulator
      (perform (op prompt-for-input) (const ";;; EC-Eval input:"))
      (assign exp (op read))
@@ -180,6 +189,7 @@
      apply-dispatch
      (if ((op primitive-procedure?) (reg proc)) (label primitive-apply))
      (if ((op compound-procedure?) (reg proc)) (label compound-apply))
+     (if ((op compiled-procedure?) (reg proc)) (label compiled-apply))
      (goto (label unknown-procedure-type))
 
      primitive-apply
@@ -194,6 +204,11 @@
      (assign env (op extend-environment) (reg unev) (reg argl) (reg env))
      (assign unev (op procedure-body) (reg proc))
      (goto (label ev-sequence))
+
+     compiled-apply
+     (restore continue)
+     (assign val (op compiled-procedure-entry) (reg proc))
+     (goto (reg val))
 
      ev-begin
      (assign unev (op begin-actions) (reg exp))
@@ -308,6 +323,12 @@
      (assign val (const ok))
      (goto (reg continue))
 
+     external-entry
+     (perform (op initialize-stack))
+     (assign env (op get-global-environment))
+     (assign continue (label print-result))
+     (goto (reg val))
+
      illegal-argument
      (perform (op user-print) (reg argl))
      (assign val (const illegal-argument))
@@ -331,4 +352,11 @@
      (perform (op user-print) (reg val))
      (goto (label read-eval-print-loop)))))
 
-(start eceval)
+(define (compile-and-go expression)
+  (let ((instructions
+         (assemble (statements (compile expression 'val 'return))
+                   eceval)))
+    (set! the-global-environment (setup-environment))
+    (set-register-contents! eceval 'val instructions)
+    (set-register-contents! eceval 'flag true)
+    (start eceval)))

@@ -309,9 +309,12 @@
                 (advance-pc pc))))
         (error "Bad BRANCH instruction -- ASSEMBLE" inst))))
 
+(define (branch-dest branch-instruction)
+  (cadr branch-instruction))
+
 (define (make-test inst machine labels operations pc)
   (let ((condition (test-condition inst))
-        (dest (branch-dest inst)))
+        (dest (test-dest inst)))
     (if (operation-exp? condition)
         (let ((condition-proc
                (make-operation-exp condition machine labels operations)))
@@ -327,7 +330,7 @@
 (define (test-condition test-instruction)
   (cadr test-instruction))
 
-(define (branch-dest branch-instruction)
+(define (test-dest branch-instruction)
   (caddr branch-instruction))
 
 (define (make-goto inst machine labels pc)
@@ -400,7 +403,7 @@
   (let ((op (lookup-prim (operation-exp-op exp) operations))
         (aprocs
          (map (λ (e)
-                (make-operand-exp e machine labels))
+                (make-primitive-exp e machine labels))
               (operation-exp-operands exp))))
     (λ ()
       (apply op (map (λ (p) (p)) aprocs)))))
@@ -419,16 +422,6 @@
     (if val
         (cadr val)
         (error "Unknown operation -- ASSEMBLE" symbol))))
-
-(define (make-operand-exp exp machine labels)
-  (cond ((constant-exp? exp)
-         (let ((c (constant-exp-value exp)))
-           (const c)))
-        ((register-exp? exp)
-         (let ((r (get-register machine (register-exp-reg exp))))
-           (λ () (reg-get-contents r))))
-        (else
-         (error "Invalid operand expression -- ASSEMBLE" exp))))
 
 ;; -------------------------------------------------------
 ;; Client API
