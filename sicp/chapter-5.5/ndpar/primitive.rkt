@@ -250,7 +250,3 @@
 
 (define (set-variable-value! var val env)
   (env-loop var env (set-val! val)))
-
-(define the-global-environment (setup-environment))
-
-(define (get-global-environment) the-global-environment)

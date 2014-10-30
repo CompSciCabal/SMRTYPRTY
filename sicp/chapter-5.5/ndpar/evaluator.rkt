@@ -1,8 +1,14 @@
 #lang racket
 
 (require r5rs)
+(require (file "compiler.rkt"))
 (require (file "primitive.rkt"))
 (require (file "simulator.rkt"))
+
+(provide (all-defined-out))
+
+(define the-global-environment (setup-environment))
+(define (get-global-environment) the-global-environment)
 
 ;; -------------------------------------------------------
 ;; Explicit-Control Evaluator
