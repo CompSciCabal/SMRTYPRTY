@@ -129,9 +129,7 @@
 (define (primitive-implementation proc) (cadr proc))
 
 (define (apply-primitive-procedure proc args)
-  (with-handlers ([exn:fail:contract?
-                   (λ (e) '_*illegal-argument*_)])
-    (apply (primitive-implementation proc) args)))
+  (apply (primitive-implementation proc) args))
 
 (define (compound-procedure? p)
   (tagged-list? p 'procedure))
@@ -240,7 +238,7 @@
 
 (define (env-loop var env action)
   (if (eq? env the-empty-environment)
-      '_*unbound-variable*_
+      (error "Unbound variable" var)
       (let ((frame (first-frame env))
             (try-next-frame
              (lambda (_)

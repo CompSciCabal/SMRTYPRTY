@@ -121,7 +121,6 @@
 
      ev-variable
      (assign val (op lookup-variable-value) (reg exp) (reg env))
-     (if ((op eq?) (reg val) (const _*unbound-variable*_)) (label unbound-variable))
      (goto (reg continue))
 
      ev-quoted
@@ -194,7 +193,6 @@
 
      primitive-apply
      (assign val (op apply-primitive-procedure) (reg proc) (reg argl))
-     (if ((op eq?) (reg val) (const _*illegal-argument*_)) (label illegal-argument))
      (restore continue)
      (goto (reg continue))
 
@@ -329,16 +327,6 @@
      (assign continue (label print-result))
      (goto (reg val))
 
-     illegal-argument
-     (perform (op user-print) (reg argl))
-     (assign val (const illegal-argument))
-     (goto (label signal-error))
-
-     unbound-variable
-     (perform (op user-print) (reg exp))
-     (assign val (const unbound-variable))
-     (goto (label signal-error))
-
      unknown-expression-type
      (assign val (const unknown-expression-type-error))
      (goto (label signal-error))
@@ -351,6 +339,7 @@
      signal-error
      (perform (op user-print) (reg val))
      (goto (label read-eval-print-loop)))))
+
 
 (define (compile-and-go expression)
   (let ((instructions
