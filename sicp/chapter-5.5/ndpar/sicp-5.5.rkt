@@ -51,8 +51,31 @@
 ;; Compiler + Evaluator
 ;; -------------------------------------------------------
 
+;; Exercise 5.45.a, p.608
+;; Compiler efficiency
+
 (compile
  '(define (factorial n)
     (if (= n 1)
         1
         (* (factorial (- n 1)) n))))
+
+; 1  3  5
+; 2  5 11
+; 3  8 17
+; 4 11 23
+; 5 14 29
+; 6 17 35
+
+; Recursive factorials
+; ┌─────────────────────┬─────────┬──────────┐
+; │                     │max depth│ # pushes │
+; │                     │ (space) │  (time)  │
+; ├─────────────────────┼─────────┼──────────┤
+; │interpretor (ex 5.27)│  5n + 3 │ 32n - 16 │
+; │compiler    (ex 5.45)│  3n - 1 │  6n -  1 │
+; │reg.machine (ex 5.14)│  2n - 2 │  2n -  2 │
+; ├─────────────────────┼─────────┼──────────┤
+; │compiler/interpretor │     3/5 │     3/16 │
+; │machine/interpretor  │     2/5 │     1/16 │
+; └─────────────────────┴─────────┴──────────┘
