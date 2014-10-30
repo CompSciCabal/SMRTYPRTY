@@ -1,7 +1,7 @@
 #lang racket
 
 (require r5rs)
-(require (file "../chapter-5.4/ndpar-prim.rkt"))
+(require (file "primitive.rkt"))
 
 ;; -------------------------------------------------------
 ;; Compiler
