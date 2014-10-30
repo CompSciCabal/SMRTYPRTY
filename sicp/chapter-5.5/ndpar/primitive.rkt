@@ -172,6 +172,12 @@
 (define (false? x) (eq? x false))
 (define (true? x) (not (false? x)))
 
+(define (compile? exp)
+  (or (tagged-list? exp 'compile-and-run)
+      (tagged-list? exp 'compile)))
+
+(define compile-and-run-exp cadadr)
+
 
 (define (make-frame variables values)
   (cons 'frame (map cons variables values)))

@@ -10,6 +10,10 @@
 (define the-global-environment (setup-environment))
 (define (get-global-environment) the-global-environment)
 
+(define (compile-and-run expression)
+  (assemble (statements (compile expression 'val 'return))
+            eceval))
+
 ;; -------------------------------------------------------
 ;; Explicit-Control Evaluator
 ;; -------------------------------------------------------
@@ -54,6 +58,9 @@
         (list 'last-exp? last-exp?)
         (list 'first-exp first-exp)
         (list 'rest-exps rest-exps)
+        (list 'compile? compile?)
+        (list 'compile-and-run compile-and-run)
+        (list 'compile-and-run-exp compile-and-run-exp)
         (list 'if-predicate if-predicate)
         (list 'if-consequent if-consequent)
         (list 'if-alternative if-alternative)
@@ -112,6 +119,7 @@
      (if ((op lambda?) (reg exp)) (label ev-lambda))
      (if ((op let?) (reg exp)) (label ev-let))
      (if ((op begin?) (reg exp)) (label ev-begin))
+     (if ((op compile?) (reg exp)) (label ev-compile))
      (if ((op application?) (reg exp)) (label ev-application))
      (goto (label unknown-expression-type))
 
@@ -321,6 +329,11 @@
      (assign val (const ok))
      (goto (reg continue))
 
+     ev-compile
+     (assign val (op compile-and-run-exp) (reg exp))
+     (assign val (op compile-and-run) (reg val))
+     (goto (label external-entry))
+
      external-entry
      (perform (op initialize-stack))
      (assign env (op get-global-environment))
@@ -340,6 +353,9 @@
      (perform (op user-print) (reg val))
      (goto (label read-eval-print-loop)))))
 
+
+(set-register-contents! eceval 'flag false)
+(start eceval)
 
 (define (compile-and-go expression)
   (let ((instructions
