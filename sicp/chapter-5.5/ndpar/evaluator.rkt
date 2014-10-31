@@ -5,14 +5,156 @@
 (require (file "primitive.rkt"))
 (require (file "simulator.rkt"))
 
-(provide (all-defined-out))
+;; -------------------------------------------------------
+;; Forms
+;; -------------------------------------------------------
+
+(define no-operands? null?)
+(define first-operand car)
+(define rest-operands cdr)
+
+(define no-conds? null?)
+(define first-cond car)
+(define rest-conds cdr)
 
 ;; -------------------------------------------------------
-;; Helper functions
+;; Procedures
 ;; -------------------------------------------------------
+
+(define (compound-procedure? p)
+  (tagged-list? p 'procedure))
+
+(define (procedure-parameters p) (cadr p))
+(define (procedure-body p) (caddr p))
+(define (procedure-environment p) (cadddr p))
+
+(define (make-procedure parameters body env)
+  (list 'procedure parameters body env))
+
+(define (empty-arglist) '())
+
+(define (adjoin-arg arg arglist)
+  (append arglist (list arg)))
+
+(define (last-operand? ops)
+  (null? (cdr ops)))
+
+(define (compiled-procedure? proc)
+  (tagged-list? proc 'compiled-procedure))
+
+;; -------------------------------------------------------
+;; Display
+;; -------------------------------------------------------
+
+(define (prompt-for-input string)
+  (newline) (newline) (display string) (newline))
+
+(define (announce-output string)
+  (newline) (display string) (newline))
+
+(define (user-print object)
+  (cond ((compound-procedure? object)
+         (display (list 'compound-procedure
+                        (procedure-parameters object)
+                        (procedure-body object)
+                        '<procedure-env>)))
+        ((compiled-procedure? object)
+         (display '<compiled-procedure>))
+        (else (display object))))
+
+;; -------------------------------------------------------
+;; Environment
+;; -------------------------------------------------------
+
+(define (make-frame variables values)
+  (cons 'frame (map cons variables values)))
+
+(define (extend-environment vars vals base-env)
+  (if (= (length vars) (length vals))
+      (cons (make-frame vars vals) base-env)
+      (if (< (length vars) (length vals))
+          (error "Too many arguments supplied" vars vals)
+          (error "Too few arguments supplied" vars vals))))
+
+(define (frame-bindings frame) (cdr frame))
+
+(define (add-binding-to-frame! var val frame)
+  (set-cdr! frame (cons (cons var val)
+                        (frame-bindings frame))))
+
+(define (define-variable! var val env)
+  (let* ((frame (first-frame env))
+         (bind (λ (_) (add-binding-to-frame! var val frame))))
+    (do-in-frame var frame (set-val! val) bind)))
+
+(define (first-frame env) (car env))
+
+(define ((set-val! val) var) (set-cdr! var val))
+
+(define (do-in-frame var frame then-proc else-proc)
+  (let ((binding (assoc var (frame-bindings frame))))
+    (if binding
+        (then-proc binding)
+        (else-proc binding))))
+
+(define primitive-procedures
+  (list (list 'car car)
+        (list 'cdr cdr)
+        (list 'cons cons)
+        (list 'null? null?)
+        (list 'eq? eq?)
+        (list '= =)
+        (list '< <)
+        (list '+ +)
+        (list '- -)
+        (list '* *)))
+
+(define (primitive-procedure-names)
+  (map car primitive-procedures))
+
+(define (primitive-procedure-objects)
+  (map (λ (proc) (list 'primitive (cadr proc)))
+       primitive-procedures))
+
+(define (setup-environment)
+  (let ((initial-env
+         (extend-environment (primitive-procedure-names)
+                             (primitive-procedure-objects)
+                             the-empty-environment)))
+    (define-variable! 'true true initial-env)
+    (define-variable! 'false false initial-env)
+    (define-variable! '*unassigned* '*unassigned* initial-env)
+    initial-env))
+
+(define the-empty-environment '())
+(define (enclosing-environment env) (cdr env))
+
+(define (env-loop var env action)
+  (if (eq? env the-empty-environment)
+      (error "Unbound variable" var)
+      (let ((frame (first-frame env))
+            (try-next-frame
+             (λ (_) (env-loop var (enclosing-environment env) action))))
+        (do-in-frame var frame action try-next-frame))))
+
+(define (lookup-variable-value var env)
+  (env-loop var env cdr))
+
+(define (set-variable-value! var val env)
+  (env-loop var env (set-val! val)))
 
 (define the-global-environment (setup-environment))
 (define (get-global-environment) the-global-environment)
+
+;; -------------------------------------------------------
+;; Compiler
+;; -------------------------------------------------------
+
+(define (compile? exp)
+  (or (tagged-list? exp 'compile-and-run)
+      (tagged-list? exp 'compile)))
+
+(define compile-and-run-exp cadadr)
 
 (define (compile-and-go expression)
   (let ((instructions
@@ -78,7 +220,6 @@
         (list 'if-consequent if-consequent)
         (list 'if-alternative if-alternative)
         (list 'true? true?)
-        (list 'false? false?)
         (list 'list list)
         (list 'cons cons)
         (list 'cond-clauses cond-clauses)

@@ -3,7 +3,10 @@
 (require r5rs)
 (require (file "primitive.rkt"))
 
-(provide (all-defined-out))
+(provide assemble
+         make-machine
+         set-register-contents!
+         start)
 
 ;; -------------------------------------------------------
 ;; Utility functions
