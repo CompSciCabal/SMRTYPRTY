@@ -189,3 +189,16 @@
                     ((label fib-done)))
           (val ((op +) (reg val) (reg n))
                ((reg n)))))
+
+;; Exercise 5.46, p.609
+
+(set-register-contents! fib-machine 'n 7)
+(start fib-machine)
+(print-statistics fib-machine)
+
+; 2  2   3  1
+; 3  4   9  2
+; 4  6  21  3
+; 5  8  42  5
+; 6 10  78  8
+; 7 12 138 13
