@@ -219,6 +219,7 @@
         (list 'if-predicate if-predicate)
         (list 'if-consequent if-consequent)
         (list 'if-alternative if-alternative)
+        (list 'false? false?)
         (list 'true? true?)
         (list 'list list)
         (list 'cons cons)

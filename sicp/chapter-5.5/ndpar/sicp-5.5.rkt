@@ -55,6 +55,28 @@
  'val
  'next))
 
+;; Exercise 5.37, p.595
+;; Compiler stack optimizations
+
+; diff out/ex-5.37-optimized.scm out/ex-5.37-no-optimization.scm
+; 35 redundant saves and 35 redundant restores
+
+; 1  6  16
+; 2  9  52
+; 3 12  88
+; 4 15 124
+; 5 18 160
+; 6 21 196
+
+; Factorials
+; ┌────────────────────────┬─────────┬──────────┐
+; │                        │max depth│ # pushes │
+; │                        │ (space) │  (time)  │
+; ├────────────────────────┼─────────┼──────────┤
+; │preserving     (ex 5.45)│  3n - 1 │  6n -  1 │
+; │w/o preserving (ex 5.37)│  3n + 3 │ 36n - 20 │
+; └────────────────────────┴─────────┴──────────┘
+
 ;; -------------------------------------------------------
 ;; Compiler + Evaluator
 ;; -------------------------------------------------------
