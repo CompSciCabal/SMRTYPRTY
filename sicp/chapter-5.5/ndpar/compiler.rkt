@@ -193,6 +193,7 @@
           (if (null? (cdr operand-codes))
               code-to-get-last-arg
               (preserving '(env)
+               ; right-to-left evaluation
                code-to-get-last-arg
                (code-to-get-rest-args
                 (cdr operand-codes))))))))

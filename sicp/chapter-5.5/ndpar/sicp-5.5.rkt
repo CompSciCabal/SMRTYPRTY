@@ -47,6 +47,14 @@
  'val
  'next))
 
+;; Exercise 5.36, p.595
+;; Order of evaluation
+
+(display (compile
+ '(define (f x y) (+ x y))
+ 'val
+ 'next))
+
 ;; -------------------------------------------------------
 ;; Compiler + Evaluator
 ;; -------------------------------------------------------
