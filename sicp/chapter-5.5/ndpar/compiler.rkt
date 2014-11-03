@@ -26,6 +26,8 @@
          (compile-lambda exp target linkage))
         ((begin? exp)
          (compile-sequence (begin-actions exp) target linkage))
+        ((open-coded? exp)
+         (compile-open-coded exp target linkage))
         ((cond? exp)
          (compile (cond->if exp) target linkage))
         ((let? exp)
@@ -166,6 +168,23 @@
                 (reg argl)
                 (reg env))))
      (compile-sequence (lambda-body exp) 'val 'return))))
+
+;; Compiling open-coded
+
+(define (compile-open-coded exp target linkage)
+  (let ((operator (car exp))
+        (arg1-insts (compile (cadr exp) 'arg1 'next))
+        (arg2-insts (compile (caddr exp) 'arg2 'next)))
+    (end-with-linkage linkage
+     (preserving '(env)
+      arg1-insts
+      (preserving '(arg1)
+       arg2-insts
+       (make-instruction-sequence '(arg1 arg2) (list target)
+        `((assign ,target
+                  (op ,operator)
+                  (reg arg1)
+                  (reg arg2)))))))))
 
 ;; Compiling combinations
 

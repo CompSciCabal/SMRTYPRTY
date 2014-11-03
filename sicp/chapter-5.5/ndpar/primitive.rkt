@@ -82,6 +82,12 @@
 
 (define (make-begin seq) (cons 'begin seq))
 
+;; Open-coded
+
+(define (open-coded? exp)
+  (and (pair? exp)
+       (memq (car exp) '(= * - +))))
+
 ;; Applications
 
 (define (application? exp) (pair? exp))
