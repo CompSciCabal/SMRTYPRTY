@@ -106,6 +106,16 @@
        (+ (* x y)
           (* y x)))))
 
+(display (compile
+ '(define (h a b c d)
+    (+ a b c d))
+ 'val
+ 'next))
+
+(compile
+ '(define (h a b c d)
+    (+ a b c d)))
+
 ; 1  3  3
 ; 2  3  5
 ; 3  4  7

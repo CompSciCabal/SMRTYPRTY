@@ -172,6 +172,11 @@
 ;; Compiling open-coded
 
 (define (compile-open-coded exp target linkage)
+  (if (= 3 (length exp))
+      (compile-open-coded-pair exp target linkage)
+      (compile (expand-open-coded exp) target linkage)))
+
+(define (compile-open-coded-pair exp target linkage)
   (let ((operator (car exp))
         (arg1-insts (compile (cadr exp) 'arg1 'next))
         (arg2-insts (compile (caddr exp) 'arg2 'next)))
@@ -185,6 +190,15 @@
                   (op ,operator)
                   (reg arg1)
                   (reg arg2)))))))))
+
+(define (expand-open-coded exp)
+  (let ((operator (car exp))
+        (operands (cdr exp)))
+    (let iter ((acc (car operands)) (ops (cdr operands)))
+      (if (null? ops)
+          acc
+          (iter (list operator acc (car ops))
+                (cdr ops))))))
 
 ;; Compiling combinations
 
