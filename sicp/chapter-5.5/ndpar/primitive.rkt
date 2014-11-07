@@ -7,6 +7,13 @@
 (define (false? x) (eq? x false))
 (define (true? x) (not (false? x)))
 
+(define-syntax-rule
+  (if-let (x exp)
+          consequent
+          alternative)
+  (let ((x exp))
+    (if x consequent alternative)))
+
 ;; -------------------------------------------------------
 ;; Primary forms
 ;; -------------------------------------------------------
@@ -197,3 +204,29 @@
               (list frame#
                     (- (length frame) (length mem)))
               (iter (+ frame# 1) (cdr env)))))))
+
+;; Exercise 5.43, p.603
+
+; Built-in partition does not work with mlist :(
+(define (partition pred lst)
+  (let iter ([lst lst] [tr '()] [fl '()])
+    (if (null? lst)
+        (values (reverse tr) (reverse fl))
+        (let ([i (car lst)])
+          (if (pred i)
+              (iter (cdr lst) (cons i tr) fl)
+              (iter (cdr lst) tr (cons i fl)))))))
+
+(define (scan-out-defines body)
+  (define (def->let def)
+    `(,(definition-variable def) '*unassigned*))
+  (define (def->set def)
+    `(set! ,(definition-variable def) ,(definition-value def)))
+  (define (defs->let defs)
+    (let ([lets (map def->let defs)]
+          [sets (map def->set defs)])
+      `(let ,lets ,@sets)))
+  (let-values ([(defs rest) (partition definition? body)])
+    (if (null? defs)
+        body
+        (list (append (defs->let defs) rest)))))
