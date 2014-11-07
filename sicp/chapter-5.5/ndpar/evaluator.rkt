@@ -158,7 +158,7 @@
 
 (define (compile-and-go expression)
   (let ((instructions
-         (assemble (statements (compile expression 'val 'return '()))
+         (assemble (statements (compile expression 'val 'return))
                    eceval)))
     (set! the-global-environment (setup-environment))
     (set-register-contents! eceval 'val instructions)
@@ -166,7 +166,7 @@
     (start eceval)))
 
 (define (compile-and-run expression)
-  (assemble (statements (compile expression 'val 'return '()))
+  (assemble (statements (compile expression 'val 'return))
             eceval))
 
 ;; -------------------------------------------------------

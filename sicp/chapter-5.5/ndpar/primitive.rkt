@@ -91,9 +91,8 @@
 
 ;; Open-coded
 
-(define (open-coded? exp env)
+(define (open-coded? exp)
   (and (pair? exp)
-       (not (find-variable (car exp) env))
        (memq (car exp) '(= * - +))))
 
 ;; Applications
