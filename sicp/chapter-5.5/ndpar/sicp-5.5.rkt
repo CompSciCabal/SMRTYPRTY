@@ -136,6 +136,26 @@
 ;; Lexical Addressing
 ;; -------------------------------------------------------
 
+;; Exercise 5.42, p.602
+
+(compile
+ '(let ((x 3) (y 4))
+    ((lambda (a b c d e)
+       (let ((y (* a b x))
+             (z (+ c d x)))
+         (* x y z)))
+     1 2 3 4 5)))
+
+(display (compile
+ '(let ((x 3) (y 4))
+    ((lambda (a b c d e)
+       (let ((y (* a b x))
+             (z (+ c d x)))
+         (* x y z)))
+     1 2 3 4 5))
+ 'val
+ 'next))
+
 ;; Exercise 5.43, p.603
 
 (display (scan-out-defines
@@ -148,6 +168,14 @@
        (define z (+ c d x))
        (* x y z))
      1 2 3 4 5)))
+
+;; Exercise 5.44, p.603
+
+(compile
+ '(define (f + * a b x y)
+    (+ (* a x) (* b y))))
+
+(f * + 1 3 2 4) ;=> 14 (before), 21 (after)
 
 ;; -------------------------------------------------------
 ;; Compiler + Evaluator
