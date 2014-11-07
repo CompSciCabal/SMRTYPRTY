@@ -9,31 +9,31 @@
 ;; Compiler
 ;; -------------------------------------------------------
 
-(define (compile exp target linkage)
+(define (compile exp target linkage env)
   (cond ((self-evaluating? exp)
          (compile-self-evaluating exp target linkage))
         ((quoted? exp)
          (compile-quoted exp target linkage))
         ((variable? exp)
-         (compile-variable exp target linkage))
+         (compile-variable exp target linkage env))
         ((assignment? exp)
-         (compile-assignment exp target linkage))
+         (compile-assignment exp target linkage env))
         ((definition? exp)
-         (compile-definition exp target linkage))
+         (compile-definition exp target linkage env))
         ((if? exp)
-         (compile-if exp target linkage))
+         (compile-if exp target linkage env))
         ((lambda? exp)
-         (compile-lambda exp target linkage))
+         (compile-lambda exp target linkage env))
         ((begin? exp)
-         (compile-sequence (begin-actions exp) target linkage))
-        ((open-coded? exp)
-         (compile-open-coded exp target linkage))
+         (compile-sequence (begin-actions exp) target linkage env))
+        ((open-coded? exp env)
+         (compile-open-coded exp target linkage env))
         ((cond? exp)
-         (compile (cond->if exp) target linkage))
+         (compile (cond->if exp) target linkage env))
         ((let? exp)
-         (compile (let->combination exp) target linkage))
+         (compile (let->combination exp) target linkage env))
         ((application? exp)
-         (compile-application exp target linkage))
+         (compile-application exp target linkage env))
         (else
          (error "Unknown expression type -- COMPILE" exp))))
 
@@ -64,32 +64,43 @@
    (make-instruction-sequence '() (list target)
     `((assign ,target (const ,(text-of-quotation exp)))))))
 
-(define (compile-variable exp target linkage)
+(define (compile-variable exp target linkage env)
   (end-with-linkage linkage
    (make-instruction-sequence '(env) (list target)
-    `((assign ,target
-              (op lookup-variable-value)
-              (const ,exp)
-              (reg env))))))
+    (if-let (addr (find-variable exp env))
+            `((assign ,target
+                      (op lookup-variable-value)
+                      (const ,exp)
+                      (reg env)))
+            `((assign ,target
+                      (op lexical-address-lookup)
+                      (const ,addr)
+                      (reg env)))))))
 
-(define (compile-assignment exp target linkage)
+(define (compile-assignment exp target linkage env)
   (let ((var (assignment-variable exp))
         (get-value-code
-         (compile (assignment-value exp) 'val 'next)))
+         (compile (assignment-value exp) 'val 'next env)))
     (end-with-linkage linkage
      (preserving '(env)
       get-value-code
       (make-instruction-sequence '(env val) (list target)
-       `((perform (op set-variable-value!)
-                  (const ,var)
-                  (reg val)
-                  (reg env))
-         (assign ,target (const ok))))))))
+       (if-let (addr (find-variable var env))
+               `((perform (op set-variable-value!)
+                          (const ,var)
+                          (reg val)
+                          (reg env))
+                 (assign ,target (const ok)))
+               `((perform (op lexical-address-set!)
+                          (const ,addr)
+                          (reg val)
+                          (reg env))
+                 (assign ,target (const ok)))))))))
 
-(define (compile-definition exp target linkage)
+(define (compile-definition exp target linkage env)
   (let ((var (definition-variable exp))
         (get-value-code
-         (compile (definition-value exp) 'val 'next)))
+         (compile (definition-value exp) 'val 'next env)))
     (end-with-linkage linkage
      (preserving '(env)
       get-value-code
@@ -100,18 +111,18 @@
                   (reg env))
          (assign ,target (const ok))))))))
 
-(define (compile-if exp target linkage)
+(define (compile-if exp target linkage env)
   (let ((t-branch (make-label 'true-branch))
         (f-branch (make-label 'false-branch))
         (after-if (make-label 'after-if)))
     (let ((consequent-linkage
            (if (eq? linkage 'next) after-if linkage)))
       (let ((p-code
-             (compile (if-predicate exp) 'val 'next))
+             (compile (if-predicate exp) 'val 'next env))
             (c-code
-             (compile (if-consequent exp) target consequent-linkage))
+             (compile (if-consequent exp) target consequent-linkage env))
             (a-code
-             (compile (if-alternative exp) target linkage)))
+             (compile (if-alternative exp) target linkage env)))
         (preserving '(env continue)
          p-code
          (append-instruction-sequences
@@ -133,14 +144,14 @@
     (string-append (symbol->string name)
                    (number->string (new-label-number)))))
 
-(define (compile-sequence seq target linkage)
+(define (compile-sequence seq target linkage env)
   (if (last-exp? seq)
-      (compile (first-exp seq) target linkage)
+      (compile (first-exp seq) target linkage env)
       (preserving '(env continue)
-       (compile (first-exp seq) target 'next)
-       (compile-sequence (rest-exps seq) target linkage))))
+       (compile (first-exp seq) target 'next env)
+       (compile-sequence (rest-exps seq) target linkage env))))
 
-(define (compile-lambda exp target linkage)
+(define (compile-lambda exp target linkage env)
   (let ((proc-entry (make-label 'entry))
         (after-lambda (make-label 'after-lambda)))
     (let ((lambda-linkage
@@ -153,10 +164,10 @@
                     (op make-compiled-procedure)
                     (label ,proc-entry)
                     (reg env)))))
-        (compile-lambda-body exp proc-entry))
+        (compile-lambda-body exp proc-entry env))
        after-lambda))))
 
-(define (compile-lambda-body exp proc-entry)
+(define (compile-lambda-body exp proc-entry env)
   (let ((formals (lambda-parameters exp)))
     (append-instruction-sequences
      (make-instruction-sequence '(env proc argl) '(env)
@@ -167,19 +178,25 @@
                 (const ,formals)
                 (reg argl)
                 (reg env))))
-     (compile-sequence (lambda-body exp) 'val 'return))))
+     (compile-sequence
+      (scan-out-defines (lambda-body exp))
+      'val 'return
+      (extend-env env formals)))))
+
+(define (extend-env env frame)
+  (cons frame env))
 
 ;; Compiling open-coded
 
-(define (compile-open-coded exp target linkage)
+(define (compile-open-coded exp target linkage env)
   (if (= 3 (length exp))
-      (compile-open-coded-pair exp target linkage)
-      (compile (expand-open-coded exp) target linkage)))
+      (compile-open-coded-pair exp target linkage env)
+      (compile (expand-open-coded exp) target linkage env)))
 
-(define (compile-open-coded-pair exp target linkage)
+(define (compile-open-coded-pair exp target linkage env)
   (let ((operator (car exp))
-        (arg1-insts (compile (cadr exp) 'arg1 'next))
-        (arg2-insts (compile (caddr exp) 'arg2 'next)))
+        (arg1-insts (compile (cadr exp) 'arg1 'next env))
+        (arg2-insts (compile (caddr exp) 'arg2 'next env)))
     (end-with-linkage linkage
      (preserving '(env)
       arg1-insts
@@ -202,10 +219,10 @@
 
 ;; Compiling combinations
 
-(define (compile-application exp target linkage)
-  (let ((proc-code (compile (operator exp) 'proc 'next))
+(define (compile-application exp target linkage env)
+  (let ((proc-code (compile (operator exp) 'proc 'next env))
         (operand-codes
-         (map (λ (operand) (compile operand 'val 'next))
+         (map (λ (operand) (compile operand 'val 'next env))
               (operands exp))))
     (preserving '(env continue)
      proc-code
