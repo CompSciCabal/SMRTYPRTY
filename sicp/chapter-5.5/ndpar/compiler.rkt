@@ -26,8 +26,6 @@
          (compile-lambda exp target linkage))
         ((begin? exp)
          (compile-sequence (begin-actions exp) target linkage))
-        ((open-coded? exp)
-         (compile-open-coded exp target linkage))
         ((cond? exp)
          (compile (cond->if exp) target linkage))
         ((let? exp)
