@@ -184,3 +184,16 @@
 
 (define (lexical-address-set! env address val)
   (set-cdr! (list-deep-ref env address) val))
+
+;; Exercise 5.41, p.602
+
+(define (find-variable var env)
+  (let iter ([frame# 0] [env env])
+    (if (null? env)
+        #f ; SICP returns 'not-found instead
+        (let* ([frame (car env)]
+               [mem (memq var frame)])
+          (if mem
+              (list frame#
+                    (- (length frame) (length mem)))
+              (iter (+ frame# 1) (cdr env)))))))
