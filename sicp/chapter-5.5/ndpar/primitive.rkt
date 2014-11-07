@@ -159,3 +159,28 @@
 
 (define (make-compiled-procedure entry env)
   (list 'compiled-procedure entry env))
+
+;; -------------------------------------------------------
+;; Lexical addressing
+;; -------------------------------------------------------
+
+;; Exercise 5.39, p.602
+
+(define (list-deep-ref lst pos)
+  (let ([ls (list-ref lst (car pos))])
+    (if (null? (cdr pos))
+      ls
+      (list-deep-ref ls (cdr pos)))))
+
+(define (lexical-address-lookup address env)
+  (let* ([frame (car address)]
+         [var (cadr address)]
+         ; our frames have symbol 'frame in car
+         [address (list frame (add1 var))]
+         [entry (list-deep-ref env address)])
+    (if (eq? (cdr entry) '*unassigned*)
+        (error "Unassigned variable" entry)
+        (cdr entry))))
+
+(define (lexical-address-set! env address val)
+  (set-cdr! (list-deep-ref env address) val))

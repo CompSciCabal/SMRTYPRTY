@@ -237,6 +237,8 @@
         (list 'assignment-variable assignment-variable)
         (list 'assignment-value assignment-value)
         (list 'set-variable-value! set-variable-value!)
+        (list 'lexical-address-lookup lexical-address-lookup)
+        (list 'lexical-address-set! lexical-address-set!)
         (list 'definition-variable definition-variable)
         (list 'definition-value definition-value)
         (list 'define-variable! define-variable!)
