@@ -14,6 +14,10 @@
   (let ((x exp))
     (if x consequent alternative)))
 
+(define-syntax-rule
+  (redefine (f args ...) body ...)
+  (set! f (λ (args ...) body ...)))
+
 ;; -------------------------------------------------------
 ;; Primary forms
 ;; -------------------------------------------------------
