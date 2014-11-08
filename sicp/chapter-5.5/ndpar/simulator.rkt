@@ -1,7 +1,7 @@
 #lang racket
 
 (require r5rs)
-(require (file "primitive.rkt"))
+(require "primitive.rkt")
 
 (provide assemble
          make-machine

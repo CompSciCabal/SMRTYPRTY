@@ -1,9 +1,7 @@
 #lang racket
 
 (require r5rs)
-(require (file "compiler.rkt"))
-(require (file "primitive.rkt"))
-(require (file "simulator.rkt"))
+(require "compiler.rkt" "primitive.rkt" "simulator.rkt")
 
 ;; -------------------------------------------------------
 ;; Forms
