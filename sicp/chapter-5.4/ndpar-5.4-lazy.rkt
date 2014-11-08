@@ -73,7 +73,7 @@
      (assign exp (op read))
      (assign env (op get-global-environment))
      (assign continue (label print-result))
-     (goto (label actual-value))
+     (goto (label actual-value)) ; eval-dispatch [strict]
 
      print-result
      (perform (op print-stack-statistics)) ; defined in simulator
@@ -137,7 +137,7 @@
      (save unev)
      (assign exp (op operator) (reg exp))
      (assign continue (label ev-appl-did-operator))
-     (goto (label actual-value))
+     (goto (label actual-value)) ; eval-dispatch [strict]
 
      ev-appl-did-operator
      (restore unev)
@@ -145,10 +145,13 @@
      (assign argl (op empty-arglist))
      (assign proc (reg val))
      (save proc)
+     ; different treatment of primitive and compound procedures.
+     ; no apply-dispatch any longer. switch happens here
      (if ((op primitive-procedure?) (reg proc)) (label act-appl-operand-loop))
      (if ((op compound-procedure?) (reg proc)) (label del-appl-operand-loop))
      (goto (label unknown-procedure-type))
 
+     ;; primitive procedures (same as in strict case)
      act-appl-operand-loop
      (save argl)
      (assign exp (op first-operand) (reg unev))
@@ -156,7 +159,7 @@
      (save env)
      (save unev)
      (assign continue (label act-appl-accumulate-arg))
-     (goto (label actual-value))
+     (goto (label actual-value)) ; eval-dispatch [strict]
 
      act-appl-accumulate-arg
      (restore unev)
@@ -168,7 +171,7 @@
 
      act-appl-last-arg
      (assign continue (label act-appl-accum-last-arg))
-     (goto (label actual-value))
+     (goto (label actual-value)) ; eval-dispatch [strict]
 
      act-appl-accum-last-arg
      (restore argl)
@@ -181,6 +184,8 @@
      (restore continue)
      (goto (reg continue))
 
+     ;; compound procedures. similar to primitive with replacement:
+     ;; actual-value -> delay-it
      del-appl-operand-loop
      (save argl)
      (assign exp (op first-operand) (reg unev))
@@ -244,7 +249,7 @@
      (save continue)
      (assign continue (label ev-if-decide))
      (assign exp (op if-predicate) (reg exp))
-     (goto (label actual-value))
+     (goto (label actual-value)) ; eval-dispatch [strict]
 
      ev-if-decide
      (restore continue)
