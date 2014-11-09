@@ -251,7 +251,8 @@
 (define eceval
   (make-machine
    eceval-operations
-   '((branch (label external-entry))
+   '((assign compapp (label compound-apply))
+     (branch (label external-entry))
 
      read-eval-print-loop
      (perform (op initialize-stack)) ; defined in simulator

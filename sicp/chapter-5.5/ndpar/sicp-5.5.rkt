@@ -238,3 +238,14 @@
 ; │compiler/interpretor │     3/5 │             5/28 │
 ; │machine/interpretor  │     2/5 │                  │
 ; └─────────────────────┴─────────┴──────────────────┘
+
+;; Exercise 5.47, p.609
+;; Compiled proc calls interpreted proc
+
+(compile
+ '(define (f x y)
+    (+ (g x) (g y))))
+
+(define (g x) (* x x))
+
+(f 3 4)
