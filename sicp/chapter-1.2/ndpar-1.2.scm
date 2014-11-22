@@ -9,8 +9,11 @@
         (else (A (- x 1)
                  (A x (- y 1))))))
 
-;(= (A 1 10) 1024)
-;(= (A 2 4) 65536 (A 3 3))
+(module+ test
+  (require rackunit)
+  (check-equal? (A 1 10) 1024)
+  (check-equal? (A 2 4) 65536)
+  (check-equal? (A 3 3) 65536))
 
 ; Exercise 1.11, p.42
 ; Tree recursion vs linear iteration
@@ -218,4 +221,6 @@
         ((even? n) #f)
         (else (test 0))))
 
-;(miller-rabin-test 1729 3)
+
+(module+ test
+  (check-false (miller-rabin-test 1729 3)))
