@@ -121,9 +121,9 @@ The pointers used to organize memory in this scheme are behind the scenes *(not 
 
 Costs depend on:
 
-1. Initial work required at each collection *(initial root set scanning)*
+1. Initial work required at each collection
 2. Work done at allocation
-3. Work done at collection time *(the actual tracing)*
+3. Work done at collection time
 
 The "initial work" is fixed per program *(depending on the size of the root set)*, allocation work depends on number of objects allocated, and collection work depends on number of live objects.
 
@@ -131,10 +131,10 @@ The "initial work" is fixed per program *(depending on the size of the root set)
 
 ### 2.7 Problems With Simple Tracing Collectors
 
-- Copying and Treadmill *(can't find a reference to this elsewhere; I'm reading it as the collector described in 2.4)* collectors have excellent asymptotic performance. Approaching zero with larger memory sizes. HOWEVER. Large amounts of memory are expensive, and we lose locality of reference *(usually, every location is used before any location is freed)*. So we can only grow heap so far until any advantage is negated by memory paging costs.
-- This is a problem that affetcs, to some degree, all tracers and deferred reference counters *(generational collectors fight this be reusing a smaller area of memory more often)*
+- Copying and Treadmill *(this is a reference to a collector we'll see later on)* collectors have excellent asymptotic performance. Approaching zero with larger memory sizes. HOWEVER. Large amounts of memory are expensive, and we lose locality of reference *(usually, every location is used before any location is freed)*. So we can only grow heap so far until any advantage is negated by memory paging costs.
+- This is a problem that affetcs, to some degree, all tracers and deferred reference counters *(generational collectors fight this by reusing a smaller area of memory more often)*
 - Interesting footnote 13 about collectors that mitigate this cost. Also, a note about a paper that demonstrates that cyclic reuse is a poor match for hierarchical memory *(and a suggestion that LIFO reuse would be better than FIFO. That's... tempting enough for me to try to implement)*
-- Pause times are disruptive when a collection cycle comes up *(OPINION: anecdotally, not as disruptive as you think)*, and Generational collectors fight it by lowering typical collection time *(ANOTHER OPINION: they do so at the cost of occasionally large collection time, which is worse from the users' perspective)*
+- Pause times are disruptive when a collection cycle comes up *(OPINION: anecdotally, not as disruptive as you think)*, and Generational collectors fight it by lowering typical collection time *(ANOTHER OPINION: they do so at the cost of occasionally large collection time, which is worse from the users' perspective)* *(ADDENDUM TO THE OPINION: As Dann pointed out, this problem gets heavily mitigated in a pure-functional context, because an older generation can never have pointers into a younger generation, which in turn means that generations can be collected independently of each other. Haskell apparently takes advantage of this)*
 
 ### 2.8 Conservatism in Garbage Collection
 
