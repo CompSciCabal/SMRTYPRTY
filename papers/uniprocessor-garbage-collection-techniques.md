@@ -20,7 +20,7 @@ Garbage collectors break down into two phases
 
 ### 1.3 & 1.4
 
-Quick notes about some details of real life implementations, and a note that the ideas being presented in this paper are slightly idealized. 1.4 is some meta-information about the rest of the paper.
+Quick notes about some details of real life implementations (use of type tags across the static/dynamic world in particular), and a note that the ideas being presented in this paper are slightly idealized. 1.4 is some meta-information about the rest of the paper.
 
 ### 2 Basic Garbage Collection Techniques
 
