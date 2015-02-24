@@ -1,6 +1,6 @@
 #lang plai/mutator
 
-(allocator-setup "../good-collectors/stop_and_copy_collector.rkt" 50)
+(allocator-setup "../good-collectors/mark_and_sweep_collector.rkt" 30)
 
 (define (sum-list L)
   (if (empty? L)

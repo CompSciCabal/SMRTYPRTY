@@ -1,6 +1,6 @@
 #lang plai/mutator
 ; This is `classic' in that it caught many bugs in copying collectors that students wrote for CS173, Fall 2007.
-(allocator-setup "../good-collectors/stop_and_copy_collector.rkt" 28)
+(allocator-setup "../good-collectors/mark_and_sweep_collector.rkt" 12)
 
 'trash
 'junk
