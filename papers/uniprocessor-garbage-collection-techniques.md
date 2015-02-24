@@ -145,3 +145,15 @@ The general conservative assumptions:
 1. any variable in the stack, globals or registers is live *(compilers may otimize away dead values, but anything that hasn't been so discarded is assumed to be live)*
 2. a) Tracers only  -- nothing is garbage until we run out of space
    b) Counters only -- any pointer is treated as relevant *(even if it comes from a dead object)*
+
+
+
+
+
+
+http://hydra.nixos.org/build/17897584/download/1/nix_1.8-1_amd64.deb
+
+- Garbage Collection Handbook
+- Sahib Shihab
+- Purism: free software laptop [Librem](https://www.crowdsupply.com/purism/librem-laptop) 
+- Docker/vagrant/nixos.org

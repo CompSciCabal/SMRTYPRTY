@@ -2,7 +2,7 @@ module Main where
 
 import Control.Monad (unless, forever)
 import Pipes
--- import Pipes.Concurrent
+import Pipes.Concurrent
 import System.IO (isEOF)
 
 import Control.Exception (try, throwIO)
@@ -44,6 +44,9 @@ tap label = forever $ do
               lift $ putStrLn $ concat [label, "::> ", show a]
               yield a
               
+
+splitap :: Pipe [Char] Char IO ()
+splitap = splitter >-> tap "Split "
 
 main :: IO ()
 main = runEffect $ stdinLn >-> tap "One" 

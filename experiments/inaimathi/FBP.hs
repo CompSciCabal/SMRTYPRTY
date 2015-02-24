@@ -1,5 +1,7 @@
 module FBP where
 
+import System.IO
+
 data Thing = Str String
            | Num Integer
            | Flt Float
@@ -15,6 +17,9 @@ data Part = Route Path
           | Crate Box
 
 data Box = Box [(String, Part)]
+
+type Source = IO Message
+type Sink = (Message -> IO ())
 
 runPart :: Message -> Part -> [Message]
 runPart msg@(Msg tag _) (Crate (Box tbl)) = 
@@ -37,10 +42,14 @@ hello = Leaf (out . body)
 greeter :: Part
 greeter = Crate $ Box [("in", Route hello)]
 
-printer :: Message -> IO ()
+printer :: Sink
 printer (Msg _ t) = printThing t
     where printThing (Str s) = putStrLn s
           printThing t = putStrLn $ show t
+
+-- reader :: Handle -> Source
+-- reader h = do msg <- hGetLine h
+              
 
 main :: IO ()
 main = mapM_ printer $ runPart (Msg "in" (Str "Leo")) greeter 
