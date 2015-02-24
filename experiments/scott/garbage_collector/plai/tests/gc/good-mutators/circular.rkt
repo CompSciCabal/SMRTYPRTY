@@ -1,6 +1,8 @@
 #lang plai/mutator
 ;(allocator-setup "../good-collectors/stop_and_copy_collector.rkt" 45)
-(allocator-setup "../good-collectors/mark_and_sweep_collector.rkt" 30)
+;(allocator-setup "../good-collectors/mark_and_sweep_collector.rkt" 30)
+(allocator-setup "../good-collectors/mark_and_compact_collector.rkt" 40)
+
 (define (gen-circular)
   (let ([x (cons 3 4)])
     (let ([y (cons 2 x)])
