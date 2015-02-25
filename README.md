@@ -1,13 +1,21 @@
 SMRTYPRTY
 =========
 
-We read computer science books for fun, and then post our secret findings here.
+We study computer science for fun and ???. Then we post our secret findings here. TOP SECRET DO NOT ENTER!
 
 
-We're currently reading SICP. We'll meet at the SUPER SECRET SAFEHOUSE this coming Friday night.
+### Schedules
 
-Check our <a href="https://github.com/CompSciCabal/SMRTYPRTY/wiki/Reading-Schedule">Reading List</a> for this week's section. 
+The classic [Friday night meetings](https://github.com/CompSciCabal/SMRTYPRTY/wiki/Reading-Schedule) -- we're currently reading CS papers for a few months before picking our next book.
 
-General chatter over in <a href="https://plus.google.com/communities/101341712823792967748">google land</a>.
+We're [reading SICP, again](https://github.com/CompSciCabal/SMRTYPRTY/wiki/Reading-Schedule!-SICP-Mark-II), because it was so much fun the first time!
+
+### Also
+
+We have a [mailing list](https://groups.google.com/forum/#!forum/cs-cabal) and a [google plus](https://plus.google.com/communities/101341712823792967748) and a [twitter account](https://twitter.com/cscabal)
+and a [Code of Conduct](https://bentomiso.zendesk.com/hc/en-us/articles/201812303-Code-of-Conduct) and even a slack team. Come and join us if you like theory and practice and fun and dinosaurs!
+
+### Our mascot
 
 <img src="https://raw.github.com/CompSciCabal/SMRTYPRTY/master/resources/our-mascot.png">
+
