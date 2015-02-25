@@ -12,7 +12,7 @@ We're also [reading SICP again](https://github.com/CompSciCabal/SMRTYPRTY/wiki/R
 
 ### Also
 
-We have a [mailing list](https://groups.google.com/forum/#!forum/cs-cabal) and a [google plus](https://plus.google.com/communities/101341712823792967748) and a [twitter account](https://twitter.com/cscabal)
+We have a [mailing list](https://groups.google.com/forum/#!forum/cs-cabal) and a [google plus](https://plus.google.com/communities/101341712823792967748) and a [twitterer](https://twitter.com/cscabal)
 and a [Code of Conduct](https://bentomiso.zendesk.com/hc/en-us/articles/201812303-Code-of-Conduct) and even a slack team. Come and join us if you like theory and practice and fun and dinosaurs!
 
 ### Our mascot
