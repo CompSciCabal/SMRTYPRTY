@@ -29,25 +29,47 @@
 ; Man compaction is terrible, I'm going to use the extra storage for the forwarding pointer
 ; and be done with it
 
-; I've again simplified to use single size objects and promoted the primitives
-; However, I've tried to not use the much simpler compaction scheme that can take 
-; advantage of the single sizes and I do the full 3 scans to adjust the positions of 
-; the objects, so it should be extensible to variable sized objects
-
-; Not super happy with this one, it got too fiddly
-
 (define heap-ptr 'uninitialized-heap-ptr)
 
-(define (cell:width)
-  4)
+(define (cell:prim:width) 3)
+(define (cell:cons:width) 4)
 
-(define (cell:set! cell tag f r)
-  (let ([addr cell]) 
-    (begin
-      (heap-set! addr tag)
-      (heap-set! (+ 1 addr) f)
-      (heap-set! (+ 2 addr) r)
-      addr)))
+(define (cell:type cell)
+  (cell:tag:type (cell:tag cell)))
+
+(define (cell:type:width type)
+  (cond
+    [(eq? type 'prim) (cell:prim:width)]
+    [(eq? type 'cons) (cell:cons:width)]))
+
+(define (cell:tag:width tag)
+  (cell:type:width (cell:tag:type tag)))
+
+(define (cell:tag:type tag)
+  (cond 
+    [(eq? tag 'prim) 'prim]
+    [(eq? tag 'live:prim) 'prim]
+    [(eq? tag 'free:prim) 'prim]
+    [(eq? tag 'cons) 'cons]
+    [(eq? tag 'live:cons) 'cons]
+    [(eq? tag 'free:cons) 'cons]
+    [else (error "Unknown cell:type")]))
+
+(define (cell:width cell)
+  (cell:tag:width (cell:tag cell)))
+
+(define (cell:prim:set! cell p)
+  (begin
+    (heap-set! cell 'prim)
+    (heap-set! (+ 1 cell) p)
+    cell))
+
+(define (cell:cons:set! cell f r)
+  (begin
+    (heap-set! cell 'cons)
+    (heap-set! (+ 1 cell) f)
+    (heap-set! (+ 2 cell) r)
+    cell))
 
 (define (cell:set-tag! cell tag)
   (begin 
@@ -57,13 +79,48 @@
 (define (cell:tag cell)
   (heap-ref cell))
 
+(define (cell:prim:set-forward! cell forward)
+  (heap-set! (+ 2 cell) forward))
+
+(define (cell:cons:set-forward! cell forward)
+  (heap-set! (+ 3 cell) forward))
+
 (define (cell:set-forward! cell forward)
-  (begin
-    (heap-set! (+ 3 cell) forward)
-    cell))
+  (let ([type (cell:type cell)])
+    (begin
+      (cond
+        [(eq? type 'prim) (cell:prim:set-forward! cell forward)]
+        [(eq? type 'cons) (cell:cons:set-forward! cell forward)])
+      cell)))
+
+(define (cell:prim:forward cell)
+  (heap-ref (+ 2 cell)))
+
+(define (cell:cons:forward cell)
+  (heap-ref (+ 3 cell)))
 
 (define (cell:forward cell)
-  (heap-ref (+ 3 cell)))
+  (if (eq? cell null)
+      null
+      (let ([type (cell:type cell)])
+        (cond
+          [(eq? type 'prim) (cell:prim:forward cell)]
+          [(eq? type 'cons) (cell:cons:forward cell)]))))
+
+(define (cell:set-free! cell)
+  (let ([type (cell:type cell)])
+    (cond 
+      [(eq? type 'prim) (begin
+                          (cell:prim:set! cell null)
+                          (cell:set-tag! cell 'free:prim)
+                          (cell:set-forward! cell null))]
+      [(eq? type 'cons) (begin
+                          (cell:cons:set! cell null null)
+                          (cell:set-tag! cell 'free:cons)
+                          (cell:set-forward! cell null))])))
+
+(define (cell:deref cell)
+  (gc:deref cell))
 
 (define (cell:first cell)
   (gc:first cell))
@@ -71,30 +128,31 @@
 (define (cell:rest cell)
   (gc:rest cell))
 
-(define (free:init start)
-  (let ([real-heap-size (- (heap-size) (remainder (heap-size) (cell:width)))])
-    (define (init-iter cell)
-      (let ([next (+ (cell:width) cell)])
-        (if (= next real-heap-size)
-            (cell:set! cell 'free null null)
-            (begin
-              (cell:set! cell 'free next null)
-              (init-iter next)))))
-    (init-iter start)))
+(define (mem:init start)
+  (define (zero-mem-iter cell) 
+    (if (= cell (heap-size))
+        null
+        (begin 
+          (heap-set! cell null)
+          (zero-mem-iter (+ 1 cell)))))
+  (begin
+    (set! heap-ptr start)
+    (zero-mem-iter start)))
 
-(define (free:available?)
-  (not (eq? heap-ptr null)))
+(define (mem:last? cell)
+  (= cell heap-ptr))
 
-(define (free:pop)
+(define (mem:available? size)
+  (<= (+ heap-ptr size) (heap-size)))
+
+(define (mem:allocate size)
   (let ([cell heap-ptr])
     (begin
-      (set! heap-ptr (cell:first cell))
+      (set! heap-ptr (+ heap-ptr size))
       cell)))
 
-(define (free:push cell)
-  (begin
-    (cell:set! cell 'free heap-ptr null)
-    (set! heap-ptr cell)))
+(define (mem:free cell)
+    (cell:set-free! cell))
 
 (define (mark cell)
   (define (mark-primitive cell)
@@ -111,89 +169,96 @@
       [(eq? tag 'cons) (mark-cons cell)])))
 
 (define (sweep)
-  (let* ([real-heap-size (- (heap-size) (remainder (heap-size) (cell:width)))])
-    (define (update-cell cell shift)
-      (begin 
-        (cell:set-forward! cell (- cell shift))
-        (sweep-cell (+ cell (cell:width)) shift)))
-    (define (update-shift cell shift)
-      (begin
-        (free:push cell)
-        (sweep-cell (+ cell (cell:width)) (+ shift (cell:width)))))
-    (define (sweep-cell cell shift)
-      (if (= cell real-heap-size)
-          null
-          (begin
-            (cond
-              [(eq? (cell:tag cell) 'live:prim) (update-cell cell shift)]
-              [(eq? (cell:tag cell) 'live:cons) (update-cell cell shift)]
-              [else (update-shift cell shift)]))))
+  (define (next-cell cell)
+    (+ cell (cell:width cell)))
+  (define (update-cell cell shift)
+    (begin 
+      (cell:set-forward! cell (- cell shift))
+      (sweep-cell (next-cell cell) shift)))
+  (define (update-shift cell shift)
     (begin
-      (set! heap-ptr null)
-      (sweep-cell 0 0))))
+      (mem:free cell)
+      (sweep-cell (next-cell cell) (+ shift (cell:width cell)))))
+  (define (sweep-cell cell shift)
+    (if (mem:last? cell)
+        null
+        (begin
+          (cond
+            [(eq? (cell:tag cell) 'live:prim) (update-cell cell shift)]
+            [(eq? (cell:tag cell) 'live:cons) (update-cell cell shift)]
+            [else (update-shift cell shift)]))))
+  (sweep-cell 0 0))
+
+(define (update)
+  (define (update-references cell)
+    (let ([tag (cell:tag cell)]
+          [first (cell:first cell)]
+          [rest (cell:rest cell)])
+      (if (eq? tag 'live:cons)
+          (let ([new-first (cell:forward first)]
+                [new-rest (cell:forward rest)])
+            (begin
+              (cell:cons:set! cell new-first new-rest)
+              (cell:set-tag! cell 'live:cons)))
+          null)))
+  (define (update-cell-iter cell)
+    (if (mem:last? cell)
+        null
+        (begin
+          (update-references cell)
+          (update-cell-iter (+ cell (cell:width cell))))))
+  (update-cell-iter 0))
 
 (define (compact)
-  (let ([real-heap-size (- (heap-size) (remainder (heap-size) (cell:width)))]
-        [last-forward 0]) 
-    (define (update-cell cell)
-      (let ([tag (cell:tag cell)]
-            [first (cell:first cell)]
-            [rest (cell:rest cell)])
-        (if (eq? tag 'live:cons)
-            (let ([new-first (cell:forward first)]
-                  [new-rest (cell:forward rest)])
-              (cell:set! cell tag new-first new-rest))
-            null)))
-    (define (update-cell-iter cell)
-      (if (= cell real-heap-size)
-          null
-          (begin 
-            (update-cell cell)
-            (update-cell-iter (+ cell (cell:width))))))
-    (define (shift-cell cell tag forward)
-      (begin 
-        (cell:set! forward tag (cell:first cell) (cell:rest cell))
-        (set! last-forward forward)))
-    (define (shift-cell-iter cell)
-      (if (= cell real-heap-size)
-          null
-          (let ([tag (cell:tag cell)])
-            (begin
-              (cond 
-                [(eq? tag 'live:prim) (shift-cell cell 'prim (cell:forward cell))]
-                [(eq? tag 'live:cons) (shift-cell cell 'cons (cell:forward cell))])
-              (shift-cell-iter (+ cell (cell:width)))))))
-    (begin
-      (update-cell-iter 0)
-      (shift-cell-iter 0)
-      (let ([free-start (+ (cell:width) last-forward)])
-        (if (> (+ free-start (cell:width)) (heap-size))
-            (set! heap-ptr null)
-            (begin 
-              (set! heap-ptr (+ (cell:width) last-forward))
-              (free:init (+ (cell:width) last-forward))))))))
+  (define (shift-prim-cell cell forward)
+    (let ([width (cell:width cell)])
+      (begin
+        (cell:prim:set! forward (cell:deref cell))
+        (cell:set-forward! forward null)
+        (shift-cell-iter (+ cell width) (+ forward width)))))
+  (define (shift-cons-cell cell forward)
+    (let ([width (cell:width cell)])
+      (begin
+        (cell:cons:set! forward (cell:first cell) (cell:rest cell))
+        (cell:set-forward! forward null)
+        (shift-cell-iter (+ cell width) (+ forward width)))))
+  (define (shift-cell-iter cell new-heap-ptr)
+    (if (mem:last? cell)
+        new-heap-ptr
+        (let ([tag (cell:tag cell)])
+          (begin
+            (cond 
+              [(eq? tag 'live:prim) (shift-prim-cell cell (cell:forward cell))]
+              [(eq? tag 'live:cons) (shift-cons-cell cell (cell:forward cell))]
+              [else (shift-cell-iter (+ cell (cell:width cell)) new-heap-ptr)])))))
+    (mem:init (shift-cell-iter 0 0)))
 
-(define (update-root root)
-  (let ([new-addr (cell:forward (read-root root))])
-    (set-root! root new-addr)))
 
-(define (mark-and-compact roots)
+
+(define (mark-and-compact roots live-refs)
   (define (root-addresses roots)
     (map read-root roots))
+  (define (update-root root)
+    (let ([new-addr (cell:forward (read-root root))])
+      (set-root! root new-addr)))
+  (define (update-references refs)
+    (if (eq? refs null)
+        null
+        (cons (cell:forward (car refs)) (cell:forward (cdr refs)))))
   (begin
     (map mark (root-addresses roots))
     (sweep)
-    (compact)
-    (map update-root roots)))
+    (update)
+    (map update-root roots)
+    (let ([new-refs (update-references live-refs)])
+      (begin 
+        (compact)
+        new-refs))))
 
 (define (init-allocator)
   ; calling heap-offset before init-allocator is called gives 'undefined
   ; need to be able to at least store 1 cell
-  (if (< (heap-size) (cell:width))
-      null
-      (begin
-        (set! heap-ptr 0)
-        (free:init heap-ptr))))
+  (mem:init 0))
 
 (define (get-roots tag f r)
   (define (get-primitive-roots p)
@@ -206,22 +271,25 @@
     [(eq? tag 'prim) (get-primitive-roots f)]
     [(eq? tag 'cons) (get-cons-roots f r)]))
   
-(define (alloc tag f r)
-  (if (free:available?)
-      (cell:set! (free:pop) tag f r)
-      (begin 
-        (mark-and-compact (get-roots tag f r))
-        (when (not (free:available?))
-          (error "out of memory"))
-        (if (eq? tag 'cons)
-            (cell:set! (free:pop) tag (cell:forward f) (cell:forward r))
-            (cell:set! (free:pop) tag f r)))))
-  
 (define (gc:alloc-flat p)
-  (alloc 'prim p null))
+  (let ([size (cell:type:width 'prim)])
+    (if (mem:available? size)
+        (cell:prim:set! (mem:allocate size) p)
+        (begin
+          (mark-and-compact (get-roots 'prim p null) null)
+          (when (not (mem:available? size))
+            (error "out of memory"))
+          (cell:prim:set! (mem:allocate size) p)))))
 
 (define (gc:cons f r)
-  (alloc 'cons f r))
+  (let ([size (cell:type:width 'cons)])
+    (if (mem:available? size)
+        (cell:cons:set! (mem:allocate size) f r)
+          (let ([new-refs (mark-and-compact (get-roots 'cons f r) (cons f r))])
+            (begin
+              (when (not (mem:available? size))
+                (error "out of memory"))
+              (cell:cons:set! (mem:allocate size) (car new-refs) (cdr new-refs)))))))
 
 (define (gc:deref a)
   (heap-ref (+ 1 a)))
