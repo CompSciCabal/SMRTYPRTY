@@ -1,6 +1,6 @@
 #lang plai/mutator
 ;(allocator-setup "../good-collectors/mark_and_sweep_collector.rkt" 100)
-(allocator-setup "../good-collectors/mark_and_compact_collector.rkt" 140)
+(allocator-setup "../good-collectors/mark_and_compact_collector.rkt" 110)
 (halt-on-errors)
 
 ;(check-temps1 temps) -> boolean?
