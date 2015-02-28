@@ -78,7 +78,7 @@ void sweep(struct Memory* mem) {
     cur = &mem->all[i];
     if (cur->mark == 1) {
       cur->mark = 0;
-    } else if (cur->type != LISP_FREE){
+    } else if (cur->type != LISP_FREE) {
       deallocate(mem, cur);
     }
   }
@@ -179,9 +179,7 @@ void print_memory(struct Memory* mem) {
 }
 
 void fill_memory(struct Memory* mem) {
-  printf("Filling: ");
   while (mem->nil != mem->free) {
-    print_cell_type(mem->free);
     new_integer(mem, 34);
   }
 }
