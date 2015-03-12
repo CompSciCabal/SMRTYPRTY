@@ -111,6 +111,7 @@
   (lambda (guess)
     (iterative-improve-iter guess)))
 
+(displayln "iterative-improve impl of sqrt")
 (define (sqrt x)
   (define (good-enough? guess)
     (< (abs (- (square guess) x)) 0.001))
@@ -118,4 +119,14 @@
     (average guess (/ x guess)))
   ((iterative-improve good-enough? improve-guess) 1.0))
 (sqrt 2.0)
+
+(define (fixd-point f)
+  (define tolerance 0.00001)
+  (define (good-enough? guess)
+    (< (abs (- guess (f guess))) tolerance))
+  ((iterative-improve good-enough? f) 1.0))
+
+(fixed-point (lambda (x) (+ 1 (/ 1 x)))
+             1.0)
+(fixd-point (lambda (x) (+ 1 (/ 1 x))))
 
