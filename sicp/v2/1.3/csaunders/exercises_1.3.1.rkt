@@ -68,8 +68,8 @@
     (cond [(or (= k 0) (= k steps)) 1]
           [(= (remainder k 2) 1) 4]
           [else 2]))
-  (define (simpson-term x)
-    (* (multfor x) (yk x)))
+  (define (simpson-term k)
+    (* (multfor k) (yk k)))
   (* (/ h 3)
      (sum simpson-term 0 inc steps)))
 
@@ -129,7 +129,7 @@
                             b))))
 
 (define (accum-sum term a next b)
-  (accumulate + 1 term a next b))
+  (accumulate + 0 term a next b))
 
 (define (accum-prod term a next b)
   (accumulate * 1 term a next b))

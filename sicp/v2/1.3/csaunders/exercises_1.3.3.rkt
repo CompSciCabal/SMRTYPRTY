@@ -47,13 +47,9 @@
 
 (displayln "exercise 1.37 a.")
 (define (cont-frac n d k)
-           (define (cont-frac-iter n d k i)
-             (let [(ni (n i))
-                   (di (d i))]
-             (if (= k i)
-                 (/ ni di)
-                 (/ ni (+ di (cont-frac-iter n d k (+ i 1)))))))
-           (cont-frac-iter n d k 1))
+  (if (= k 1)
+      (/ (n k) (d k))
+      (/ (n k) (+ (d k) (cont-frac n d (- k 1))))))
 
 ;; 1 / goldenRatio == 1.6180339887498948482
 ;; The procedure will need to iterate 11 times to get 4 decimal
