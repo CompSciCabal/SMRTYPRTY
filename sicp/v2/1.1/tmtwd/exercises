@@ -1,5 +1,14 @@
 #lang racket
-;1.1
+
+;subsitution rule
+;To Evaluate an application
+;  Evaluate the operator to get a proc
+;  Eval the operands to get the args
+;  Apply the proc to the args
+;    Copy the body of the proc, substituting the supplied args for the formal params of the proc
+;  Evaluate the resulting body
+
+;1.2
 (/ (+ 5
       (/ 1 2)
       (- 2 
@@ -8,4 +17,20 @@
    (* 3 
       (- 6 2)
       (- 2 7)))
+
+(define (sqr x) (* x x ))
+
+;1.3
+;this is wrong I think
+(define (proc a b c)
+  (cond (and (< a b) (< a c))
+    (+ (sqr b) (sqr c)))
+  (cond (and (< b a) (< b c))
+    (+ (sqr a) (sqr c)))
+  (cond (and (< c a)(< c b))
+    (+ (sqr a) (sqr c)))
+  )
+
+(proc 1 3 4)
+
 
