@@ -177,3 +177,81 @@
 (rect-height rect-c)
 (rect-perim rect-c)
 (rect-area rect-c)
+
+(displayln "exercise 2.4")
+(define (a-cons x y)
+  (lambda (m) (m x y)))
+
+(define (a-car z)
+  (z (lambda (p q) p)))
+
+;; What does the substitution of (a-car (a-cons 3 4)) look like?
+;; (a-car (lambda (m) (m 3 4))
+;;       A                  B
+;; ((lambda (m) (m 3 4)) (lambda (p q) p))
+;; m from A gets replaced with the provided lambda in B
+;; Since m is applied, we need to pass in 3 and 4 to the
+;; lambda in B
+;; (lambda (3 4) 3)
+;; > 3
+
+;; How could we do the same for a-cdr?
+(define (a-cdr z)
+  (z (lambda (p q) q)))
+
+(a-car (a-cons 3 4))
+(a-cdr (a-cons 3 4))
+
+(displayln "exercise 2.5")
+;; I don't really _get_ this question
+(define (num-cons a b) (* (expt 2 a) (expt 3 b)))
+(define (num-car x) (count-0-remainder-divisions x 2))
+(define (num-cdr x) (count-0-remainder-divisions x 3))
+
+(define (count-0-remainder-divisions n divisor)
+  (define (iter try-exp)
+    (if (= 0 (remainder n (expt divisor try-exp)))
+        (iter (+ try-exp 1))
+        (- try-exp 1)))
+  (iter 1))
+
+(num-car (num-cons 3 4))
+(num-cdr (num-cons 3 4))
+
+(displayln "exercise 2.6")
+;; I'm not super super sure on this one.
+;; Would be great to cover at the book club.
+(define zero (lambda (f) (lambda (x) x)))
+(define (add-1 n)
+  (lambda (f) (lambda (x) (f ((n f) x)))))
+(add-1 zero)
+;; Substitution Model:
+;;                  Z
+;; (add-1 (lambda (f) (lambda (x) x)))
+;; In add-1 replace n with the lambda function identified by Z, to reduce
+;; confusion let's rename the variable f in zero to g
+;; (add-1 (lambda (g) (lambda (x) x)))
+;;(lambda (f)
+;;  (lambda (x)
+;;    (f (((lambda (g) (lambda (x) x)) f) x))))
+;; Apply f to Z (lambda (g)....)
+;; (lambda (f)
+;;  (lambda (x)
+;;    (f ((lambda (x) x) x))))
+;; Now apply x to (lambda (x) ...)
+;; (lambda (f) (lambda (x) (f x)))
+;; So... add-1 is really just (f x). Therefore, to create one
+;; and two all we need to do is define them as the application of the function
+;; a number of times
+(define (one f) (lambda (x) (f x)))
+(define (two f) (lambda (x) (f (f x))))
+
+;; If we look at the definition of Church Numerals we can see
+;; that plus(m, n) is just (mf(nf(x))
+;; https://en.wikipedia.org/wiki/Church_encoding#Calculation_with_Church_numerals
+(define (church-sum m n)
+  ;; First we need our f and x, which are just lambda functions
+  (lambda (f)
+    (lambda (x)
+      ((m f) ((n f) x)))))
+  
