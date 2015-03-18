@@ -254,4 +254,75 @@
   (lambda (f)
     (lambda (x)
       ((m f) ((n f) x)))))
+
+(display "section 2.1.4: extended exercise")
+
+(define (add-interval x y)
+  (make-interval (+ (lower-bound x) (lower-bound y))
+                 (+ (upper-bound x) (upper-bound y))))
   
+(displayln "exercise 2.7")
+(define (make-interval a b) (cons a b))
+(define (lower-bound i) (min (car i) (cdr i)))
+(define (upper-bound i) (max (car i) (cdr i)))
+
+(lower-bound (make-interval 2 5))
+(lower-bound (make-interval 8 2))
+
+(displayln "exercise 2.8")
+;; We can take the logic from the way division of intevals is performed
+;; Instead of taking the reciprocal though, we take the negative value
+;; then sum the them together.
+(define (sub-interval x y)
+  (add-interval x (make-interval (- (upper-bound y))
+                                 (- (lower-bound y)))))
+
+(sub-interval (make-interval 5 2) (make-interval 3 2))
+(sub-interval (make-interval 3 1) (make-interval 3 2))
+
+(displayln "exercise 2.9")
+(displayln "exercise 2.9 a: See exercise-2.9.png for work")
+(displayln "exercise 2.9 b")
+(define (width-interval i)
+  (/ (- (upper-bound i) (lower-bound i)) 2))
+
+;; For multiplication/division things don't play out as nicely. If we look at the
+;; implementations we'll see that we end up using the largest and smallest combination
+;; from the two intervals being operated on. When those intervals cross over into
+;; negative values things start to get kinda weird
+;; We can see this by taking intervals that have similar widths but will notice that
+;; the widths of their products aren't the same
+(define (mul-interval x y)
+  (let ([p1 (* (lower-bound x) (lower-bound y))]
+        [p2 (* (lower-bound x) (upper-bound y))]
+        [p3 (* (upper-bound x) (lower-bound y))]
+        [p4 (* (upper-bound x) (upper-bound y))])
+    (make-interval (min p1 p2 p3 p4)
+                   (max p1 p2 p3 p4))))
+
+(define i1 (make-interval -1 1))
+(define i2 (make-interval -5 5))
+(width-interval i1) ;; > 1
+(width-interval i2) ;; > 5
+(width-interval (mul-interval i1 i2)) ;; > 5
+
+(define i3 (make-interval 0 2)) ;; > 1
+(define i4 (make-interval 0 10)) ;; > 5
+(width-interval i3) ;; > 1
+(width-interval i4) ;; > 5
+(width-interval (mul-interval i3 i4)) ;; > 10
+
+(define i5 (make-interval 1 3)) ;; > 1
+(define i6 (make-interval 2 12)) ;; > 5
+(width-interval i5) ;; > 1
+(width-interval i6) ;; > 5
+(width-interval (mul-interval i5 i6)) ;; > 17
+
+(displayln "exercise 2.10")
+(define (div-interval x y)
+  (if (>= 0 (* (lower-bound y) (upper-bound y)))
+      (error "cannot divide by an interval that spans 0" y)
+      (mul-interval x
+                    (make-interval (/ 1.0 (upper-bound y))
+                                   (/ 1.0 (lower-bound y))))))
+(div-interval i5 i1)
