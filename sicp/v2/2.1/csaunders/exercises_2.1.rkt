@@ -325,4 +325,99 @@
       (mul-interval x
                     (make-interval (/ 1.0 (upper-bound y))
                                    (/ 1.0 (lower-bound y))))))
-(div-interval i5 i1)
+
+(displayln "exercise 2.11")
+(define (interval-sign i)
+  (let ([iL (lower-bound i)]
+        [iH (upper-bound i)])
+    (cond [(and (>= 0 iL) (>= 0 iH)) 1]
+          [(and (< 0 iL) (< 0 iH)) -1]
+          [else 0])))
+
+;; ¯\(°_o)/¯ -- I'll try this one again later
+(displayln "exercise 2.11 -- skipped / confused")
+
+(displayln "exercise 2.12")
+(define (make-center-width c w)
+  (make-interval (- c w) (+ c w)))
+
+(define (center i)
+  (/ (+ (lower-bound i) (upper-bound i)) 2))
+
+(define (width i)
+  (/ (- (upper-bound i) (lower-bound i)) 2))
+
+(define (make-center-percent c pct)
+  (let ([pct-offset (* c (/ pct 100.0))])
+    (make-interval (- c pct-offset) (+ c pct-offset))))
+
+(define (percent i)
+  (let* [(offset (/ (- (upper-bound i) (lower-bound i)) 2))
+         (center (+ (lower-bound i) offset))]
+    (* (/ offset center) 100)))
+
+(define p1 (make-center-percent 100 10))
+(define p2 (make-center-percent 5 5))
+(define p3 (make-center-percent 30 2))
+(define p4 (make-center-percent 20 15))
+(define p5 (make-center-percent 30 1))
+(map (lambda (x) (percent x)) (list p1 p2 p3 p4))
+
+(displayln "exercise 2.13")
+(percent (mul-interval p1 p2))
+(percent (mul-interval p3 p4))
+(percent (mul-interval p2 p4))
+;; As we can see by taking the percentages of a few intervals, the
+;; resulting percentage is approx. the sum of each intervals tolerance.
+
+(displayln "exercise 2.14, 2.15, & 2.16")
+(define (par1 r1 r2)
+  (div-interval (mul-interval r1 r2)
+                (add-interval r1 r2)))
+
+(define (par2 r1 r2)
+  (let ([one (make-interval 1 1)])
+    (div-interval one
+                  (add-interval (div-interval one r1)
+                                (div-interval one r2)))))
+
+(define A (make-interval 4.5 5.5))
+(define B (make-interval 4.75 5.25))
+(percent A)
+(percent B)
+
+;; 2.14
+(define A-div-A (div-interval A A))
+(define A-div-B (div-interval A B))
+(percent A-div-A)
+(percent A-div-B)
+;; There isn't an "identity" so we cannot differentiate between an interval dividing
+;; itself and dividing being divided by another. In the case of A / A weouldn't expect to see
+;; a change in the error, but instead we the tolerance increase by double.
+
+;; 2.15
+(percent (par1 A B))
+(percent (par2 A B))
+;; Yes, Eva is correct. There is a bunch of uncertainty in the values passed into par1 and as
+;; we saw in 2.14, dividing values by themselves results in disgustingly large increases in the
+;; tolerance percentage. By avoiding these kinds of operations we can keep our tolerances down to
+;; something manageable. By introducing the _one_ interval we ensure that no provided interval is
+;; dividing itself.
+
+;; 2.16
+;; No I cannot devise an interval-arithmetic package
+;;
+;; If we look at other algebraic constructs(?) such as the set of real numbers(?) there are certain properties
+;; that we need in order for two equations to be algebraically equivalent.
+;; Properties of Real Numbers:
+;; - Summation/Subtraction: There exists an identity X such that A+X = A and A-X = A
+;; - Multiplication/Division: There exists an identiy Y such that A*Y = A and A/Y = A
+;; The reason this works is because the values we are working with are discrete and we are completely confident
+;; in their value.
+;;
+;; With the intervals the actual value can land *anywhere* within that interval, so subsequent
+;; operations decrease our confidence in the interval. Depending on how we perform the operations we can cause
+;; bigger and bigger increases to the tolerance.
+;;
+;; ? - My math knowledge discrete mathematics / set theory is terrible so I might be getting these names wrong.
+;;     I apologize.
