@@ -118,3 +118,165 @@
 
 (for-each (lambda (x) (displayln x))
           (list 1 2 3 4 5))
+
+(displayln "exercise 2.24")
+(displayln "see exercise-2.24.jpg")
+
+(displayln "exercise 2.25")
+(define ex-2-25-a '(1 3 (5 7) 9))
+(define ex-2-25-b '((7)))
+(define ex-2-25-c '(1 (2 (3 (4 (5 (6 7)))))))
+
+;; 2.25 a
+(cadr (caddr ex-2-25-a))
+;; aka
+(car (cdr (car (cdr (cdr ex-2-25-a)))))
+
+;; 2.25 b
+(caar ex-2-25-b)
+;; aka
+(car (car ex-2-25-b))
+
+;; 2.25 c
+(cadr (cadr (cadr (cadr (cadr (cadr ex-2-25-c))))))
+
+(displayln "exercise 2.26")
+
+;; x '(1 2 3)
+;; y '(4 5 6)
+
+;; (append x y)
+;;>(1 2 3 4 5 6)
+
+;; (cons x y)
+;;>((1 2 3) 4 5 6)
+
+;; (list x y)
+;;>((1 2 3) (4 5 6))
+
+(displayln "exercise 2.27")
+(define (deep-reverse x)
+  (define (iter lst acc)
+    (cond [(null? lst) acc]
+          [(pair? (car lst)) (iter (cdr lst)
+                                   (cons (deep-reverse (car lst)) acc))]
+          [else (iter (cdr lst) (cons (car lst) acc))]))
+  (iter x '()))
+
+(deep-reverse (list (list 1 2) (list 3 4)))
+
+(displayln "exercise 2.28")
+(define (fringe lst)
+  (cond [(null? lst) '()]
+        [(not (pair? lst)) (list lst)]
+        [else (append (fringe (car lst))
+                      (fringe (cdr lst)))]))
+(define ex-2-28-x (list (list 1 2) (list 3 4)))
+(fringe ex-2-28-x)
+(fringe (list (list ex-2-28-x ex-2-28-x) (list 5 6 7 9 (list 10 11 12))))
+
+(displayln "exercise 2.29")
+(define (make-mobile left right)
+  (list left right))
+
+(define (make-branch length structure)
+  (list length structure))
+
+(define ex-2-29-left-branch (make-branch 5 6))
+(define ex-2-29-right-branch (make-branch 2 3))
+
+(displayln "exercise 2.29 a")
+
+(define (branch-length branch)
+  (car branch))
+
+(define (branch-structure branch)
+  (cadr branch))
+
+(define (branch? branch)
+  (not (pair? (branch-structure branch))))
+
+(define (branch-weight branch)
+  (if (branch? branch)
+      (branch-structure branch)
+      (total-weight (branch-structure branch))))
+
+(define (branch-torque branch)
+  (let [(len (branch-length branch))
+        (struct (branch-structure branch))]
+    (* len
+       (if (branch? branch)
+           struct
+           (let [(tl (branch-torque (left-branch struct)))
+                 (tr (branch-torque (right-branch struct)))]
+             (if (= tl tr)
+                 (+ tl tr)
+                 0))))))
+
+(define (left-branch mobile)
+  (car mobile))
+
+(define (right-branch mobile)
+  (cadr mobile))
+
+(when (not (= (branch-length ex-2-29-left-branch) 5))
+  (error "Branch length did not match"))
+(when (not (= (branch-structure ex-2-29-left-branch) 6))
+  (error "Branch height did not match"))
+(when (not (equal? (branch-structure (make-branch 3 ex-2-29-right-branch)) ex-2-29-right-branch))
+  (error "Child branch did not match"))
+
+(displayln "exercise 2.29 b")
+(define simple (make-mobile (make-branch 5 5) (make-branch 5 5)))
+(define airplanes
+  (make-mobile
+   (make-branch 5
+                (make-mobile
+                   (make-branch 5 5)
+                   (make-branch 5 5)))
+   (make-branch 10
+                (make-mobile
+                    (make-branch 5
+                                 (make-mobile (make-branch 3 2)
+                                              (make-branch 5 3)))
+                    (make-branch 6 5)))))
+
+(define (weird-mobile)
+  (make-mobile
+   (make-branch 5 480)
+   (make-branch 10
+                (make-mobile
+                 (make-branch 10 (make-mobile (make-branch 3 2) (make-branch 2 3)))
+                 (make-branch 6 20)))))
+                 
+(define (total-weight mobile)
+  (cond [(null? mobile) 0]
+        [(branch? mobile) (branch-structure mobile)]
+        [else
+         (let ([left (left-branch mobile)]
+               [right (right-branch mobile)])
+           (+ (branch-weight left)
+              (branch-weight right)))]))
+
+(total-weight airplanes)
+
+(displayln "exercise 2.29 c")
+(define (balanced? mobile)
+  (= (branch-torque (left-branch mobile))
+     (branch-torque (right-branch mobile))))
+
+(balanced? simple)
+(balanced? airplanes)
+(balanced? (weird-mobile))
+
+(displayln "exercise 2.29d")
+(set! make-mobile (lambda (l r) (cons l r)))
+(set! make-branch (lambda (len str) (cons len str)))
+
+;; Changes to make program work
+(set! branch-structure (lambda (b) (cdr b)))
+(set! right-branch (lambda (b) (cdr b)))
+
+;; tests
+(balanced? (weird-mobile))
+
