@@ -282,3 +282,46 @@
 (total-weight (weird-mobile))
 (balanced? (weird-mobile))
 
+(displayln "exercise 2.30")
+(define ex-2-30-tree (list 1
+                           (list 2 (list 3 4) 5)
+                           (list 6 7)))
+
+(define (square-tree tree)
+  (cond [(null? tree) '()]
+        [(not (pair? tree)) (* tree tree)]
+        [else (cons (square-tree (car tree))
+                    (square-tree (cdr tree)))]))
+(square-tree ex-2-30-tree)
+
+(displayln "exercise 2.31")
+(define (tree-map proc tree)
+  (cond [(null? tree) '()]
+        [(not (pair? tree)) (proc tree)]
+        [else (cons (tree-map proc (car tree))
+                    (tree-map proc (cdr tree)))]))
+
+(tree-map (lambda (x) (* x x)) ex-2-30-tree)
+
+(displayln "exercise 2.32")
+(define (subsets s)
+  (if (null? s)
+      (list '())
+      (let [(rest (subsets (cdr s)))]
+        (displayln rest)
+        (append rest
+                (map (lambda (x)
+                       (if (null? x)
+                           (list (car s))
+                           (cons (car s) x)))
+                     rest)))))
+
+(subsets '(1 2 3))
+;; The rest is the list we have built out so far. The first item will always be the empty
+;; list. So that's our identity and we return a new list from that. The rest of the list items
+;; are simply those we need to update with our details as well.
+;; If we have a null 'x' we know that we need to take the head of the list and create an entry for that, otherwise
+;; we create a new list by cons-ing the head of the list to whatever x is.
+;; 
+;; We basically unwind our list and then build it back up, that's why the return values aren't pretty they way we'd
+;; probably like to see them.
