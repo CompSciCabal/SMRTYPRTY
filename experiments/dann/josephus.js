@@ -30,6 +30,7 @@ last = function(list, k) { return list.slice(-k) }
 
 survive = function(n, q, k) {return last(j(n, q), k||(q-1)||1)}
 
+// r = range(20,20)
 // x = r.map(function(n) { return r.map(function(q) { return survive(n, q, 1)[0] }) })
 // console.table(x)
 

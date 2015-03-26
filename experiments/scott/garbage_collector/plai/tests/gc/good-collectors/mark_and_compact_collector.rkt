@@ -14,11 +14,6 @@
 ; e.g.
 ; If x is live data and o is garbage
 ;    xxoooxxxxooxxx
-; L: 0    5     11
-; G:   2      9
-; 
-; N: 01   2345  678
-; F:   f2     f5
 ; 
 ; Pass 2: Scan across updating references in cons cells to the new ones
 ; Pass 3: Scan across shifting all of the live cells over
@@ -26,7 +21,7 @@
 ; Maybe I can use Table based compaction...
 ; B. K. Haddon and W. M. Waite (August 1967). "A compaction procedure for variable length storage elements"
 
-; Man compaction is terrible, I'm going to use the extra storage for the forwarding pointer
+; Man table compaction is terrible, I'm going to use the extra storage for the forwarding pointer
 ; and be done with it
 
 (define heap-ptr 'uninitialized-heap-ptr)
