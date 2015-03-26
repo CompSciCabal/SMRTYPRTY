@@ -2,24 +2,44 @@
 
 (require compatibility/defmacro)
 
-(define-macro (send! to pin message)
-  `(thread-send ,to (cons ,pin ,message)))
+(define (send! to pin message)
+  (thread-send to (cons pin message)))
 
-(define-macro (make-part parent . body)
+(define-macro (make-part body)
   (let ((fn (gensym))
-	(pr (gensym)))
-    `(letrec ((,pr ,parent)
+	(connections (gensym))
+	(setup (gensym)))
+    `(letrec ((,connections '())
 	      (out! (lambda (pin msg)
-		      (let ((m (list (current-thread) pin msg)))
-			(if ,pr
-			    (thread-send ,pr m)
-			    (displayln m)))))
+		      (map (connection-lookup pin ,connections)
+			   (lambda (target pin)
+			     (send! target pin msg)))))
 	      (,fn (lambda ()
 		     (match (thread-receive)
 		       [(cons pin msg) ,@body]
 		       [junk (out! 'error "Malformed message")])
-		     (,fn))))
+		     (,fn)))
+	      (,setup (lambda ()
+			(match (thread-receive)
+			  [(list 'internal 'reset-connections conns)
+			   (set! ,connections conns)
+			   (,fn)]
+			  [junk (,setup)]))))
        (thread ,fn))))
+
+(define connection-lookup (k table)
+  (let ((targets (assoc k table)))
+    (if targets
+	(cdr targets)
+	'())))
+
+(define filter-for (part table)
+  (map (lambda (conn) (cons (cadar conn) (cdr conn)))
+       (filter (lambda (conn) (eq? (caar conn) part))
+	       table)))
+
+(define (send-connection-table! to full-table)
+  (thread-send to (list 'internal 'reset-connections (filter-for to full-table))))
 
 (define-macro (make-proxy parent parts . system-map)
   (define (convert-item itm)
@@ -33,6 +53,7 @@
   (let ((pt (gensym))
 	(launch (gensym))
 	(fn (gensym))
+	(initial (gensym))
 	(setup (gensym)))
     `(let ((,pt ,parent)
 	   (self #f)
@@ -48,17 +69,24 @@
 	   (letrec ((,fn (lambda ()
 			   (match (thread-receive)
 			     [(list src pin msg)
-			      (let ((targets (assoc (list src pin) connections)))
-				(map (,launch msg) (if targets (cdr targets) '())))]
+			      (map (,launch msg) (connection-lookup (list src pin) connections))]
 			     [(cons pin msg)
-			      (let ((targets (assoc (list self pin) connections)))
-				(map (,launch msg) (if targets (cdr targets) '())))])
+			      (map (,launch msg) (connection-lookup (list self pin) connections))])
 			   (,fn)))
+		    (,initial (lambda ()
+				(set! self (current-thread))
+				,@(map part->set-form parts)
+				(,setup)))
 		    (,setup (lambda ()
-			      (set! self (current-thread))
-			      ,@(map part->set-form parts)
-			      (set! connections (list ,@(map convert-line system-map)))
-			      (,fn))))
+			      (match (thread-receive)
+				[(list 'internal 'reset-connections conns)
+				 (set! ,connections conns)
+				 ,@(map 
+				    (lambda (part-pair)
+				      `(send-connection-table! ,(car part-pair) connections))
+				    parts)
+				 (,fn)]
+				[junk (,setup)]))))
 	     (thread ,setup)))))))
 
 (define (make-counter parent)
