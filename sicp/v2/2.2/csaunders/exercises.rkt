@@ -258,6 +258,7 @@
            (+ (branch-weight left)
               (branch-weight right)))]))
 
+(total-weight (weird-mobile))
 (total-weight airplanes)
 
 (displayln "exercise 2.29 c")
@@ -278,5 +279,6 @@
 (set! right-branch (lambda (b) (cdr b)))
 
 ;; tests
+(total-weight (weird-mobile))
 (balanced? (weird-mobile))
 
