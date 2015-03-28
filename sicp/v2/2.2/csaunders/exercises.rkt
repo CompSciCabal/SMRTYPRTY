@@ -319,3 +319,74 @@
 ;; 
 ;; We basically unwind our list and then build it back up, that's why the return values aren't pretty they way we'd
 ;; probably like to see them.
+
+;; Section 2.2.3 Functions
+(define (accumulate op init seq)
+  (if (null? seq)
+      init
+      (op (car seq)
+          (accumulate op init (cdr seq)))))
+
+(displayln "exercise 2.33")
+(define (accum-map p seq)
+  (accumulate (lambda (x y) (cons (p x) y)) '() seq))
+(accum-map square (list 1 2 3 4 5))
+
+(define (accum-append seq1 seq2)
+  (accumulate cons seq2 seq1))
+(accum-append (list 1 2 3 4 5) (list 6 7 8))
+
+(define (accum-len seq)
+  (accumulate (lambda (x y) (+ 1 y)) 0 seq))
+(accum-len (list 1 2 3 4 5 6 7))
+(accum-len (list 23 5 3 2))
+
+(displayln "exercise 2.34")
+(define (horner-eval x coeff-seq)
+  (accumulate (lambda (this-coeff higher-terms)
+                (+ (* higher-terms x) this-coeff))
+              0
+              coeff-seq))
+(horner-eval 2 (list 1 3 0 5 0 1))
+
+(displayln "exercise 2.35")
+(define (count-leaves t)
+  (accumulate + 0
+              (map (lambda (x)
+                     (cond [(null? x) 0]
+                           [(pair? x) (count-leaves x)]
+                           [else 1]))
+                   t)))
+(count-leaves (list (list (list 1 2) 3) 4))
+                         
+(displayln "exercise 2.36")
+(define (accumulate-n op init seqs)
+  (if (null? (car seqs))
+      '()
+      (cons (accumulate op init
+                        (map car seqs))
+            (accumulate-n op init
+                          (map cdr seqs)))))
+
+(accumulate-n + 0 '((1 2 3) (4 5 6) (7 8 9) (10 11 12)))
+
+(displayln "exercise 2.37")
+(displayln "dot product")
+(define (dot-product v w)
+  (accumulate + 0
+              (accumulate-n * 1 (list v w))))
+(dot-product '(1 2) '(3 4)) ;; Should be 11
+
+(displayln "matrix * vector")
+(define vec '(3 2 1))
+(define mat '((1 2 3) (4 5 6) (7 8 9)))
+(define (matrix-*-vector m v)
+  (accumulate-n + 0
+                (map (lambda (x) (accumulate-n * 1 x))
+                     (map (lambda (x) (list v x)) m))))
+
+;; Not super sure about this answer. Should it be the other way?
+(matrix-*-vector mat vec)
+
+(displayln "matrix * matrix")
+                                    
