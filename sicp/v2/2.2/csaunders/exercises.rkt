@@ -111,9 +111,7 @@
 
 (displayln "exercise 2.23")
 (define (for-each proc items)
-  (when (not (null? items))
-    (proc (car items))
-    (for-each proc (cdr items)))
+  (map proc items)
   #t)
 
 (for-each (lambda (x) (displayln x))
@@ -308,12 +306,8 @@
   (if (null? s)
       (list '())
       (let [(rest (subsets (cdr s)))]
-        (displayln rest)
         (append rest
-                (map (lambda (x)
-                       (if (null? x)
-                           (list (car s))
-                           (cons (car s) x)))
+                (map (lambda (x) (append (list (car s)) x))
                      rest)))))
 
 (subsets '(1 2 3))
