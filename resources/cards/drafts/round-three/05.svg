@@ -14,7 +14,7 @@
    id="svg2"
    version="1.1"
    inkscape:version="0.48.4 r9939"
-   sodipodi:docname="04.svg">
+   sodipodi:docname="05.svg">
   <defs
      id="defs4" />
   <sodipodi:namedview
@@ -24,15 +24,15 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="2.7142857"
-     inkscape:cx="205.45698"
-     inkscape:cy="14.536709"
+     inkscape:zoom="1.9192898"
+     inkscape:cx="234.70662"
+     inkscape:cy="24.830951"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="true"
-     inkscape:window-width="1364"
+     inkscape:window-width="681"
      inkscape:window-height="766"
-     inkscape:window-x="0"
+     inkscape:window-x="683"
      inkscape:window-y="0"
      inkscape:window-maximized="0"
      units="in"
@@ -65,7 +65,7 @@
        id="guide6937" />
     <sodipodi:guide
        orientation="1,0"
-       position="240.94737,71.842107"
+       position="240.19301,-2.6051303"
        id="guide6939" />
   </sodipodi:namedview>
   <metadata
@@ -76,7 +76,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
