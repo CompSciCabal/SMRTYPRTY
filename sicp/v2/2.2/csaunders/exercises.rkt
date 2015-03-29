@@ -380,13 +380,65 @@
 (displayln "matrix * vector")
 (define vec '(3 2 1))
 (define mat '((1 2 3) (4 5 6) (7 8 9)))
+(define iden '((1 0 0) (0 1 0) (0 0 1)))
+(define mat2 '((2 4 6) (1 1 1) (7 2 0)))
 (define (matrix-*-vector m v)
-  (accumulate-n + 0
-                (map (lambda (x) (accumulate-n * 1 x))
-                     (map (lambda (x) (list v x)) m))))
+  (map (lambda (x)
+         (accumulate + 0
+                     (accumulate-n * 1 (list v x)))) m))
 
 ;; Not super sure about this answer. Should it be the other way?
+;; The correct solution is '(10 28 46)
 (matrix-*-vector mat vec)
 
+(displayln "transpose")
+(define (transpose mat)
+  (accumulate-n cons '() mat))
+
+(transpose mat)
+
 (displayln "matrix * matrix")
-                                    
+(define (matrix-*-matrix m n)
+  (let [(cols (transpose n))]
+    (map (lambda (x)
+           (matrix-*-vector cols x)) m)))
+
+;; Should be '((1 2 3) (4 5 6) (7 8 9))
+(matrix-*-matrix mat iden)
+;; Should be '((25 12 8) (55 33 29) (85 54 50))
+(matrix-*-matrix mat mat2)
+
+(displayln "exercise 2.38")
+(define fold-right accumulate)
+(define (fold-left op init seq)
+  (define (iter result rest)
+    (if (null? rest)
+        result
+        (iter (op result (car rest))
+              (cdr rest))))
+  (iter init seq))
+
+(fold-right / 1 '(1 2 3)) ; 3 / 2 / 1
+(fold-left / 1 '(1 2 3)) ; 1 / 2 / 3
+
+(fold-right list '() '(1 2 3)) ;; (list 1 (list 2 (list 3 '())))
+(fold-left list '() '(1 2 3)) ;; (list (list (list '() 1) 2) 3)
+
+(fold-right + 0 '(1 2 3))
+(fold-left + 0 '(1 2 3))
+
+(fold-right * 1 '(1 2 3))
+(fold-left * 1 '(1 2 3))
+
+;; The operations need to be commutative in order to produce the same result.
+;; As shown above the sum and product operands satisfy that requirement.
+
+(displayln "exercise 2.39")
+(define (reverse-r seq)
+  (fold-right (lambda (x y) (append y (list x))) '() seq))
+
+(define (reverse-l seq)
+  (fold-left (lambda (x y) (cons y x)) '() seq))
+
+(reverse-r '(1 2 3 4 5))
+(reverse-l '(1 2 3 4 5))
