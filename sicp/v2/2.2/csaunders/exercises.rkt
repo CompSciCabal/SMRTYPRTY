@@ -1,4 +1,20 @@
 #lang racket
+;; Utilities from Previous Sections
+(define (prime? n)
+  (= n (smallest-divisor n)))
+
+(define (divides? a b)
+  (= (remainder b a) 0))
+
+(define (smallest-divisor n)
+  (find-divisor n 2))
+
+(define (find-divisor n test-divisor)
+  (cond
+    ((> (square test-divisor) n) n)
+    ((divides? test-divisor n) test-divisor)
+    (else (find-divisor n (+ test-divisor 1)))))
+
 (displayln "exercise 2.17")
 (define (last-pair lst)
   (if (null? (cdr lst))
@@ -442,3 +458,101 @@
 
 (reverse-r '(1 2 3 4 5))
 (reverse-l '(1 2 3 4 5))
+
+;; From SICP 2.2.3
+(define (enumerate-interval low high)
+  (if (> low high)
+      '()
+      (cons low (enumerate-interval (+ low 1) high))))
+
+(define (flatmap proc seq)
+  (accumulate append '() (map proc seq)))
+
+(define (remove item seq)
+  (filter (lambda (x) (not (= x item))) seq))
+
+(displayln "exercise 2.40")
+(define (unique-pairs n)
+  (flatmap (lambda (i)
+             (map (lambda (j) (list i j))
+                  (enumerate-interval 1 (- i 1))))
+           (enumerate-interval 1 n)))
+
+(unique-pairs 5)
+
+(define (prime-sum? pair)
+  (prime? (+ (car pair) (cadr pair))))
+
+(define (make-pair-sum pair)
+  (let ([first (car pair)]
+        [second (cadr pair)])
+    (list first second (+ first second))))
+
+(define (prime-sum-pairs n)
+  (map make-pair-sum
+   (filter prime-sum?
+           (unique-pairs n))))
+
+(prime-sum-pairs 10)
+
+(displayln "exercise 2.41")
+(define (triples-that-sum n sum)
+  (filter (lambda (x) (= sum (+ (car x) (cadr x) (caddr x))))
+          (flatmap (lambda (x)
+                     (map (lambda (pair) (append (list x) pair))
+                          (unique-pairs (- x 1))))
+                   (enumerate-interval 1 n))))
+
+(triples-that-sum 10 15)
+
+(displayln "exercise 2.42")
+;; Let's talk about this one when we meetup
+(define (queens board-size)
+  (define (queen-cols k)
+    (if (= k 0)
+        (list empty-board)
+        (filter
+         (lambda (positions) (or #f (safe? k positions)))
+         (flatmap
+          (lambda (rest-of-queens)
+            (map (lambda (new-row)
+                   (adjoin-position new-row k rest-of-queens))
+                 (enumerate-interval 1 board-size)))
+          (queen-cols (- k 1))))))
+  (queen-cols board-size))
+
+(define empty-board '())
+
+(define (adjoin-position row col other-queens)
+  (append (list row) other-queens))
+
+(define (safe? k positions)
+  (check-safe
+   (car positions)
+   1
+   (cdr positions)))
+
+(define (check-safe position distance cols)
+  (cond [(empty? cols) #t]
+        [(= (car cols) position) #f]
+        [(= (- (car cols) distance) position) #f]
+        [(= (+ (car cols) distance) position) #f]
+        [else (check-safe position (+ distance 1) (cdr cols))]))
+
+(for-each (lambda (x)
+            (display "Queens for ")
+            (display x)
+            (displayln ":")
+            (map displayln (queens x)))
+          (enumerate-interval 1 8))
+
+
+
+(displayln "exercise 2.43")
+;; enumerate-interval results in generating a bunch of extra calls to queen-cols
+;; for computation that is going to be re-performed multiple times but in the
+;; end thrown out because we don't need this. If we wanted to calculate (queens 3)
+;; using Louis implementation we'd call the first (queen-cols 2) 3 times, then the
+;; next queen cols results in calling (queen-cols 1) 3 more times, then finally calling
+;; (queen-cols 1) 3 more times. If T was the orignal time we've taken that and
+;; increased it to the power of the board-size (T^board-size)
