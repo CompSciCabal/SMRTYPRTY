@@ -9,3 +9,6 @@
          (product f
                   ((lambda(x) (+ x 1)) a)
                   b))))
+; factorial function using product function
+(define (fact n)
+  (product (lambda(x) x) 1 n))
