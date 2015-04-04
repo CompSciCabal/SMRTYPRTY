@@ -1,18 +1,3 @@
 # CSC Cards
 
-- url, github, maybe contact info for inaimathi/dxnn?
-- Comp Sci Cabal Press
-
-### Notes
-
-CompSci Cabal
-CSC
-CS Cabal
-Toronto Computer Science Reading Group
-
-Comp Sci Cabal Press
-CSC Press
-CSCP
-
-- soviet-style font
-- ascii-art swag
+- Using the font [Pixel Twist](http://www.dafont.com/pixel-twist.font), listed as "100% free" on dafont.com
