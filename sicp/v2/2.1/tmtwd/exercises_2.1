@@ -35,6 +35,25 @@
 (numer r)
 (denom r)))
 
+(define (enumerate-tree tree)
+  (cond ((null? tree) null)
+        ((not (pair? tree)) (list tree))
+        (else (append (enumerate-tree (car tree))
+                                (enumerate-tree (cdr tree))))))
+
+(define (accumulate op initial sequence)
+  (if (null? sequence)
+      initial
+      (op (car sequence)
+            (accumulate op initial (cdr sequence)))))
+
+(define (sum-odd-squares tree)
+  (accumulate +
+                        0
+                        (map (lambda(x) (* x x))
+                                 (filter odd?
+                                           (enumerate-tree tree)))))
+
 ;;Exercise 2.2
 
 (define (avg x y)
@@ -48,6 +67,8 @@
   (display ",")
   (display (y-point p))
   (display ")"))
+
+
 
 ;(define (make-segment x1 y1 x2 y2)
 ;  (list (list x1 y1) (list x2 y2)))
@@ -72,9 +93,38 @@
 (define (my_cdr z)
   (z (lambda (p q) q)))
 
+;2.5
+(define (my_new_cons a b)
+  (* (expt 2 a)
+     (expt 3 b)))
+
+
+
 ;;2.6
 (define zero (lambda (f) (lambda (x) x)))
 
 (define (add-1 n)
 (lambda (f) (lambda (x) (f ((n f) x)))))
+
+(define one (add-1 zero))
   
+(define two (add-1 one))
+
+(define (inc n)
+  (+ 1 n))
+
+;2.17
+(define (last-pair n)
+  (if (null? (cdr n))
+      (car n)
+  (last-pair (cdr n))))
+
+;2.18
+;;this doesn't work exactly. I think I know why
+;;but I don't know how to fix it yet
+;;I need to append rather than 'cons'
+(define (reverse n)
+  (if (null? (cdr n))
+      (car n)
+  (list (reverse (cdr n))
+        (car n))))
