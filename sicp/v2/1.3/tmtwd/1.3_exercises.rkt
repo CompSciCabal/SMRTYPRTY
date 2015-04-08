@@ -12,3 +12,11 @@
 ; factorial function using product function
 (define (fact n)
   (product (lambda(x) x) 1 n))
+
+(define (proc a)
+  (let k  0)
+  (if (> k 9)
+      a
+      (begin
+      (+ a (proc (+ a 1))
+         (+ k 1)))))
