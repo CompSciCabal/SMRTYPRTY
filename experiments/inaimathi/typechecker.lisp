@@ -4,28 +4,20 @@
   (:use :cl :esrap))
 (in-package :fun)
 
-(defrule exp (or (and "if" exp "then" exp "else" exp)
-		 (and "fun(" identifier ")" exp)
-		 (and "let" (+ decl) "in" exp)
-		 (and "(" exp ")")
-		 (and exp "(" exp ")")
-		 atom))
+;;;;; Expressions
+(defrule exp (or if-then-else fun let-in parenthesized call atom))
+(defrule call (and exp "(" exp ")"))
+(defrule parenthesized (and "(" exp ")"))
+(defrule fun (and "fun(" identifier ")" exp))
+(defrule if-then-else (and "if" exp "then" exp "else" exp))
+(defrule let-in (and "let" (+ decl) "in" exp))
 
-(defrule decl (or (and "rec" decl)
-		  (and "(" decl ")")
-		  (and identifier "=" exp)
-		  (and decl "then" decl)))
-
-(defun not-integer (string)
-  (when (find-if-not #'digit-char-p string) t))
-
-(defrule whitespace (+ (or #\space #\tab #\newline))
-  (:constant nil))
-
-(defun numericp (char)
-  (>= 57 (char-code char) 48))
-
-(defrule alphanumeric (alphanumericp character))
+;;;;; Declarations
+(defrule decl (or recursive compound parenthesized-declaration basic-declaration))
+(defrule recursive (and "rec" decl))
+(defrule compound (and decl "then" decl))
+(defrule parenthesized-declaration (and "(" decl ")"))
+(defrule basic-declaration (and identifier "=" exp))
 
 (defrule atom (and (* whitespace) (+ alphanumeric) (* whitespace))
   (:lambda (list)
@@ -36,3 +28,14 @@
 
 (defrule identifier (and (* whitespace) (not-integer (+ alphanumeric)) (* whitespace))
   (:lambda (list) (intern (string-upcase (text list)))))
+
+(defrule alphanumeric (alphanumericp character))
+
+(defrule whitespace (+ (or #\space #\tab #\newline))
+  (:constant nil))
+
+(defun not-integer (string)
+  (when (find-if-not #'digit-char-p string) t))
+
+(defun numericp (char)
+  (>= 57 (char-code char) 48))
