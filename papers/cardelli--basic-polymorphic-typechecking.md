@@ -22,5 +22,8 @@
 
 - A type can be
 	- a variable (a, b, numeric, y)
-	- a nullary operator (int, bool)
-	- a parametric operator (→, ×) *those should probably be -> and * for ease of typing*
+	- a nullary operator (int, bool) *he's using the ML notation where there is no visual difference between a nullary operator and a variable*
+	- a parametric operator (→, ×, list) *the first two should probably be -> and * for ease of typing*
+
+- "In principle, typechecking is done by setting up a system of type constraints, and then solving it with respect to the type variables. In practice, typechecking is done by a bottom-up inspection of the program, matching and synthesizing types while proceeding towards the root" pg 7.
+- "It is a deep property of the type system and of the typechecking algorithm that the order in which we examine programs and carry out the matching does not affect the final result and solves the system of type constraints" pg 7.
