@@ -27,10 +27,13 @@
 
 - "In principle, typechecking is done by setting up a system of type constraints, and then solving it with respect to the type variables. In practice, typechecking is done by a bottom-up inspection of the program, matching and synthesizing types while proceeding towards the root" pg 7.
 - "It is a deep property of the type system and of the typechecking algorithm that the order in which we examine programs and carry out the matching does not affect the final result and solves the system of type constraints" pg 7.
-
+	- Presumably in more modern practice, we reduce the problem of typing to a boolean satisfiability problem, then hand it to a specialized solver?
 
 - Typechecking Algorithm (pages 9 & 10)
 	1. When a new variable is introduced by a `fun`, it is assigned a fresh type variable
 	2. In a conditional, the test is matched to `bool`, and the `then` and `else` are unified to determine a unique type for the expression
 	3. In an abstraction *(anonymous function?)* `fun(x) e`, the type of `e` is inferred in a context where `x` is associated to a new type variable
 	4. In an application `f(a)`, the type of `f` is unified against `A -> B` (where `A` is the type of `a`, and `B` is a fresh type variable)
+
+- The above four rules don't account for the typing of `let` terms, which need to be more complicated in order to allow for "generic" type variables. That is, allowing heterogenous types for certain components (the example given is `fun(f) pair(f(3))(f(true))`, which can't be typed. But we'd still expect to be able to type `let f = fun(a) a in pair(f(3))(f(true))`)
+- The procedure for this is to essentially make `let`-*introduced* type variables "generic" (which means they are copied per occurrence of the named term, rather than shared beteen them).
