@@ -27,7 +27,7 @@
 
 - "In principle, typechecking is done by setting up a system of type constraints, and then solving it with respect to the type variables. In practice, typechecking is done by a bottom-up inspection of the program, matching and synthesizing types while proceeding towards the root" pg 7.
 - "It is a deep property of the type system and of the typechecking algorithm that the order in which we examine programs and carry out the matching does not affect the final result and solves the system of type constraints" pg 7.
-	- Presumably in more modern practice, we reduce the problem of typing to a boolean satisfiability problem, then hand it to a specialized solver?
+	- Presumably in more modern practice, we reduce the problem of typing to a boolean satisfiability problem, then hand it to a SAT solver?
 
 - Typechecking Algorithm (pages 9 & 10)
 	1. When a new variable is introduced by a `fun`, it is assigned a fresh type variable
