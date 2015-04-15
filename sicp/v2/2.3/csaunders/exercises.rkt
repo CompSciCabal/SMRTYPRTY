@@ -98,3 +98,149 @@
 (define (exponent e) (caddr e))
 
 (displayln "exercise 2.57")
+(displayln "see commented sections in earlier code")
+
+(displayln "exercise 2.58 a.")
+(deriv '(+ x (* 3 (+ x (+ y 2)))) 'x)
+(define (infix-make-sum a1 a2)
+  (cond ((=number? a1 0) a2)
+        ((=number? a2 0) a1)
+        ((and (number? a1) (number? a2))
+         (+ a1 a2))
+        (else (list a1 '+ a2))))
+(define (infix-sum? exp) (eq? '+ (cadr exp)))
+(define infix-addend car)
+(define infix-augend caddr)
+(set! make-sum infix-make-sum)
+(set! sum? infix-sum?)
+(set! addend infix-addend)
+(set! augend infix-augend)
+
+(define (infix-make-product m1 m2)
+  (cond [(or (=number? m1 0) (=number? m2 0)) 0]
+        [(=number? m1 1) m2]
+        [(=number? m2 1) m1]
+        [(and (number? m1) (number? m2)) (* m1 m2)]
+        [else (list m1 '* m2)]))
+(define (infix-product? exp) (eq? '* (cadr exp)))
+(define infix-multiplier car)
+(define infix-multiplicand caddr)
+(set! make-product infix-make-product)
+(set! product? infix-product?)
+(set! multiplier infix-multiplier)
+(set! multiplicand infix-multiplicand)
+
+(deriv '(x + (3 * (x + (y + 2)))) 'x)
+
+(displayln "exercise 2.58 b.")
+(define (any? pred test . rest)
+  (cond [(pred test) #t]
+        [(empty? rest) #f]
+        [else (apply any? pred rest)]))
+
+(define (zero? n) (=number? n 0))      
+
+(define (alg-make-sum a1 a2)
+  (let [(a1-sum? (alg-sum? a1))
+        (a2-sum? (alg-sum? a2))
+        (a1-num? (number? a1))
+        (a2-num? (number? a2))]
+  (cond [(and a1-num? (= a1 0)) a2]
+        [(and a2-num? (= a2 0)) a1]
+        [(and a1-sum? a2-sum?) (append a1 '(+) a2)]
+        [a1-sum? (append a1 (list '+ a2))]
+        [a2-sum? (append (list a1 '+) a2)]
+        [else (list a1 '+ a2)])))
+(define (alg-sum? exp) (and (pair? exp) (eq? '+ (cadr exp))))
+(define alg-addend car)
+(define alg-augend cddr)
+
+(define (alg-make-product m1 m2)
+  (let* [(m1-prod? (alg-prod? m1))
+        (m2-prod? (alg-prod? m2))
+        (m1-num? (number? m1))
+        (m2-num? (number? m2))]
+    (cond [(any? zero? m1 m2) 0]
+          [(and m1-num? (= m1 1)) m2]
+          [(and m2-num? (= m2 1)) m1]
+          [(and m1-num? m2-num?) (* m1 m2)]
+          [(and m1-prod? m2-prod?) (append m1 '(*) m2)]
+          [m1-prod? (append m1 (list '* m2))]
+          [m2-prod? (append (list m1 '*) m2)]
+          [else (list m1 '* m2)])))
+          
+
+(define (alg-prod? exp) (and (pair? exp) (eq? '* (cadr exp))))
+(define alg-multiplier car)
+(define alg-multiplicand cddr)
+
+(displayln "exercise 2.59")
+(define (element-of-set? x set)
+  (cond [(empty? set) #f]
+        [(equal? x (car set)) #t]
+        [else (element-of-set? x (cdr set))]))
+
+(define (adjoin-set x set)
+  (if (element-of-set? x set)
+      set
+      (cons x set)))
+
+(define (union-set set1 set2)
+  (cond [(empty? set1) set2]
+        [(empty? set2) set1]
+        [else (union-set
+               (adjoin-set (car set2) set1)
+               (cdr set2))]))
+
+(displayln "exercise 2.60")
+(define (slow-element-of-set? x set)
+  (cond [(empty? set) #f]
+        [(equal? x (car set)) #t]
+        [else (element-of-set? x (cdr set))]))
+
+(define slow-adjoin-set cons)
+(define (slow-union-set set1 set2)
+  (cond [(empty? set1) set2]
+        [(empty? set2) set1]
+        [else (slow-union-set (slow-adjoin-set (car set2) set1)
+                        (cdr set2))]))
+
+;; Intersection set suffers when there are lots of duplicates in the set being created.
+;; If the set contains a number multiple times that is in the other set, all of those
+;; values will be copied over. We never get to trim down our sets size. Adding is fast though
+;; because we don't need to check for membership.
+(define (intersection-set set1 set2)
+                          (cond [(any? empty? set1 set2) '()]
+                                [(element-of-set? (car set1) set2)
+                                 (cons (car set1) (intersection-set (cdr set1) set2))]
+                                [else (intersection-set (cdr set1) set2)]))
+
+
+(displayln "exercise 2.61")
+(define (sort-element-of-set? x set)
+  (cond [(null? set) #f]
+        [(= x (car set)) #t]
+        [(< x (car set)) #f]
+        [else (sort-element-of-set? x (cdr set))]))
+
+;; Worst Case: Need to traverse entire list to add element O(n)
+;; Average Case: Make it about half-way through the list before adding the element and
+;; stopping
+(define (sort-adjoin-set x set)
+  (cond [(null? set) (list x)]
+        [(= x (car set)) set]
+        [(< x (car set)) (cons x set)]
+        [else (cons (car set) (sort-adjoin-set x (cdr set)))]))
+
+(displayln "exercise 2.62")
+(define (sort-union-set set1 set2)
+  (cond [(empty? set1) set2]
+        [(empty? set2) set1]
+        [(= (car set1) (car set2))
+         (cons (car set1)
+               (sort-union-set (cdr set1) (cdr set2)))]
+        [(> (car set1) (car set2))
+         (cons (car set2)
+               (sort-union-set set1 (cdr set2)))]
+        [else (cons (car set1)
+                    (sort-union-set (cdr set1) set2))]))
