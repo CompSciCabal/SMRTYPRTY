@@ -244,3 +244,145 @@
                (sort-union-set set1 (cdr set2)))]
         [else (cons (car set1)
                     (sort-union-set (cdr set1) set2))]))
+
+(displayln "exercise 2.63")
+(define (reduce proc accum lst)
+  (if (empty? lst)
+      accum
+      (reduce proc
+              (proc (car lst)accum)
+              (cdr lst))))
+
+(define entry car)
+(define left-branch cadr)
+(define right-branch caddr)
+(define (make-tree entry left right)
+  (list entry left right))
+
+(define (element-of-tree-set? x set)
+  (cond ((null? set) #f)
+        ((= x (entry set)) #t)
+        ((< x (entry set))
+         (element-of-tree-set? x (left-branch set)))
+        ((> x (entry set))
+         (element-of-tree-set? x (right-branch set)))))
+
+(define (adjoin-tree-set x set)
+  (cond [(null? set) (make-tree x '() '())]
+        [(= x (entry set)) set]
+        [(< x (entry set))
+         (make-tree (entry set)
+                    (adjoin-tree-set x (left-branch set))
+                    (right-branch set))]
+        [(> x (entry set))
+         (make-tree (entry set)
+                    (left-branch set)
+                    (adjoin-tree-set x (right-branch set)))]))
+
+(define (build-tree-set lst)
+  (reduce (lambda (x set) (adjoin-tree-set x set))
+          '()
+          lst))
+  
+(define set-a (build-tree-set (list 5 2 8 1 3 9 7 6 4)))
+(define set-b (build-tree-set (list 1 2 3 4 5 6 7 8 9)))
+(define set-c (build-tree-set (list 9 8 7 6 5 4 3 2 1)))
+(define fig-1 '(7 (3 (1 () ()) (5 () ())) (9 () (11 () ()))))
+(define fig-2 '(3 (1 () ()) (7 (5 ()()) (9 () (11 () ())))))
+(define fig-3 '(5 (3 (1 () ()) ()) (9 (7 () ()) (12 () ()))))
+
+(define (tree->list-1 tree)
+  (if (null? tree)
+      '()
+      (append (tree->list-1 (left-branch tree))
+              (cons (entry tree)
+                    (tree->list-1 (right-branch tree))))))
+
+(define (tree->list-2 tree)
+  (define (copy-to-list tree result-list)
+    (if (null? tree)
+        result-list
+        (copy-to-list (left-branch tree)
+                      (cons (entry tree)
+                            (copy-to-list (right-branch tree)
+                                          result-list)))))
+  (copy-to-list tree '()))
+
+;; a. The produce the same results regardless of which one is used because they
+;;    are both working through the tree in order.
+
+;; b. tree->list-1
+;;    Tree Traversal takes n time (there's no way around that), but since during each step we perform
+;;    an append (the set is chopped in half each time though) we are going to need to take that into account.
+;;    As was stated in SICP (or the lectures), when we see a function that reduces the space by an amount, we
+;;    know that the method is O(log n) complexity. But, because we are doing this computation n times, we end
+;;    up with a total complexity of O(n * log n)
+;;    
+;;    tree->list-2 does not suffer from the additional complexity because it simply appends builds out the list
+;;    using cons, which has constant time complexity. Thus the overall complexity for this function is simply
+;;    the time it takes to traverse the tree.
+
+(displayln "exercise 2.64")
+(define (list->tree elements)
+  (car (partial-tree elements (length elements))))
+
+(define (partial-tree elts n)
+  (if (= n 0)
+      (cons '() elts)
+      (let* ([left-size (quotient (- n 1) 2)]
+             [left-result (partial-tree elts left-size)]
+             [left-tree (car left-result)]
+             [non-left-elts (cdr left-result)]
+             [right-size (- n (+ left-size 1))]
+             [this-entry (car non-left-elts)]
+             [right-result (partial-tree (cdr non-left-elts) right-size)]
+             [right-tree (car right-result)]
+             [remaining-elts (cdr right-result)])
+             (cons (make-tree this-entry left-tree right-tree)
+                   remaining-elts))))
+
+(list->tree '(1 2 3 4 5 6 7 8 9 10))
+(list->tree '(1 3 5 7 9 11))
+
+;; a. I'm using let* simply to reduce all the nesting that would be required when using just let.
+;;    This does make things a bit confusing because the explicitness of the operations gets lost
+;;    a little bit.  We want to converge to 0 as quickly as possible in order to get to our base
+;;    case (left node is entry with no leaves).
+;;    With that in place, we know that the next item in the list of unused elements is our element
+;;    We then construct the right hand side of the tree. Again, we want to converge that side to 0
+;;    as quickly as possible too.
+;;    In a simple case (input '(1 2 3)) we end up building:
+;;    -- the LHS with elts: '(1 2 3) n: ((3 - 1) / 2)
+;;       -- the LHS with elts: '(1 2 3) n: (1 / 2) -> '() 
+;;       -- entry 1
+;;       -- the RHS with elts: '(2 3) n: (1 - (0 + 1)) -> '()
+;;    <-- returns '((1 () ()) (2 3)) which we set to left-result and extract the data
+;;    -- entry 2
+;;    -- the RHS with elts: '(3) n: 3 - (1 + 1)
+;;       -- the LHS with elts: '(3) n: (1 - 1) / 2 -> '()
+;;       -- entry 3
+;;       -- the RHS with elts: '(), n: 1 - (0 + 1) -> '()
+;;    <-- returns '((3 () ()) '())
+;; <-- returns '(2 (1 () ()) (3 () ()))
+  
+;; b. Again this procedure takes our lists and breaks them into two separate pieces;
+;;    the left and right sides of the tree. But since we are performing that operation
+;;    twice we end up not gaining any time savings during the traversal (2 * n / 2 is still n).
+;;    Thankfully our make-tree function is a constant-time function, so we don't suffer any
+;;    penalties because of that. So the performance of this function is O(n)
+
+(displayln "exercise 2.65")
+(define tree->list tree->list-2)
+(define (balanced-union-set tree1 tree2)
+  (list->tree (sort-union-set (tree->list tree1)
+                              (tree->list tree2))))
+
+(define (balanced-intersection-set tree1 tree2)
+  (list->tree (intersection-set (tree->list tree1)
+                                (tree->list tree2))))
+
+(balanced-union-set (list->tree '(1 2 3 4 5 6 7 8 9 10))
+                    (list->tree '(5 6 7 8 9 10 11 12 13 14)))
+
+(balanced-intersection-set (list->tree '(1 2 3 4 5 6 7 8 9 10))
+                           (list->tree '(5 6 7 8 9 10 11 12 13 14)))
