@@ -5,6 +5,14 @@
   (and (variable? v1) (variable? v2) (eq? v1 v2)))
 (define (=number? exp num)
   (and (number? exp) (= exp num)))
+(define (type-tag datum)
+  (if (pair? datum)
+      (car datum)
+      (error "Bad tagged datum -- TYPE-TAG" datum)))
+(define (contents datum)
+  (if (pair? datum)
+      (cdr datum)
+      (error "Bad tagged datum -- CONTENTS" datum)))
 
 ;; prerequisites
 (define dispatch-lookup '())
@@ -22,6 +30,15 @@
 
 (define (operator exp) (car exp))
 (define (operands exp) (cdr exp))
+
+(define (apply-generic op . args)
+  (let* [(type-tags (map type-tag args))
+         (proc (get op type-tags))]
+    (if proc
+        (apply proc (map contents args))
+        (error "No method for these types -- APPLY-GENERIC"
+               (list op type-tags)))))
+         
 
 (displayln "exercise 2.73")
 
@@ -186,8 +203,6 @@
 
 (define (install package-installer)
   (validate (package-installer)))
-        
-  
 
 (define (sales-pkg)
   (define sales
@@ -214,7 +229,7 @@
   (put 'record 'sales get-record)
   (put 'name 'sales (lambda (x) (get-value 'name x)))
   (put 'salary 'sales (lambda (x) (get-value 'salary x)))
-  (put 'salary 'sales (lambda (x) (get-value 'address x)))
+  (put 'address 'sales (lambda (x) (get-value 'address x)))
   'sales)
 
 (define (marketing-pkg)
@@ -243,3 +258,32 @@
 (new-dispatch!)
 (install sales-pkg)
 (install marketing-pkg)
+
+(displayln "exercise 2.75")
+(set! apply-generic (lambda (op arg) (arg op)))
+
+(define (real-part z) (apply-generic 'real-part z))
+(define (imag-part z) (apply-generic 'imag-part z))
+(define (magnitude z) (apply-generic 'magnitude z))
+(define (angle z) (apply-generic 'angle z))
+
+(define (make-from-mag-ang mag ang)
+  (define (dispatch op)
+    (cond [(eq? op 'real-part) (* mag (cos ang))]
+          [(eq? op 'imag-part) (* mag (sin ang))]
+          [(eq? op 'magnitude) mag]
+          [(eq? op 'angle) ang]
+          [else (error "Unknown operation -- MAKE-FROM-MAG-ANG" op)]))
+  dispatch)
+
+(angle (make-from-mag-ang 5 30))
+(real-part (make-from-mag-ang 5 30))
+
+(displayln "exercise 2.76")
+;; Explicit dispatch is pretty gnarly, it's probably best to avoid that one
+;; completely. Data-directed and message passing are about the same though.
+;; If we want to be able to enforce compliance though, using a data-directed
+;; style can be advantageous because it allows us to validate our interfaces.
+;; This can be extremely useful when building out APIs or interfaces with many
+;; implementors and not knowing which ones are compliant or not. This allows
+;; us to move from errors at "run time" to errors at "compile time".
