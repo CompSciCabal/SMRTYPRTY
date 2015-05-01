@@ -139,8 +139,9 @@
                    (throw-err (if (eq? t1 t2) (coercion-error) '()))
                    (t1->t2 (get-coercion t1 t2))
                    (t2->t1 (get-coercion t2 t1))]
-              (cond [t1->t2 (apply-generic-w-coercion op (t1->t2 t1) t2)]
-                    [t2->t1 (apply-generic-w-coercion op t1 (t2->t1 t2))]
+              (cond [t1->t2 (apply-generic-w-coercion op (t1->t2 a1) a2)]
+                    [t2->t1 (apply-generic-w-coercion op a1 (t2->t1 a2))]
+                    ;; 2.84: Code will go in Here
                     [else (coercion-error)]))
             (coercion-error)))))
 
@@ -172,10 +173,82 @@
   (define (coercions-iter position types-in-front)
     (if (empty? position)
         (error "No coercions could be found -- FIND-AVAILABLE-COERCION" types)
-    (let [(desired-type (car position))
-          (coerce-rest (coerce-all-to desired-type (cdr position)))
-          (coerce-front (coerce-all-to desired-type types-in-front))]
-          (if (and? coerce-rest coerce-front)
+    (let* [(desired-type (car position))
+           (coerce-rest (coerce-all-to desired-type (cdr position)))
+           (coerce-front (coerce-all-to desired-type types-in-front))]
+          (if (and coerce-rest coerce-front)
               (append coerce-front '(no-coerce) coerce-rest)
               (coercions-iter (cdr position) (append types-in-front (list (car position))))))))
   (coercions-iter types '()))
+
+;; ^^^ Isn't done but I need more time to think about it.
+
+(displayln "exercise 2.83")
+;; Int Package
+(define (int->rat i)
+  ((get 'make 'rational) i 1))
+(put 'raise 'scheme-number int->rat)
+
+;; Hax
+(define (numer x) x)
+(define (denom x) x)
+;; Rational Package
+(define (rat->real r)
+  ((get 'make 'real) (/ (numer r) (denom r))))
+(put 'raise 'rational rat->real)
+
+;; Real Package
+(define (real->complex r)
+  ((get 'make-from-real-imag 'complex) r 0))
+(put 'raise 'real real->complex)
+
+;; Primary Raise Procedure
+(define (raise x) (apply-generic 'raise x))
+
+(displayln "exercise 2.84")
+;; This funciton has problems. First it needs to try and find all the
+;; coercions, apply them and each time do a count. So if we find a
+;; coercion we need to coerce the number twice in order to perform
+;; our computation. This continues until we are able to actually do
+;; the computation. So we do the test, something like n^2 or more times.
+;; A better way to change this would be to make it coerce-up or something
+;; that returns the correct coercion or returns false or something.
+(define (is-subtype? item possible-parent)
+  (define (raise-count x)
+    (let [(proc (get 'raise (type-tag x)))]
+      (if proc
+          (+ 1 (raise-count (proc (cdr x))))
+          0)))
+  (> (raise-count item) (raise-count possible-parent)))
+
+((lambda ()
+   (new-dispatch!)
+   (put 'raise 'int (lambda (x) (list 'rational (car x) 1)))
+   (put 'raise 'rational (lambda (x) (list 'real (/ (car x) (cadr x)))))
+   (put 'raise 'real (lambda (x) (list 'complex (car x) 0)))
+   (displayln (is-subtype? '(int 7) '(complex 8 1)))
+   (displayln (is-subtype? '(real 8.2) '(int 2)))))
+
+;; Inside apply-generic within the cond you'd have something like this
+(lambda (op t1 a1 t2 a2)
+  (cond
+    [(is-subtype? a1 a2) (apply-generic op ((get 'raise t1) a1) a2)]
+    [(is-subtype? a2 a1) (apply-generic op a1 ((get 'raise t2) a2))]))
+
+(displayln "exercise 2.85")
+(lambda (real-part imag-part equ? make-real make-complex numer denom)
+  (define (complex->real x) (make-real (real-part x)))
+  (define (real->int x) (round x))
+  (define (rat->int x) (round (/ (numer x) (denom x))))
+  
+  (put 'project '(complex) complex->real)
+  (put 'project '(real) real->int)
+  (put 'project '(rational) rat->int)
+  
+  (define (drop x)
+    (let [(projection (get 'project (type-tag x)))]
+          (if (and projection (equ? x (raise (projection x))))
+              (drop (projection x))
+              x)))
+  
+  'done)
