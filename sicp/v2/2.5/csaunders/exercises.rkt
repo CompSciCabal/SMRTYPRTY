@@ -252,3 +252,164 @@
               x)))
   
   'done)
+
+(displayln "2.86")
+(define (sine x) (apply-generic 'sine x))
+(define (cosine x) (apply-generic 'cosine x))
+(define (tag x) x)
+
+;; regular-numbers pkg
+(put 'sine 'scheme-number (lambda (x) (tag (sin x))))
+(put 'cosine 'scheme-number (lambda (x) (tag (cos x))))
+
+;; rational-numbers pkg
+(put 'sine 'rational (lambda (x) (tag (sin (/ (numer x) (denom x))))))
+(put 'cosine 'rational (lambda (x) (tag (cos (/ (numer x) (denom x))))))
+
+;; In the complex number package, instead of using *, +, -, / move over to
+;; using the generic operators instead (add, sub, mul, div)
+
+(displayln "2.87")
+(define (negate x) (apply-generic 'negate x)) ;; exercise 2.88
+(define (add x y) (apply-generic 'add x y))
+(define (mul x y) (apply-generic 'mul x y))
+(define (make-rational n d) (cons 'rational (cons n d)))
+(define (make-from-real-imag r i) (cons 'complex (cons r i)))
+
+;; exercise 2.88
+(put 'negate 'scheme-number (lambda (x) (tag (- x))))
+(put 'negate 'rational (lambda (r) (make-rational (- (numer r)) (denom r))))
+(put 'negate 'complex (lambda (c) (make-from-real-imag (- (real-part c))
+                                                       (- (imag-part c)))))
+
+(define (install-polynomial-package)
+  ;; internal procedures
+  ;; representation of poly
+  (define (make-poly variable term-list)
+    (cons variable term-list))
+  (define (variable p) (car p))
+  (define (term-list p) (cdr p))
+  
+  (define (variable? x) (symbol? x))
+  (define (same-variable? x y)
+    (and (variable? x) (variable? y) (eq? x y)))
+  
+  
+
+  (define (adjoin-term term term-list)
+    (if (=zero? (coeff term))
+        term-list
+        (cons term term-list)))
+  (define (the-empty-termlist) '())
+  (define (first-term term-list) (car term-list))
+  (define (rest-terms term-list) (cdr term-list))
+  (define (empty-termlist? term-list) (null? term-list))
+  (define (make-term order coeff) (list order coeff))
+  (define (order term) (car term))
+  (define (coeff term) (cadr term))
+  
+  ;; Exercise 2.89
+  (define (dense-poly-first-term term-list)
+    ;; Order is length - 1 because x^0*5 is a valid polynomial
+    (cons (car term-list) (- (length term-list) 1)))
+  (define (dense-poly-adjoin-term term term-list)
+    (let [(expt (order term))
+          (len (length term-list))]
+      (define (iter-adjoin times terms)
+        (cond [(=zero? (coeff term)) terms]
+              [(= exp times) (cons (coeff term) terms)]
+              [else (iter-adjoin (+ times 1)
+                                (cons 0 terms))]))
+      (iter-adjoin len term-list)))
+  
+  ;; Exercise 2.87
+  (define (zero-poly? poly)
+    (define (zero-terms? termlist)
+      (and (=zero? (coeff (first-term term-list))
+                   (zero-terms? (rest-terms termlist)))))
+    (zero-terms? (term-list poly)))
+  (put '=zero? 'polynomial zero-poly?)
+  ;;   <procedures same-variable? and variable? from section 2.3.2>
+  ;; representation of terms and term lists
+  ;;   <procedures adjoin-term ...coeff from text below>
+
+  ;; continued on next page
+  
+  (define (add-terms L1 L2)
+    (cond ((empty-termlist? L1) L2)
+        ((empty-termlist? L2) L1)
+        (else
+         (let ((t1 (first-term L1)) (t2 (first-term L2)))
+           (cond ((> (order t1) (order t2))
+                  (adjoin-term
+                   t1 (add-terms (rest-terms L1) L2)))
+                 ((< (order t1) (order t2))
+                  (adjoin-term
+                   t2 (add-terms L1 (rest-terms L2))))
+                 (else
+                  (adjoin-term
+                   (make-term (order t1)
+                              (add (coeff t1) (coeff t2)))
+                   (add-terms (rest-terms L1)
+                              (rest-terms L2)))))))))
+  ;; Exercise 2.88
+  (define (negate termlist)
+    (if (empty-termlist? termlist)
+        the-empty-termlist
+        (let [(t (first-term termlist))]
+          (adjoin-term (make-term (order t) (negate (coeff t)))
+                       (negate (rest-terms termlist))))))
+  (put 'negate 'polynomial (lambda (poly) (make-poly (variable poly)
+                                                     (negate (term-list poly)))))
+  (put 'sub '(polynomial polynomial) (lambda (x y) (tag (add-poly x (negate y)))))
+  
+  (define (sub-terms L1 L2)
+    (add-terms L1 (negate L2)))
+  
+  (define (mul-terms L1 L2)
+    (if (empty-termlist? L1)
+        (the-empty-termlist)
+        (add-terms (mul-term-by-all-terms (first-term L1) L2)
+                   (mul-terms (rest-terms L1) L2))))
+  (define (mul-term-by-all-terms t1 L)
+    (if (empty-termlist? L)
+        (the-empty-termlist)
+        (let ((t2 (first-term L)))
+          (adjoin-term
+           (make-term (+ (order t1) (order t2))
+                      (mul (coeff t1) (coeff t2)))
+           (mul-term-by-all-terms t1 (rest-terms L))))))
+  
+  (define (add-poly p1 p2)
+    (if (same-variable? (variable p1) (variable p2))
+        (make-poly (variable p1)
+                   (add-terms (term-list p1)
+                              (term-list p2)))
+        (error "Polys not in same var -- ADD-POLY"
+               (list p1 p2))))
+  
+  (define (mul-poly p1 p2)
+    (if (same-variable? (variable p1) (variable p2))
+        (make-poly (variable p1)
+                   (mul-terms (term-list p1)
+                              (term-list p2)))
+        (error "Polys not in same var -- MUL-POLY"
+               (list p1 p2))))
+  
+  ;; interface to rest of the system
+  (define (tag p) (attach-tag 'polynomial p))
+  (put 'add '(polynomial polynomial) 
+       (lambda (p1 p2) (tag (add-poly p1 p2))))
+  (put 'mul '(polynomial polynomial) 
+       (lambda (p1 p2) (tag (mul-poly p1 p2))))
+  (put 'make 'polynomial
+       (lambda (var terms) (tag (make-poly var terms))))
+  'done)
+
+;; Exercise 2.90 -- https://camo.githubusercontent.com/315fbec761dfcc6c0e049c4c955b5b7f9e95f7a4/687474703a2f2f692e696d6775722e636f6d2f626a4635744e632e676966
+;; I'd probably just approach it by building out two separate packages: dense-poly-pkg and sparse-poly-pkg
+
+;; Much of the effort should be avoidable if we simply figure out which parts these packages need to implement
+;; The interfaces I'm seeing are: adjoin-term, empty-termlist? make-term
+;; If we ensure that a term 'object' needs to be a pair, we can reduce how much of an API needs to be rebuilt
+;; for both of the new packages. The only tricky part would be selecting the correct term-list representation
