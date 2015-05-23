@@ -68,14 +68,14 @@
 
 (define (random-in-range low high)
   (let [(range (- high low))]
-    (+ low (random (inexact->exact range)))))
+    (+ low (* (random) range))))
 
 (define (P x y)
   (<= (+ (expt (- x 5) 2)
          (expt (- y 7) 2))
       9)) ;; 3 ^ 2
 
-(define (estimate-integral pred x1 x2 y1 y2 num-trials)
+(define (estimate-integral P x1 x2 y1 y2 num-trials)
   (define (experiment)
     (P (random-in-range x1 x2)
        (random-in-range y1 y2)))
@@ -88,11 +88,14 @@
 ;; a == rect-area * monte-carlo
 ;; r == sq-rad
 ;; ∴ pi = (/ (* rect-area monte-carlo) sq-rad)
-(define estim-pi
-  (/ (* rect-area (estimate-integral P 2.0 8.0 4.0 10.0 1000))
+
+(define (estimate-pi n)
+  (/ (* rect-area (estimate-integral P 2.0 8.0 4.0 10.0 n))
      sq-rad))
 ;; My estimates are super far off for some reason
+(define estim-pi (estimate-pi 100))
 estim-pi
+
 
 ;; I dont know how to use the prng API in order to return new procs
 ;; this means that all make-rands are going to be sharing the same
