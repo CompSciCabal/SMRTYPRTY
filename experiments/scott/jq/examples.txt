@@ -1,0 +1,19 @@
+Identity Mapping
+> jq '.' input.json
+Increment Everyone's age, the '[ .[] | ]' syntax could be replaced with map
+> jq '[ .[] | .age = .age + 1]' input.json
+Flatten the sports array
+> jq '[ .[] | .sports |= join(",") ]' input.json
+Extract Only the age element
+> jq '[ .[] | .age ]' input.json
+Grep the input
+> jq '[ .[] | select(.age <= 30) ]' input.json
+Aggregate, the length example is easy, but accumulating arbitrary values is a bit more involved.
+> jq 'length' input.json
+For instance if you want to count them and add each new id as a new value
+This one shows a function definition and also array slicing and recursion
+> jq 'def acc(i): select(length>0) | (.[0] | .id = i), ( .[1:] | acc(i+1)); [acc(0)]' input.json
+Sorted unique list of all sports
+> jq '[ .[] | .sports | .[] ] | sort | unique' input.json
+Sorted unique list of all sports in raw text, use the -r option (raw)
+> jq -r '[ .[] | .sports | .[] ] | sort | unique | .[]' input.json
