@@ -30,6 +30,7 @@
   (define (dispatch m)
     (cond [(eq? m 'withdraw) withdraw]
           [(eq? m 'deposit) deposit]
+          [(eq? m 'balance) balance]
           [else (error "Unknown Request -- MAKE-ACCOUNT" m)]))
   (define (auth pass msg)
     (if (eq? pass password)
@@ -109,3 +110,24 @@ estim-pi
           [(eq? msg 'reset) (reset)]
           [else (error "Unknown message -- MAKE-RAND" msg)])))
 (define prng (make-rand 1024))
+
+(displayln "exercise 3.7")
+(define (make-joint account account-password joint-password)
+  (if (number? (account account-password 'balance))
+      (let [(shadow-account (make-account 0 joint-password))]
+            (lambda (password message)
+              (if (= 0 (shadow-account password 'balance))
+                  (account account-password message)
+                  "Invalid Password")
+              ))
+      "Cannot create joint account"))
+(define paul-acc (make-account 100 'secrets))
+(define peter-acc (make-joint paul-acc 'secrets 'taters))
+
+(displayln "exercise 3.8")
+(define f-number '())
+(define (f-test number)
+  (when (empty? f-number) (set! f-number number))
+  f-number)
+
+(+ (f-test 0) (f-test 1))
