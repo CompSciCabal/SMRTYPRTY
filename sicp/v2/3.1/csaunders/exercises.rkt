@@ -114,12 +114,10 @@ estim-pi
 (displayln "exercise 3.7")
 (define (make-joint account account-password joint-password)
   (if (number? (account account-password 'balance))
-      (let [(shadow-account (make-account 0 joint-password))]
-            (lambda (password message)
-              (if (= 0 (shadow-account password 'balance))
-                  (account account-password message)
-                  "Invalid Password")
-              ))
+      (lambda (password message)
+        (if (eq? password joint-password)
+            (account account-password message)
+            (lambda (x) "Invalid password")))
       "Cannot create joint account"))
 (define paul-acc (make-account 100 'secrets))
 (define peter-acc (make-joint paul-acc 'secrets 'taters))
@@ -130,4 +128,10 @@ estim-pi
   (when (empty? f-number) (set! f-number number))
   f-number)
 
-(+ (f-test 0) (f-test 1))
+(define f
+  (let ([init '()])
+    (lambda (x)
+      (when (empty? init) (set! init x))
+      init)))
+
+(+ (f 0) (f 1))
