@@ -1,0 +1,69 @@
+\documentclass[12pt]{article}
+
+\usepackage{amsthm}
+\usepackage{amsmath}    % need for subequations
+\usepackage{amsfonts}
+\usepackage[ocgcolorlinks]{hyperref}
+
+\setlength{\baselineskip}{16.0pt}    % 16 pt usual spacing between lines
+
+\setlength{\parskip}{3pt plus 2pt}
+\setlength{\parindent}{20pt}
+\setlength{\oddsidemargin}{0.5cm}
+\setlength{\evensidemargin}{0.5cm}
+\setlength{\marginparsep}{0.75cm}
+\setlength{\marginparwidth}{2.0cm}
+\setlength{\marginparpush}{1.0cm}
+\setlength{\textwidth}{150mm}
+
+\DeclareMathOperator{\sinc}{sinc}
+\DeclareMathOperator{\sgn}{sgn}
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+
+\newenvironment{definition}[1][Definition]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}]}{\end{trivlist}}
+\newenvironment{example}[1][Example]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}]}{\end{trivlist}}
+\newenvironment{remark}[1][Remark]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}]}{\end{trivlist}}
+
+\begin{document}
+
+\section{Example: Counting change}
+
+\begin{lemma}
+    $\forall n, d, k \in \mathbb{N} : d, k \ge 1 \implies n^{k-1} + (n-d)^k \le n^k$
+\end{lemma}
+
+\begin{proof}
+    $$d \ge 1 \implies n - d \le n - 1 < n.$$
+    $$k \ge 1 \implies (n-d)^{k-1} < n^{k-1}.$$
+    $$(n-d)^k = (n-d)(n-d)^{k-1} \le (n-1)n^{k-1} = n^k - n^{k-1}.$$
+\end{proof}
+
+\begin{definition}
+    $T(n,k)$ is the number of ways to change amount $n$ using $k$ kinds of coins. $n, k \in \mathbb{N}, n, k \ge 1$.
+\end{definition}
+
+\begin{theorem}
+    $T(n,k) = O(n^k).$
+\end{theorem}
+
+\begin{proof}
+    To prove the theorem we have to show that $\exists c>0$ such that $T(n,k) \le cn^k$ for sufficiently large $n$.
+    Let's prove it using substitution method (CLRS, p.83).
+
+    Assume that the inequality is true.
+    The recurrence formula for $T(n,k)$ is
+    $$T(n,k) = T(n,k-1) + T(n-d,k),$$
+    where $d$ is denomination of the first coin. $d \ge 1$. Therefore by Lemma
+    $$T(n,k) \le cn^{k-1} + c(n-d)^k = c\left[n^{k-1} + (n-d)^k\right] \le cn^k.$$
+
+    To finish the proof, we just need to find $c$. Since the boundary condition $T(1,1) = 1$, it's sufficient to put $c \ge 1$.
+\end{proof}
+
+\end{document}
