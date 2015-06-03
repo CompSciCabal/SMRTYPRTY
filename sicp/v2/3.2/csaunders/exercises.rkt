@@ -94,3 +94,51 @@ w ;> '(a b c d)
 zz1
 (displayln "> zz2")
 zz2
+
+(displayln "exercise 3.16")
+(define (count-pairs x)
+  (if (not (pair? x))
+      0
+      (+ (count-pairs (car x))
+         (count-pairs (cdr x))
+         1)))
+(count-pairs (list 'a 'b 'c))
+
+(define aa '(a))
+(count-pairs (list aa aa))
+
+(define bb (cons aa aa))
+(define cc (cons bb bb))
+(count-pairs cc)
+
+(define isdef (mlist 'a 'b 'c))
+(define undef (mlist 'a 'b 'c))
+(set-mcdr! (mcdr (mcdr undef)) undef)
+undef
+
+(displayln "exercise 3.17")
+(define (good-count-pairs x)
+  (let ([seen '()])
+    (define (iter x)
+      (if (or (not (pair? x)) (memq x seen))
+        0
+        (begin (set! seen (cons x seen))
+               (+ (iter (car x))
+                  (iter (cdr x))
+                  1))))
+    (iter x)))
+(good-count-pairs (list aa aa))
+(good-count-pairs bb)
+(good-count-pairs cc)
+
+(displayln "exercise 3.18")
+(define (has-cycle? lst)
+  (define (iter lst seen)
+    (cond [(empty? lst) #f]
+          [(memq (mcdr lst) seen) #t]
+          [else
+           (iter (mcdr lst)
+                 (cons (mcdr lst) seen))]))
+  (iter lst '()))
+(has-cycle? isdef)
+(has-cycle? undef)
