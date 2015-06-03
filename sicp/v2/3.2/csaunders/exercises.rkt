@@ -142,3 +142,24 @@ undef
   (iter lst '()))
 (has-cycle? isdef)
 (has-cycle? undef)
+
+(displayln "exercise 3.19")
+(define (const-has-cycle? lst)
+  (define (move lst)
+    (if (mpair? lst)
+        (mcdr lst)
+        '()))
+  (define (iter tortoise hare)
+    (cond [(not (mpair? tortoise)) #f]
+          [(not (mpair? hare)) #f]
+          [(eq? tortoise hare) #t]
+          [(eq? tortoise (move hare)) #t]
+          [else (iter (move tortoise)
+                      (move (move hare)))]))
+  (iter (move lst) (move (move lst))))
+
+(define list-with-cycle (mlist 'a 'b 'c 'd 'e 'f))
+(set-mcdr! (mcdr (mcdr (mcdr (mcdr list-with-cycle))))
+           (mcdr (mcdr list-with-cycle)))
+(const-has-cycle? isdef)
+(const-has-cycle? undef)
