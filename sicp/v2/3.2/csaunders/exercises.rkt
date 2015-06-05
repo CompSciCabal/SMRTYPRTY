@@ -111,6 +111,7 @@ zz2
 (define cc (cons bb bb))
 (count-pairs cc)
 
+(define tricksy-hobbitses (mlist 'a 'b 'a))
 (define isdef (mlist 'a 'b 'c))
 (define undef (mlist 'a 'b 'c))
 (set-mcdr! (mcdr (mcdr undef)) undef)
@@ -134,6 +135,9 @@ undef
 (displayln "exercise 3.18")
 (define (has-cycle? lst)
   (define (iter lst seen)
+    (displayln seen)
+    (when (not (empty? lst)) (displayln (mcdr lst)))
+    (displayln "----")
     (cond [(empty? lst) #f]
           [(memq (mcdr lst) seen) #t]
           [else
@@ -141,6 +145,7 @@ undef
                  (cons (mcdr lst) seen))]))
   (iter lst '()))
 (has-cycle? isdef)
+(has-cycle? tricksy-hobbitses)
 (has-cycle? undef)
 
 (displayln "exercise 3.19")
