@@ -1,4 +1,6 @@
 #lang racket
+(require scheme/mpair)
+
 (define (front-ptr queue) (mcar queue))
 (define (rear-ptr queue) (mcdr queue))
 (define (set-front-ptr! queue item)
@@ -155,3 +157,68 @@
 ((deq 'insert-rear!) 'b)
 ((deq 'insert-rear!) 'c)
 ((deq 'insert-front!) 'd)
+
+(displayln "exercise 3.24")
+(define (make-2d-table same-key?)
+  (let ((local-table (mlist '*table*)))
+    (define (assoc key records)
+      (define (mcaar mlst) (mcar (mcar mlst)))
+      (cond [(empty? records) #f]
+            [(same-key? key (mcaar records)) (mcar records)]
+            [else (assoc key (mcdr records))]))    
+    (define (lookup key-1 key-2)
+      (let ((subtable (assoc key-1 (mcdr local-table))))
+        (if subtable
+            (let ((record (assoc key-2 (mcdr subtable))))
+              (if record
+                  (mcdr record)
+                  false))
+            false)))
+    (define (insert! key-1 key-2 value)
+      (let ((subtable (assoc key-1 (mcdr local-table))))
+        (if subtable
+            (let ((record (assoc key-2 (mcdr subtable))))
+              (if record
+                  (set-mcdr! record value)
+                  (set-mcdr! subtable
+                            (mcons (mcons key-2 value)
+                                  (mcdr subtable)))))
+            (set-mcdr! local-table
+                      (mcons (mlist key-1
+                                    (mcons key-2 value))
+                             (mcdr local-table)))))
+      'ok)    
+    (define (dispatch m)
+      (cond ((eq? m 'lookup-proc) lookup)
+            ((eq? m 'insert-proc!) insert!)
+            (else (error "Unknown operation -- TABLE" m))))
+    dispatch))
+
+(define my-table (make-2d-table eq?))
+((my-table 'insert-proc!) 1 1 "hello")
+((my-table 'insert-proc!) 1 2 "this is nice")
+((my-table 'lookup-proc) 1 2)
+((my-table 'lookup-proc) 1 1)
+
+(displayln "exercise 3.25")
+(displayln "This one is really hard. I'll come back to it")
+;;(define deep-t (make-deep-table))
+;;((deep-t 'insert!) '(1 1 1 1))
+;;((deep-t 'insert!) '(1 1 1 2))
+;;((deep-t 'lookup) '(1 1 1))
+
+(displayln "exercise 3.26")
+
+(displayln "exercise 3.27")
+;; I am not going to draw an environment diagram
+;;
+;; The reason why the memoized function is able to calculate
+;; the n-th fibonacci number in a number of steps proportional
+;; to n is because a lot of the duplicated method calls have
+;; already been computed. The result is fetching the value from
+;; the table instead of performing the computation.
+;;
+;; It doesn't work when wrapping fib because each "child" call hasn't
+;; been memoized. So to first fill the table it will require doing a full
+;; unmemoized fibonnaci function call, whereas making the calls in the memoized
+;; version ensures that a function is never called more than once.
