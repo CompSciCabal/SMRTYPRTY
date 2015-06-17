@@ -223,6 +223,55 @@
 ;; unmemoized fibonnaci function call, whereas making the calls in the memoized
 ;; version ensures that a function is never called more than once.
 
+#|
+| Wire "Built-ins" from SICP
+|#
+
+(define (make-wire)
+  (let [(signal-value 0) (action-procedures '())]
+    (define (set-my-signal! new-value)
+      (if (not (= signal-value new-value))
+          (begin (set! signal-value new-value)
+                 (call-each action-procedures))
+          'done))
+    (define (accept-action-procedure! proc)
+      (set! action-procedures (cons proc action-procedures))
+      (proc))
+    (define (dispatch m)
+      (cond [(eq? m 'get-signal) signal-value]
+            [(eq? m 'set-signal!) set-my-signal!]
+            [(eq? m 'add-action!) accept-action-procedure!]
+            [else (error "Unknown operation -- WIRE" m)]))
+    dispatch))
+
+(define (call-each procedures)
+  (if (empty? procedures)
+      'done
+      (begin ((car procedures))
+             (call-each (cdr procedures)))))
+
+(define (get-signal wire)
+  (wire 'get-signal))
+
+(define (set-signal! wire value)
+  ((wire 'set-signal!) value))
+
+(define (add-action! wire action-procedure)
+  ((wire 'add-action!) action-procedure))
+
+(define (after-delay delay action)
+  (add-to-agenda! (+ delay (current-time the-agenda))
+                  action
+                  the-agenda))
+
+(define (propagate)
+  (if (empty-agenda? the-agenda)
+      'done
+      (let [(first-item (first-agenda-item the-agenda))]
+        (first-item)
+        (remove-first-agenda-item! the-agenda)
+        (propagate))))
+
 (define (inverter input output)
   (define (invert-input)
     (let ((new-value (logical-not (get-signal input))))
@@ -284,8 +333,10 @@
 |  O2 -|NAND|
 |-------------------------------------
 |
-| Delay time is that of 3 NAND gates. So that would be
-| 3x the delay for And + 3x the delay for NOT (inverter)
+| Delay time is that of 3 NAND gates. The NAND gates for O1 and O2
+| are evaluated in parallel so they will finish at the same time.
+| This means that we would only "see" the delay for 2 NAND gates:
+| 2*AND + 2*NOT
 |#
 (define (compound-or-gate o1 o2 output)
   (define (nand-gate in1 in2 out)
@@ -311,5 +362,25 @@
 | So a series consisting of N full adders would take:
 | N * (4*AND-DELAY + 3*OR-DELAY + 2*INVERTER-DELAY)
 |#
-    
+
+(displayln "exercise 3.31")
+#|
+| Some of the inputs might actually cause changes based on the current value of the wire.
+| In a real system, if we were to wire it up there would be an immediate "trigger" that would
+| cause the value on the wire to change. In our system that is not the case, so we need to manually
+| trigger it when the item is added to the wire.
+|#
+
+(displayln "exercise 3.32")
+#|
+| The values that the output is going to be assigned to are already determined based on the state of the system
+| after the value of the wire has been set. Due to the delay in the "hardware" we aren't going to see that change
+| immediately, but a number of ticks afterwards. Subsequent changes to wire values are delayed as well, so while a value
+| might change from 0 to 1 then back to 0, there is still going to be a point where we could've had both inputs equal to 1.
+| If we don't evaluate them in order we are going to update our outputs to invalid data based on what we previously
+| knew as the truth.
+| 
+| This solution helps explain it a lot better than I am:
+|   https://github.com/qiao/sicp-solutions/blob/a2fe069ba6909710a0867bdb705b2e58b2a281af/chapter3/3.32.scm
+|#
   
