@@ -2,6 +2,7 @@
 (require scheme/mpair)
 (require compatibility/mlist)
 ; Section 3.3.2: Queues
+
 (define (front-ptr queue) (mcar queue))
 (define (rear-ptr queue) (mcdr queue))
 (define (set-front-ptr! queue item) (set-mcar! queue item))
@@ -29,7 +30,7 @@
          (set-front-ptr! queue (mcdr (front-ptr queue)))
          queue))) 
 
-(displayln "Excercise 3.21")
+(displayln "Exercise 3.21")
 (define q1 (make-queue))
 (insert-queue! q1 'a)
 (insert-queue! q1 'b)
@@ -43,9 +44,6 @@ printed and it gets extra confusing if the queue is short. Just print the car
 of the queue to fix it.")
 (define (print-queue queue)
   (displayln (mcar queue)))
-
-
-
 
 
 
