@@ -183,3 +183,73 @@
 | it isn't bi-directional. Setting the value on b
 | will not trigger changes to to a
 |#
+
+
+(displayln "exercise 3.35")
+(define (squarer a b)
+  (define (process-new-value)
+    (if (has-value? b)
+        (if (< (get-value b) 0)
+            (error "square less than 0 -- SQUARER" (get-value b))
+            (set-value! a (sqrt (get-value b)) me))
+        (set-value! b (* (get-value a) (get-value a)) me)))
+  (define (process-forget-value)
+    (forget-value! a me)
+    (forget-value! b me)
+    (process-new-value))
+  (define (me request)
+    (cond [(eq? request 'I-have-a-value) (process-new-value)]
+          [(eq? request 'I-lost-my-value) (process-forget-value)]
+          [else (error "Unknown request -- SQUARER" request)]))
+  (connect a me)
+  (connect b me)
+  me)
+(define x (make-connector))
+(define y (make-connector))
+(probe "X" x)
+(probe "Y" y)
+(squarer x y)
+(set-value! x 2 'user)
+
+(displayln "exercise 3.36")
+;; No.
+
+(displayln "exercise 3.37")
+
+(define (cv value)
+  (let [(const (make-connector))]
+    (constant value const)
+    const))
+
+(define (c+ x y)
+  (let [(z (make-connector))]
+    (adder x y z)
+    z))
+
+(define (c* x y)
+  (let [(z (make-connector))]
+    (multiplier x y z)
+    z))
+
+(define (c/ numer denom)
+  (let [(one-over-denom (make-connector))
+        (identity (cv 1))
+        (quotient (make-connector))]
+    (multiplier denom one-over-denom identity)
+    (multiplier numer one-over-denom quotient)
+    quotient))
+
+(define (c-to-f-converter x)
+  (c+ (c* (c/ (cv 9) (cv 5)) x)
+      (cv 32)))
+(define cels (make-connector))
+(define far (c-to-f-converter cels))
+
+(define top (make-connector))
+(define bot (make-connector))
+(define res (c/ top bot))
+(probe "top" top)
+(probe "bot" bot)
+(probe "res" res)
+(set-value! top 5 'user)
+(set-value! bot 10 'user)
