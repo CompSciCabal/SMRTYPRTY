@@ -133,3 +133,72 @@
 (displayln (s 'avail))
 ;;(s 'acquire) <-- will block forever
 
+(displayln "exercise 3.48")
+(define (make-serializer)
+  (let [(mutex (make-mutex))]
+    (lambda (p)
+      (define (serialized-p . args)
+        (mutex 'acquire)
+        (let [(val (apply p args))]
+          (mutex 'release)
+          val))
+      serialized-p)))
+
+(define make-account
+  ((lambda ()
+     (let [(account-id 0)]
+       (define (make-account balance)
+         (define id-for-account account-id)
+         (set! account-id (+ account-id 1))
+
+         (define (withdraw amount)
+           (if (>= balance amount)
+               (begin (set! balance (- balance amount))
+                      balance)
+               "Insufficient Funds"))
+
+         (define (deposit amount)
+           (set! balance (+ balance amount)))
+
+         (let [(protected (make-serializer))]
+           (define (dispatch msg)
+             (cond [(eq? msg 'withdraw) withdraw]
+                   [(eq? msg 'deposit) deposit]
+                   [(eq? msg 'balance) balance]
+                   [(eq? msg 'serializer) protected]
+                   [(eq? msg 'account-id) id-for-account]
+                   [else (error "Unknown request -- MAKE-ACCOUNT" msg)]))
+           dispatch))
+       make-account))))
+
+(define (exchange account1 account2)
+  (let [(diff (- (account1 'balance)
+                 (account2 'balance)))]
+    ((account1 'withdraw) diff)
+    ((account2 'deposit) diff)
+    )
+  )
+
+(define (serialized-exchange account-1 account-2)
+  (define (account-1-has-lower-id?)
+    (< (- (account-1 'account-id) (account-2 'account-id)) 0))
+  (let [(lower-serializer ((if (account-1-has-lower-id?) account-1 account-2) 'serializer))
+        (higher-serializer ((if (not (account-1-has-lower-id?)) account-1 account-2) 'serializer))]
+    ((higher-serializer (lower-serializer exchange))
+     account-1 account-2)))
+
+(define (instrument account)
+  (lambda (msg)
+    (display msg)
+    (display ": ")
+    (displayln (account 'account-id))
+    (account msg)))
+
+(define joe (instrument (make-account 100)))
+(define bob (instrument (make-account 200)))
+(serialized-exchange bob joe)
+
+(displayln "exercise 3.49")
+;; There can be the case where a we don't know what other resources we will require until we've acquired
+;; the lock. This could be something like a database, or an anonymous function that also locks on another
+;; resource which never becomes available.
