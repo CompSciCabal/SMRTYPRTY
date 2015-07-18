@@ -1,0 +1,80 @@
+;exercise 2.30 and 2.31
+
+;(define (square-tree tree)
+;  (map (lambda(i) (* i i)) (car tree))
+;  (square-tree (cdr tree)))
+
+
+(define (atom? n)
+  (not (pair? n)))
+
+;not working at all
+(define (my-tree-map fun tree)
+  (cond ((atom? (car tree)) (fun (car tree)))
+        (else (tree-map fun (car tree))))
+  (cond ((atom? (cdr tree)) (fun (cdr tree)))
+        (else (tree-map fun (cdr tree)))))
+
+;;took from csaunders
+(define (tree-map fun tree)
+  (cond ((null? tree) '())
+        ((not (pair? tree)) (fun tree))
+        (else (cons (tree-map fun (car tree))
+                    (tree-map fun (cdr tree))))))
+         
+
+(define (square-tree tree) (tree-map (lambda(i) (* i i)) tree))
+
+;(define (tree-map fun tree)
+;  (cond ((not (pair? (fun (car tree)))) (map fun (car tree)))
+;        (else (treemap (car tree))))
+;  (cond ((not (pair? (cdr tree))) map (cdr tree))
+;        (else (treemap (cdr tree)))))
+
+;2.32
+
+(define (subsets s)
+  (if (null? s)
+      (list '())
+      (let ((rest (subsets (cdr s))))
+        (append rest 
+                (map (lambda(x) (append (list (car s)) x)) 
+                     rest)))))
+
+;2.33 I don't understand
+
+(define (accumulate op initial sequence)
+(if (null? sequence)
+initial
+(op (car sequence)
+(accumulate op initial (cdr sequence)))))
+
+(define (mymap p sequence)
+  (accumulate (lambda (x y) (cons (p x) y) ) '() sequence))
+
+
+;Exercise 2.34 difficult, will come back
+
+;Ex 2.34 will come back
+
+;Ex 2.35 will come back
+
+;Ex 2.36 will come back
+
+;Ex 2.37 later
+
+;Ex 2.38
+
+;Ex 2.39 later
+
+;Check out section at p. 165
+
+;Ex 2.40
+
+;Ex 2.41
+
+;Ex 2.42
+
+;Ex 2.43
+
+

@@ -1,0 +1,90 @@
+#lang racket
+
+;2.20
+
+;(define (listify a)
+  
+
+;(define (same-parity x . z)
+
+(define (other-reverse nl)
+  (let ((ret '()))
+        (cond (null? (car nl) ret)
+              (else (cons (car nl) ret)
+                    (other-reverse (cdr nl)))) ret))
+
+;(define empty '())
+
+(define (new-reverse nl)
+  (cond (null? (car nl) empty)              
+              (else (cons (car nl) empty)
+                    (new-reverse (cdr nl)))))
+
+(define (rev ln)
+  (cond ((not (pair? ln)) ln)
+        (else '( 1 2))))
+
+ 
+
+(define (test)
+  (cons 1 empty))
+
+
+;; 2.21 weirdly difficult *puzzled*
+(define (square-list items)
+  (map (lambda(i) (* i i)) (items)))
+
+(define (my-square-list items)
+  (if (null? items)
+      '()
+      (cons ((lambda(i) (* i i)) (car items)) (cdr items))) items)
+  
+;; 2.22
+;; this one should be done after 2.21
+
+;;2.23 this one is finished
+
+(define (for-each fun items)
+  (cond ((null? items)
+         (newline))
+        (else (fun (car items)) (for-each fun (cdr items)))))
+
+
+;;2.26 just a repl exercise - finished
+
+;;2.27 need 2.18
+
+;;2.28 I'm getting a contract violation error, not sure how to fix
+
+(define (fringe t)
+  (cond ((pair? (car t)) (dump-list (car t)) (fringe (cdr t)))
+        (else (dump-list t))))
+
+(define (dump-list l)
+  (cond ((null? l) l)
+        (not (pair? l) (display l))
+        (else (display (car l))
+              (dump-list (cdr l)))))
+
+
+
+; ex 2.29 binary mobile
+
+(define (make-mobile left right)
+  (list left right))
+
+(define (make-branch length structure)
+  (list length structure))
+
+(define (left-branch m)
+  (car m))
+
+(define (right-branch m)
+  (cdr m))
+
+(define (branch-length b)
+  (car b))
+
+(define (branch-structure b)
+  (car b))
+

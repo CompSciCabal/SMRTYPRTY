@@ -264,6 +264,17 @@
                   action
                   the-agenda))
 
+(define inverter-delay 0)
+(define and-gate-delay 0)
+(define or-gate-delay 0)
+
+(define the-agenda '())
+(define (empty-agenda? agenda) #t)
+(define (first-agenda-item agenda) '())
+(define (remove-first-agenda-item! agenda) '())
+(define (current-time agenda) 0)
+(define (add-to-agenda! duration action agenda) '())
+
 (define (propagate)
   (if (empty-agenda? the-agenda)
       'done
@@ -309,7 +320,7 @@
 (displayln "exercise 3.28")
 
 (define (or-gate o1 o2 output)
-  (define (and-action-procedure)
+  (define (or-action-procedure)
     (let ([new-value (logical-or (get-signal o1) (get-signal o2))])
       (after-delay or-gate-delay
                    (lambda ()
@@ -383,4 +394,3 @@
 | This solution helps explain it a lot better than I am:
 |   https://github.com/qiao/sicp-solutions/blob/a2fe069ba6909710a0867bdb705b2e58b2a281af/chapter3/3.32.scm
 |#
-  

@@ -1,0 +1,29 @@
+
+;special file for the binary mobile
+
+; ex 2.29 binary mobile
+
+(define (make-mobile left right)
+  (list left right))
+
+(define (make-branch length structure)
+  (list length structure))
+
+(define (left-branch m)
+  (car m))
+
+(define (right-branch m)
+  (cdr m))
+
+(define (branch-length b)
+  (car b))
+
+(define (branch-structure b)
+  (cdr b))
+
+(define a (make-branch 23 2))
+
+(define b (make-branch 2 a))
+
+(define c (make-mobile a b))
+
