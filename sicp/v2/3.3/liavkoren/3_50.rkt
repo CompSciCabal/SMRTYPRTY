@@ -132,12 +132,52 @@ Explain.
 
 
 #|
- Exercise 3.53.  Without running the program, describe the elements of the stream defined by
+Exercise 3.53
+-------------
 
+Without running the program, describe the elements of the stream defined by
 (define s (cons-stream 1 (add-streams s s)))
 
 1 . promise to add 1 + 1 --> 1 . promise 2
 1. 2 . promise to add 2 + 2 --> 4
 so the sequence is 1 2 4 8 16...
 |#
+(displayln "excercise 3.53: the stream is 1 2 4 8 16...")
+#|
+Exercise 3.54
+-------------
+Define a procedure mul-streams, analogous to add-streams, that produces the 
+elementwise product of its two input streams. Use this together with the stream 
+of integers to complete the following definition of the stream whose nth element 
+(counting from 0) is n + 1 factorial:
+
+(define factorials (cons-stream 1 (mul-streams <??> <??>)))
+
+factorial stream is: 
+1 1*2 1*2*3 1*2*3*4 1*2*3*4*5 ... == 1 2 6 24 120... ==
+(1)*1 (1)*2 ((1)*2)*3 (((1)*2)*3)*4... ==
+(1 2 3 4...) * (1 1*1 1*2 1*2*3...) == int_stream * (1 . 1 . (cdr int_stream))
+
+we need to find an implicit representation of factorial. The stream is can be 
+represented implicitely as: 
+1 . <promise of 2 * previous value of fact> . <promise of 3 * prev. val> . <promise of 4 * prev. value> ...>>>>
+|#
+(define (mul-streams s1 s2)
+  (stream-map * s1 s2))
+
+; You can do it like this:
+(define fact
+  (cons-stream 1 
+               (cons-stream 1
+                            (mul-streams (stream-cdr fact)
+                                        integers))))
+; analogous to fib:
+(define fibs
+  (cons-stream 0
+               (cons-stream 1
+                            (add-streams (stream-cdr fibs)
+                                         fibs))))
+; But a more straightforward def is: 
+ (define fact2 (cons-stream 1 (mul-streams integers fact2))) 
+; Hoooly crap, implicit streams! 
 
