@@ -40,13 +40,7 @@ Variadic is the college word for 'accepts arbitrary number of arguments'.
   (if (= n 0)
       (stream-car s)
       (stream-ref (stream-cdr s) (- n 1))))
-#|
-(define (stream-map proc s)
-  (if (stream-null? s)
-      the-empty-stream
-      (cons-stream (proc (stream-car s))
-                   (stream-map proc (stream-cdr s)))))
-|#
+
 (define (stream-for-each proc s)
   (if (null? s)
       'done
@@ -180,4 +174,20 @@ represented implicitely as:
 ; But a more straightforward def is: 
  (define fact2 (cons-stream 1 (mul-streams integers fact2))) 
 ; Hoooly crap, implicit streams! 
+#|
+Exercise 3.55
+-------------
+Define a procedure partial-sums that takes as argument a stream S 
+and returns the stream whose elements are S0, S0 + S1, S0 + S1 + S2, .... 
+For example, (partial-sums integers) should be the stream 1, 3, 6, 10, 15, ....
+
+This is the same structure as fact, replace * with +, and the base case is S0 rather than 1.
+|#
+
+(define (partial-sums stream)
+  (cons-stream (stream-car stream)
+               (add-streams (stream-cdr stream) (partial-sums stream)))) 
+(define p (partial-sums integers))
+; the trick here was doing `(add-streams (stream-cdr stream) (partial-sums stream))` to advance 
+; the stream one more element forward. 
 
