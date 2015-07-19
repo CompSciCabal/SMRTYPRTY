@@ -238,3 +238,20 @@ Fill in the missing expressions in the places marked <??> above.
 (define (scale-stream stream factor)
   (stream-map (lambda (x) (* x factor)) stream))
 (define S (cons-stream 1 (merge (scale-stream S 2) (merge (scale-stream S 3) (scale-stream S 5)))))
+
+
+#|
+Exercise 3.57
+-------------
+How many additions are performed when we compute the nth Fibonacci 
+number using the definition of fibs based on the add-streams procedure? 
+Show that the number of additions would be exponentially greater if we 
+had implemented (delay <exp>) simply as (lambda () <exp>), without using 
+the optimization provided by the memo-proc procedure described in section 
+3.5.1.64
+|#
+(newline)
+(displayln "exercise 3.57: ")
+(displayln "Using call-by-need, the nth Fib number needs n-2 additions, because all previous additions are cached and the first two elements of the list are predefinted.")
+(displayln "Withour caching, for every element i of the sequence we need to recompute the i-1 and i-2 terms, which grows geometrically. This is easiest to show diagramatically, by expanding the tree of terms for each item in the sequence -- the sequence grows geometrically.")
+
