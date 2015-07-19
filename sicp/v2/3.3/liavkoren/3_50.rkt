@@ -259,3 +259,21 @@ the optimization provided by the memo-proc procedure described in section
 (displayln "additions for f(i-1) + number of additions for f(i-2) plus one, so the number of ")
 (displayln "additions involved grows even faster than the Fib sequence.")
 
+#|
+Exercise 3.58
+-------------
+  Give an interpretation of the stream computed by the following procedure:
+
+(define (expand num den radix)
+  (cons-stream
+   (quotient (* num radix) den)
+   (expand (remainder (* num radix) den) den radix)))
+
+(Quotient is a primitive that returns the integer quotient of two integers.) 
+What are the successive elements produced by (expand 1 7 10) ? What is produced by (expand 3 8 10) ?
+|#
+(newline)
+(displayln "Exercise 3.58")
+(displayln "Oh tricksy hobbiteses! Very nice. Expand(1 7 10) = cycle(1 4 2 8 5 7),")
+(displayln "expand(3 8 10) = 3 7 5 0 0 0... These are the base 10 decimal expansions")
+(displayln "Of num/den.")
