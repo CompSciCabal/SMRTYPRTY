@@ -251,7 +251,11 @@ the optimization provided by the memo-proc procedure described in section
 3.5.1.64
 |#
 (newline)
-(displayln "exercise 3.57: ")
-(displayln "Using call-by-need, the nth Fib number needs n-2 additions, because all previous additions are cached and the first two elements of the list are predefinted.")
-(displayln "Withour caching, for every element i of the sequence we need to recompute the i-1 and i-2 terms, which grows geometrically. This is easiest to show diagramatically, by expanding the tree of terms for each item in the sequence -- the sequence grows geometrically.")
+(displayln "Exercise 3.57: ")
+(displayln "Using call-by-need, the nth Fib number needs n-2 additions, because all previous")
+(displayln "additions are cached and the first two elements of the list are predefinded. ")
+(displayln "Withour caching, the number of additions follows a very similar pattern to the ")
+(displayln "fib sequence itself: the number of additions needed to find f(i) is the number of ")
+(displayln "additions for f(i-1) + number of additions for f(i-2) plus one, so the number of ")
+(displayln "additions involved grows even faster than the Fib sequence.")
 
