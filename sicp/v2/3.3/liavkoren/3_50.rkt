@@ -1,6 +1,6 @@
 #lang racket
 #| Exercise 3.50.  Complete the following definition, which generalizes stream-map 
-to allow procedures that take multiple arguments, analogous to map in section 
+to allow procedures that take muliple arguments, analogous to map in section 
 2.2.3, footnote 12. 
 
 Spending some time understanding 
@@ -277,3 +277,19 @@ What are the successive elements produced by (expand 1 7 10) ? What is produced 
 (displayln "Oh tricksy hobbiteses! Very nice. Expand(1 7 10) = cycle(1 4 2 8 5 7),")
 (displayln "expand(3 8 10) = 3 7 5 0 0 0... These are the base 10 decimal expansions")
 (displayln "Of num/den.")
+
+#|
+Exercise 3.59
+-------------
+a. The integral of the series a_0 + a_1*x + a_2*x^2 + a_3*x^3 + ··· is the series
+c + a_0*x + a_1*x^2 + a_2*x^3 + a_3*x^4 where c is any constant. Define a procedure 
+integrate-series that takes as input a stream a_0, a_1, a_2... representing a power 
+series and returns the stream a0, (1/2)a1, (1/3)a2, ... of coefficients of the 
+non-constant terms of the integral of the series.
+|#
+
+(define (integrate-series series)
+  (let ((coefficients (stream-map (lambda (x) (/ 1 x)) (integers-starting-from 1))))
+    (mul-streams series coefficients)))
+
+(define test (integrate-series ones)) ; use stream-ref to confirm coefficients are correct.
