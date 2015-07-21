@@ -293,3 +293,32 @@ non-constant terms of the integral of the series.
     (mul-streams series coefficients)))
 
 (define test (integrate-series ones)) ; use stream-ref to confirm coefficients are correct.
+
+
+#|
+b. The function x -> e^x is its own derivative. This implies that e^x and the integral of 
+e^x are the same series, except for the constant term, which is e_0 = 1. Accordingly, we 
+can generate the series for e^x as
+
+(define exp-series
+  (cons-stream 1 (integrate-series exp-series)))
+
+Show how to generate the series for sine and cosine, starting from the facts that the 
+derivative of sine is cosine and the derivative of cosine is the negative of sine:
+
+(define cosine-series
+  (cons-stream 1 <??>))
+(define sine-series
+  (cons-stream 0 <??>))
+|#
+(newline)
+(displayln "Exercise 3.59b:")
+(displayln "Let Dx stand for Derivitive of a function w/r/t x, and Int be the integral ")
+(displayln "of the function w/r/t dx. Dx sin(x) = cos(x) and Dx cos(x) = -sin(x), ")
+(displayln "so sin(x) = [Int cos(x)] - C and cos(x) = -[Int sin(x)] - C.")
+(displayln "It is witchy and insane that this works.. but you can define them in terms of each other.")
+
+(define cosine-series
+  (cons-stream 1 (scale-stream (integrate-series sine-series) -1)))
+(define sine-series
+  (cons-stream 0 (integrate-series cosine-series)))
