@@ -142,3 +142,66 @@
                (stream-map +
                            (partial-sums stream)
                            (stream-cdr stream))))
+
+(displayln "exercise 3.56")
+(define (scale-stream stream factor)
+  (stream-map (lambda (x) (* x factor)) stream))
+
+(define (merge s1 s2)
+  (cond ((stream-null? s1) s2)
+        ((stream-null? s2) s1)
+        (else
+         (let ((s1car (stream-car s1))
+               (s2car (stream-car s2)))
+           (cond ((< s1car s2car)
+                  (cons-stream s1car (merge (stream-cdr s1) s2)))
+                 ((> s1car s2car)
+                  (cons-stream s2car (merge s1 (stream-cdr s2))))
+                 (else
+                  (cons-stream s1car
+                               (merge (stream-cdr s1)
+                                      (stream-cdr s2)))))))))
+
+(define S (cons-stream 1 (merge (scale-stream S 2)
+                                (merge (scale-stream S 3)
+                                       (scale-stream S 5)))))
+
+(displayln "exercise 3.57")
+#|
+| If delay is memoized, then it means that previous calculations for the two previous numbers
+| won't need to happen again, we simply return the value. Meanwhile, if the function calls weren't
+| memoized, each successive call would need to call all the previous calls (because of the recursive
+| functionality of the fibonacci implementation)
+|#
+
+(displayln "exercise 3.58")
+(define (expand num den radix)
+  (cons-stream
+   (quotient (* num radix) den)
+   (expand (remainder (* num radix) den) den radix)))
+
+(define first-360 (expand 1 7 10))
+;; (1 . (expand 3 7 10))
+;; (1 . (4 . (expand 2 7 10)))
+;; (1 . (4 . (2 . (expand 6 7 10))))
+;; (1 . (4 . (2 . (8 . (expand 4 7 10)))))
+;; #0=(1 4 2 8 5 7 #0#)
+
+(define secnd-360 (expand 3 8 10))
+;; (3 7 5 #0=0 #0#)
+
+(displayln "exercise 3.59")
+
+(displayln "exercise 3.59 a.")
+(define (integrate-series s) (stream-map / s integers))
+
+(displayln "exercise 3.59 b.")
+(define exp-series
+  (cons-stream 1 (integrate-series exp-series)))
+
+(define sine-series
+  (cons-stream 0 (integrate-series cosine-series)))
+
+(define cosine-series
+  (cons-stream 1 (integrate-series (scale-stream sine-series -1))))
+
