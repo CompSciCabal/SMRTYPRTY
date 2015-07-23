@@ -326,3 +326,58 @@
                           (= (+ (sq i) (sq j))
                              (sq k)))))
                  numbers))
+
+(displayln "exercises 3.70, 3.71 & 3.72")
+;; Nope
+
+(displayln "exercise 3.73")
+(define (integral integrand initial-value dt)
+  (define int
+    (cons-stream initial-value
+                 (add-streams (scale-stream integrand dt)
+                              int)))
+  int)
+
+;; Had to look at scheme wiki :(
+(define (RC R C dt)
+  (define (proc I V)
+    (add-streams (scale-stream I R) ;; R*i
+                 (integral (scale-stream I (/ 1 C)) ;; v0 + (1/C)*integ([0,t], i*dt)
+                           V
+                           dt)))
+  proc)
+
+(displayln "exercise 3.74")
+(define sense-data (cons-stream 0 sense-data))
+(define (sign-change-detector value last-value) 0)
+
+(define zero-crossings
+  ;; using the multi-stream version of stream-map
+  (stream-map sign-change-detector
+              sense-data ;; <--- stream-car => next reading
+              (cons-stream 0 sense-data))) ;; <--- stream-car => last-value
+
+(displayln "exercise 3.75")
+(define (make-zero-crossings input-stream last-value last-avpt)
+  (let [(avpt (/ (+ (stream-car input-stream) last-value) 2))]
+    ;; The error was we weren't preserving the last value, so our
+    ;; averages would become more and more warped the further into
+    ;; the stream we read. To fix this we allow the last average to
+    ;; be passed in and check for a sign change against that based
+    ;; on the next average
+    (cons-stream (sign-change-detector avpt last-avpt)
+                 (make-zero-crossings (stream-cdr input-stream)
+                                      (stream-car input-stream)
+                                      avpt))))
+
+(displayln "exercise 3.76")
+(define (smooth input-stream)
+  (define previous-values (cons-stream 0 input-stream))
+  (stream-map (lambda (a b) (/ (+ a b) 2)) input-stream previous-values))
+
+(define (better-make-zero-crossings input-stream smooth)
+  (let [(smoothed-readings (smooth input-stream))]
+    (stream-map sign-change-detector
+                smoothed-readings
+                (cons-stream 0 smoothed-readings))))
+    
