@@ -193,7 +193,8 @@
 (displayln "exercise 3.59")
 
 (displayln "exercise 3.59 a.")
-(define (integrate-series s) (stream-map / s integers))
+(define ones (cons-stream 1 ones))
+(define (integrate-series s) (stream-map * (stream-map / ones integers) s))
 
 (displayln "exercise 3.59 b.")
 (define exp-series
@@ -205,3 +206,123 @@
 (define cosine-series
   (cons-stream 1 (integrate-series (scale-stream sine-series -1))))
 
+(displayln "exercise 3.60")
+(define (add-streams s1 s2)
+  (stream-map + s1 s2))
+
+(define (mul-series s1 s2)
+  (cons-stream (* (stream-car s1)
+                  (stream-car s2))
+               (add-streams (mul-streams
+                             (stream-cdr s1)
+                             (stream-cdr s2))
+                            (mul-series s1 s2))))
+;; It isn't working... I don't know what I'm doing wrong :(
+
+(displayln "exercise 3.63")
+(define (average a b)
+  (/ (+ a b) 2))
+
+(define (sqrt-improve guess x)
+  (average guess (/ x guess)))
+
+(define (sqrt-stream x)
+  (define guesses
+    (cons-stream 1.0
+                 (stream-map (lambda (guess)
+                               (sqrt-improve guess x))
+                             guesses)))
+  guesses)
+
+(define (louis-sqrt-stream x)
+  (cons-stream 1.0
+               (stream-map (lambda (guess)
+                             (sqrt-improve guess x))
+                           (sqrt-stream x))))
+;; It isn't as efficient because it keeps on re-applying the same function to x
+;; over and over again and they haven't been memoized. If we didn't have memoization
+;; then this function would be totes cool
+
+(displayln "exercise 3.64")
+(define (stream-limit stream tolerance)
+  (let [(first (stream-ref stream 0))
+        (second (stream-ref stream 1))]
+    (if (< (abs (- first second)) tolerance)
+        second
+        (stream-limit (stream-cdr stream) tolerance))))
+
+(define (tol-sqrt x tolerance)
+  (stream-limit (sqrt-stream x) tolerance))
+
+(displayln "exercise 3.65")
+(define (ln2-summands n)
+  (cons-stream (/ 1.0 n)
+               (stream-map - (ln2-summands (+ n 1)))))
+
+(define ln2-stream
+  (partial-sums (ln2-summands 1)))
+
+(stream-limit ln2-stream 0.01)
+
+(displayln "exercise 3.66")
+(define (interleave s1 s2)
+  (if (stream-null? s1)
+      s2
+      (cons-stream (stream-car s1)
+                   (interleave s2 (stream-cdr s1)))))
+
+(define (pairs s t)
+  (cons-stream
+   (list (stream-car s) (stream-car t))
+   (interleave
+    (stream-map (lambda (x) (list (stream-car s) x))
+                (stream-cdr t))
+    (pairs (stream-cdr s) (stream-cdr t)))))
+
+(define (num-until-match stream target)
+  (define (eq-pair? a b)
+    (and (= (car a) (car b))
+         (= (cadr a) (cadr b))))
+  (define (iter stream count)
+    (if (eq-pair? (stream-car stream) target)
+        count
+        (iter (stream-cdr stream) (+ count 1))))
+  (iter stream 0))
+
+(num-until-match (pairs integers integers) '(1 100))
+;; The following cannot be computed in any realistic amount of time
+;; (num-until-match (pairs integers integers) '(99 100))
+;; (num-until-match (pairs integers integers) '(100 100))
+;; Scheme-wiki shows these to be the forumulas for how
+;; many pairs will be computed. This makes sense since finding
+;; the number of pairs before takes super long.
+;;
+;; f(i,j) = 2^i - 2, i = j
+;; f(i,j) = 2^i * (j-i) + 2^(i-1) - 2, i < j
+
+(displayln "exercise 3.67")
+;; Nope
+
+(displayln "exercise 3.68")
+;; Nope
+
+(displayln "exercise 3.69")
+(define (triples s t u)
+  (cons-stream
+   (list (stream-car s) (stream-car t) (stream-car u))
+   (interleave
+    (stream-map (lambda (x) (cons (stream-car s) x))
+                (stream-cdr (pairs t u)))
+    (triples (stream-cdr s) (stream-cdr t) (stream-cdr u)))))
+
+(define (pythagorean-numbers)
+  (define (sq x) (* x x))
+  (define numbers (triples integers integers integers))
+  (stream-filter (lambda (triple)
+                   (let [(i (car triple))
+                         (j (cadr triple))
+                         (k (caddr triple))]
+                     (and (< i j)
+                          (= (+ (sq i) (sq j))
+                             (sq k)))))
+                 numbers))
