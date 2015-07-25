@@ -343,6 +343,9 @@ following procedure for multiplying series:
       (scale-stream (stream-cdr v) (stream-car u))
       (mul-series (stream-cdr u) v))))
 
+(define mul-test 
+  (add-streams (mul-series sine-series sine-series)
+              (mul-series cosine-series cosine-series)))
 
 #|
 Exercise 3.61
@@ -361,7 +364,6 @@ procedure invert-unit-series that computes 1/S for a power series S with
 constant term 1.
 |#
 
-
 (define (invert-unit-series series)
   (cons-stream 1 (scale-stream (mul-series (stream-cdr series) (invert-unit-series series)) -1)))
 (newline)
@@ -370,3 +372,35 @@ constant term 1.
 (displayln "The solution can be checked with by `stream-ref`ing into the series produced by:")
 (displayln "(mul-series (invert-unit-series cosine-series) cosine-series).")
 
+(define invert-unit-test (invert-unit-series cosine-series))
+#|
+Exercise 3.62
+-------------  
+Use the results of exercises 3.60 and 3.61 to define a procedure div-series that
+divides two power series. Div-series should work for any two series, provided
+that the denominator series begins with a nonzero constant term. (If the
+denominator has a zero constant term, then div-series should signal an error.)
+Show how to use div-series together with the result of exercise 3.59 to generate
+the power series for tangent.
+|#
+(newline)
+(displayln "Exercise 3.62:")
+
+(displayln "We can only divide power series that start with one, so we need to create an offset term")
+(displayln "that is equal to stream-car - 1. If the series is `S`, we need to create S' = S - offset,")
+(displayln "where offset is equal to (-s_0 + 1). Then, S = S' + offset, and 1/S = 1/(S' + offset).")
+(displayln "The term S' + offset is just: s_0 . -1 . S', where each dot is a stream-cons.")
+
+(define (stream-cons x y)
+  (cons-stream x y))
+
+(define (div-series numer-series denom-series)
+  (define (invert-series series)    
+    (let ((first-term (stream-car denom-series))
+          (offset-series (stream-cons 1 (stream-cdr denom-series))))      
+      (stream-cons first-term (stream-cons -1 (invert-unit-series offset-series))))
+    )
+  (mul-streams numer-series (invert-series denom-series)))
+
+(define sec-test (div-series ones cosine-series))
+(define tan (mul-series sec-test sine-series))
