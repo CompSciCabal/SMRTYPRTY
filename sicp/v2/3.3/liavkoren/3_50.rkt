@@ -322,3 +322,51 @@ derivative of sine is cosine and the derivative of cosine is the negative of sin
   (cons-stream 1 (scale-stream (integrate-series sine-series) -1)))
 (define sine-series
   (cons-stream 0 (integrate-series cosine-series)))
+
+#|
+Exercise 3.60
+-------------  
+With power series represented as streams of coefficients as in exercise 3.59, 
+adding series is implemented by add-streams. Complete the definition of the 
+following procedure for multiplying series:
+
+(define (mul-series s1 s2)
+  (cons-stream <??> (add-streams <??> <??>)))
+|#
+
+; Eli Bendersky's solution and explaination are the best I've seen so far:
+
+(define (mul-series u v)
+  (cons-stream 
+    (* (stream-car u) (stream-car v))
+    (add-streams 
+      (scale-stream (stream-cdr v) (stream-car u))
+      (mul-series (stream-cdr u) v))))
+
+
+#|
+Exercise 3.61
+-------------
+Let S be a power series (exercise 3.59) whose constant term is 1. Suppose we
+want to find the power series 1/S, that is, the series X such that S · X = 1.
+Write S = 1 + SR where SR is the part of S after the constant term. Then we can
+solve for X as follows:
+
+See https://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%_thm_3.61 
+for diagram.
+
+In other words, X is the power series whose constant term is 1 and whose higher-
+order terms are given by the negative of SR times X. Use this idea to write a
+procedure invert-unit-series that computes 1/S for a power series S with
+constant term 1.
+|#
+
+
+(define (invert-unit-series series)
+  (cons-stream 1 (scale-stream (mul-series (stream-cdr series) (invert-unit-series series)) -1)))
+(newline)
+(displayln "Exercise 3.61:")
+(displayln "This is straightforward, just translate the formula presented to into a recursive stream.")
+(displayln "The solution can be checked with by `stream-ref`ing into the series produced by:")
+(displayln "(mul-series (invert-unit-series cosine-series) cosine-series).")
+
