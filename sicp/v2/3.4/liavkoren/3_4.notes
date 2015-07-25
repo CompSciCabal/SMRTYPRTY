@@ -1,0 +1,97 @@
+"Exercise 3.43.  Suppose that the balances in three accounts start out as $10, $20, and $30, and that multiple processes run, exchanging the balances in the accounts. Argue that if the processes are run sequentially, after any number of concurrent exchanges, the account balances should be $10, $20, and $30 in some order."
+
+Okay, the key things I had to notice for this are:
+
+ (define (serialized-exchange account1 account2)
+  (let ((serializer1 (account1 'serializer))
+        (serializer2 (account2 'serializer)))
+    ((serializer1 (serializer2 exchange))
+     account1
+     account2)))
+
+
+And the relevant portion from `make-account-and-serializer`:
+
+ (let ((balance-serializer (make-serializer)))
+    (define (dispatch m)
+      (cond ((eq? m 'withdraw) withdraw)
+            ((eq? m 'deposit) deposit)
+            ((eq? m 'balance) balance)
+            ((eq? m 'serializer) balance-serializer)
+            (else (error "Unknown request -- MAKE-ACCOUNT"
+                         m))))
+    dispatch))
+
+At first I wondered if it mattered that the serializer is defined in the score enclosing `dispatch` -- it's not being used to protect `deposit` or `withdraw`, so could it be replaced with serializer defined in the global scope? I think it is actually important that the serializer be 'bound' to the `dispatch`, `deposit`, `widthdraw` procedures,
+
+
+
+Exercise 3.44
+-------------
+
+Consider the problem of transferring an amount from one account to another. Ben Bitdiddle claims that this can be accomplished with the following procedure, even if there are multiple people concurrently transferring money among multiple accounts, using any account mechanism that serializes deposit and withdrawal transactions, for example, the version of make-account in the text above.
+
+(define (transfer from-account to-account amount)
+  ((from-account 'withdraw) amount)
+  ((to-account 'deposit) amount))
+
+Louis Reasoner claims that there is a problem here, and that we need to use a more sophisticated method, such as the one required for dealing with the exchange problem. Is Louis right? If not, what is the essential difference between the transfer problem and the exchange problem? (You should assume that the balance in from-account is at least amount.)
+
+Answer
+------
+
+I think the difference is that `transfer` doesn't need to atomically manipulate both accounts in a single transaction. As long as transfer can be guaranteed that from-account has sufficient funds (which protected-withdraw should do), then the deposit can happen in a separate memory transaction.
+
+
+Exercise 3.45
+-------------
+
+Louis Reasoner thinks our bank-account system is unnecessarily complex and error-prone now that deposits and withdrawals aren't automatically serialized. He suggests that make-account-and-serializer should have exported the serializer (for use by such procedures as serialized-exchange) in addition to (rather than instead of) using it to serialize accounts and deposits as make-account did. He proposes to redefine accounts as follows:
+
+(define (make-account-and-serializer balance)
+  (define (withdraw amount)
+    (if (>= balance amount)
+        (begin (set! balance (- balance amount))
+               balance)
+        "Insufficient funds"))
+  (define (deposit amount)
+    (set! balance (+ balance amount))
+    balance)
+  (let ((balance-serializer (make-serializer)))
+    (define (dispatch m)
+      (cond ((eq? m 'withdraw) (balance-serializer withdraw))
+            ((eq? m 'deposit) (balance-serializer deposit))
+            ((eq? m 'balance) balance)
+            ((eq? m 'serializer) balance-serializer)
+            (else (error "Unknown request -- MAKE-ACCOUNT"
+                         m))))
+    dispatch))
+
+Then deposits are handled as with the original make-account:
+
+(define (deposit account amount)
+ ((account 'deposit) amount))
+
+Explain what is wrong with Louis's reasoning. In particular, consider what happens when serialized-exchange is called.
+
+
+(define (serialized-exchange account1 account2)
+  (let ((serializer1 (account1 'serializer))
+        (serializer2 (account2 'serializer)))
+    ((serializer1 (serializer2 exchange))
+     account1
+     account2)))
+
+
+
+ (define (exchange account1 account2)
+  (let ((difference (- (account1 'balance)
+                       (account2 'balance))))
+    ((account1 'withdraw) difference)
+    ((account2 'deposit) difference)))
+
+Answer
+------
+
+If you use *serialized-exchange* with this make-account definition, you will get a deadlock! The dispatch method will return a serialized withdraw method, which is then serialized again with the same account's serializer -- because serailizers cannot overlap in execution, the is a deadlock. I think.
+
