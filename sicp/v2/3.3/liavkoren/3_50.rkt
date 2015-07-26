@@ -574,6 +574,97 @@ the same way we did above for . How rapidly do these sequences converge?
 (define ln2_less_suck (stream-limit (accelerated-sequence euler-transform ln-stream) 0.000001))
 
 
+; Infinite streams of pairs
+; -------------------------
+; (as infinite as this chapter section..)
 
+#|
+For example, suppose we want to generalize the prime-sum-pairs procedure of
+section 2.2.3 to produce the stream of pairs of all integers (i,j) with i < j
+such that i + j is prime. If int-pairs is the sequence of all pairs of integers
+(i,j) with i < j, then our required stream is simply66
+|#
+(define (prime? n)
+  (define (iter ps)
+    (cond ((> (square (stream-car ps)) n) true)
+          ((divisible? n (stream-car ps)) false)
+          (else (iter (stream-cdr ps)))))
+  (iter primes))
+#|
+(stream-filter (lambda (pair)
+                 (prime? (+ (car pair) (cadr pair))))
+               int-pairs)
 
+(stream-map (lambda (x) (list (stream-car s) x))
+            (stream-cdr t))
+|#
+(define (interleave s1 s2)
+  (if (null? s1)
+      s2
+      (cons-stream (stream-car s1)
+                   (interleave s2 (stream-cdr s1)))))
+(define (pairs s t)
+  (cons-stream
+   (list (stream-car s) (stream-car t))
+   (interleave
+    (stream-map (lambda (x) (list (stream-car s) x))
+                (stream-cdr t))
+    (pairs (stream-cdr s) (stream-cdr t)))))
+(define int-pairs (pairs integers integers))
 
+#|
+Exercise 3.66
+-------------  
+Examine the stream (pairs integers integers). Can you make any general comments
+about the order in which the pairs are placed into the stream? For example,
+about how many pairs precede the pair (1,100)? the pair (99,100)? the pair
+(100,100)? (If you can make precise mathematical statements here, all the
+better. But feel free to give more qualitative answers if you find yourself
+getting bogged down.)
+|#
+(newline)
+(displayln "First 12 entries in int-pairs:")
+(stream-ref int-pairs 0)
+(stream-ref int-pairs 1)
+(stream-ref int-pairs 2)
+(stream-ref int-pairs 3)
+(stream-ref int-pairs 4)
+(stream-ref int-pairs 5)
+(stream-ref int-pairs 6)
+(stream-ref int-pairs 7)
+(stream-ref int-pairs 8)
+(stream-ref int-pairs 9)
+(stream-ref int-pairs 10)
+(stream-ref int-pairs 11)
+
+#|
+0:(1 1)     1:(1 2)     3:(1 3)   5:(1 4)   7:(1 5)   9:(1 6)   11:(1 7)
+            2:(2 2)     4:(2 3)   8:(2 4)
+                        6:(3 3)  10:(3 4)
+
+|#
+
+(define (find-pair x y)
+  (define (inner stream counter)
+    (let ((pair (stream-car stream)))
+      (if (and (= x (car pair)) (= y (cadr pair)))
+        (printf "Took ~a iterations to find pair." counter)
+        (inner (stream-cdr stream) (+ counter 1)))
+      )
+    )
+  (inner int-pairs 0))
+(newline)
+(displayln "Exercise 3.66:")
+(displayln "Takes 17 iterations for 1 10")
+(displayln "Takes 32 iterations for 2 10")
+(displayln "Takes 37 iterations for 1 20")
+(displayln "Takes 72 iterations for 2 20")
+(displayln "Takes 97 iterations for 1 50")
+(displayln "Takes 197 iterations for 1 100")
+(displayln "Takes 397 iterations for 1 200")
+(displayln "Takes 92670 iterations for 10 100")
+; (find-pair 2 20)
+(newline)
+(displayln "It seems like to find (1 n) it takes roughly 2n iterations.")
+(displayln "Every row above 1 seems to roughly double the iteration count again, eg")
+(displayln "so (2 n) is roughly double (1 n).")
