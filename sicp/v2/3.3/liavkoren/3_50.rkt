@@ -461,3 +461,72 @@ the power series for tangent.
 
 (define pi (accelerated-sequence euler-transform pi-stream))
 
+
+#|
+Exercise 3.63
+-------------
+Louis Reasoner asks why the sqrt-stream procedure was not written in the
+following more straightforward way, without the local variable guesses:
+
+(define (sqrt-stream x)
+  (cons-stream 1.0
+               (stream-map (lambda (guess)
+                             (sqrt-improve guess x))
+                           (sqrt-stream x))))
+
+vs:
+
+(define (sqrt-stream x)
+  (define guesses
+    (cons-stream 1.0
+                 (stream-map (lambda (guess)
+                               (sqrt-improve guess x))
+                             guesses)))
+  guesses)
+
+
+Alyssa P. Hacker replies that this version of the procedure is considerably less
+efficient because it performs redundant computation. Explain Alyssa's answer.
+Would the two versions still differ in efficiency if our implementation of delay
+used only (lambda () <exp>) without using the optimization provided by memo-proc
+(section 3.5.1)?
+|#
+
+(define (sqrt-stream-bad x)
+  (cons-stream 1.0
+               (stream-map (lambda (guess)
+                             (sqrt-improve guess x))
+                           (sqrt-stream-bad x))))
+
+(stream-ref (sqrt-stream 5) 3)
+(stream-ref (sqrt-stream-bad 5) 3)
+
+(newline)
+(displayln "Exercise 3.63:")
+(displayln "It looks like in Louis' version the recursive call to sqrt-stream has to redo work that was already done.")
+(displayln "Using a reference to the same stream in the correct version allows the cached values to be used instead. ")
+
+#|
+Exercise 3.64
+-------------
+Write a procedure stream-limit that takes as arguments a stream and a number
+(the tolerance). It should examine the stream until it finds two successive
+elements that differ in absolute value by less than the tolerance, and return
+the second of the two elements. Using this, we could compute square roots up to
+a given tolerance by
+
+(define (sqrt x tolerance) (stream-limit (sqrt-stream x) tolerance))
+|#
+
+(define (stream-limit stream tolerance)
+  (define (good-enough? x y)
+    (< (abs (- x y)) tolerance))
+  (if (good-enough? (stream-car stream) (stream-car (stream-cdr stream))) (stream-car (stream-cdr stream))
+      (stream-limit (stream-cdr stream) tolerance)))
+
+(define (sqrt x tolerance)
+  (stream-limit (sqrt-stream x) tolerance))
+
+(sqrt 5 0.1)
+(sqrt 5 0.01)
+(sqrt 5 0.001)
