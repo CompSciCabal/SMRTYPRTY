@@ -521,8 +521,19 @@ a given tolerance by
 (define (stream-limit stream tolerance)
   (define (good-enough? x y)
     (< (abs (- x y)) tolerance))
-  (if (good-enough? (stream-car stream) (stream-car (stream-cdr stream))) (stream-car (stream-cdr stream))
-      (stream-limit (stream-cdr stream) tolerance)))
+  ; we only need an inner function if we want to track how many iterations are needed. Oh well. 
+  (let ((counter 0))
+    (define (inner stream tolerance)
+      (set! counter (+ counter 1))
+      (if (good-enough? (stream-car stream) (stream-car (stream-cdr stream))) 
+          (begin           
+            (display "took ")
+            (display counter)
+            (display " iteration(s)")
+            (newline)
+            (stream-car (stream-cdr stream)))        
+          (inner (stream-cdr stream) tolerance)))
+    (inner stream tolerance)))
 
 (define (sqrt x tolerance)
   (stream-limit (sqrt-stream x) tolerance))
@@ -530,3 +541,39 @@ a given tolerance by
 (sqrt 5 0.1)
 (sqrt 5 0.01)
 (sqrt 5 0.001)
+
+#|
+Exercise 3.65
+-------------
+Use the series
+
+ln(2) = 1 - 1/2 + 1/3 - 1/4 + ...
+
+to compute three sequences of approximations to the natural logarithm of 2, in
+the same way we did above for . How rapidly do these sequences converge?
+|#
+
+
+; The stream defined by (ln-summands 1) gives the sequence of fractions for ln(2)
+; 1, -1/2, 1/3, -1/4, ...
+(define (ln-summands n)
+  (cons-stream (/ 1 n)
+               (stream-map - (ln-summands (+ n 1)))))
+; Remember, partial-sums takes a stream S and returns S0, S0 + S1, S0 + S1 + S2, ...
+(define ln-stream
+  (partial-sums (ln-summands 1)))
+
+; ln(2) = 0.693147180559945...
+; ============================
+;
+;(define ln2 (stream-limit ln-stream 0.1)) ; 1627/2520
+(displayln "Naive ln(2), to a tolerance of 0.01: ")
+(define ln2 (stream-limit ln-stream 0.01)) ; o_O
+
+(displayln "Using Euler's accel series magic, it's *soooooo* much faster. Ln(2) to a tolerance of 0.000001:")
+(define ln2_less_suck (stream-limit (accelerated-sequence euler-transform ln-stream) 0.000001))
+
+
+
+
+
