@@ -380,4 +380,43 @@
     (stream-map sign-change-detector
                 smoothed-readings
                 (cons-stream 0 smoothed-readings))))
-    
+
+(displayln "exercise 3.77")
+(define (integral delayed-integrand initial-value dt)
+  (cons-stream initial-value
+               (let [(integrand (force delayed-integrand))]
+                 (if (stream-null? integrand)
+                     the-empty-stream
+                     (integral (delay (stream-cdr integrand))
+                               (+ (* dt (stream-car integrand))
+                                  initial-value)
+                               dt)))))
+
+(displayln "exercise 3.78")
+(define (solve-2nd a b dt y0 dy0)
+  (define y (integral (delay dy) y0 dt))
+  (define dy (integral (delay ddy) dy0 dt))
+  (define ddy (add-streams (scale-stream dy a)
+                           (scale-stream y b)))
+  y)
+
+(displayln "exercise 3.79")
+(define (gen-solve-2nd f y0 dy0 dt)
+  (define y (integral (delay dy) y0 dt))
+  (define dy (integral (delay ddy) dy0 dt))
+  (define ddy (stream-map f dy y))
+  y)
+
+(displayln "exercise 3.80")
+(define (RLC R L C dt)
+  (define (step vC0 iL0)
+    (define vC (integral (delay dvC) vC0 dt))
+    (define iL (integral (delay diL) iL0 dt))
+    (define dvC (scale-stream iL (/ -1 C)))
+    (define diL (add-streams
+                 (scale-stream vC (/ 1 L))
+                 (scale-stream iL (- (/ R L)))))
+    (stream-map (lambda v i)
+                (cons v i)
+                dvC diL))
+  step)
