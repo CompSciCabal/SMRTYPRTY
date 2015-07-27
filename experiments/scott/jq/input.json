@@ -1,0 +1,24 @@
+  [
+    {
+      "first"   : "trevor",
+      "last"    : "wellington",
+      "from"    : "england",
+      "age"     : 52,
+      "sports"  : [ "rugby", "badmitton", "snooker" ]
+    },
+    {
+      "first"   : "yoni",
+      "last"    : "halevi",
+      "from"    : "israel",
+      "age"     : 26,
+      "sports"  : [ "soccer", "windsurfing" ]
+    },
+    {
+      "first"   : "cory",
+      "last"    : "parker",
+      "from"    : "united states",
+      "age"     : 31,
+      "sports"  : [ "windsurfing", "baseball", "extreeeeme kayaking" ]
+    }
+  ]
+
