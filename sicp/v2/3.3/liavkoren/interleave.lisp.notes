@@ -13,6 +13,18 @@ y: A B C D E F G H I J K L ...
 1 . A . 2 . (interleave (B C D E...) (3 4 5...))
 1 . A . 2 . B .
 
+
+(define (pairs s t)
+  (cons-stream
+   (list (stream-car s) (stream-car t))
+   (interleave
+
+    (stream-map (lambda (x) (list (stream-car s) x))    ; the nth row of matrix. Given x, return `((car s) x)
+                (stream-cdr t))                         ; where x is taken from (cdr t)
+    (pairs (stream-cdr s) (stream-cdr t)))))
+(define int-pairs (pairs integers integers))
+
+
 (define (pairs s t)
   (cons-stream
    (list (stream-car s) (stream-car t))
@@ -33,8 +45,12 @@ y: A B C D E F G H I J K L ...
                                     14: (4 4)   22: (4 5)   38: (4 6)
                                                 30: (5 5)
 
-
-
+row periods
+-----------
+1: 2
+2: 4
+3: 8
+4: 16
 
 
 
