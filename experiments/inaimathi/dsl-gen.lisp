@@ -22,6 +22,24 @@
 (let ((n 37))
   (loopow 7 n))
 
+;; At runtime?
+(defun ev-pow (n x)
+  (assert (numberp n))
+  (let ((f (eval
+	    `(lambda (x)
+	       (* ,@(loop repeat n collect 'x))))))
+    (funcall f x)))
+
+; Uglier, but now we can do
+
+(ev-pow (read) 37)
+
+; in addition to
+
+(ev-pow 5 6)
+(let ((n 37))
+  (ev-pow 7 n))
+
 ;;;;;;;;;; QBF (starts on pg 4)
 ;; Unstaged
 (defun env0 (sym)
