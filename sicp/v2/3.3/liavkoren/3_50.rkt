@@ -612,6 +612,17 @@ such that i + j is prime. If int-pairs is the sequence of all pairs of integers
     (pairs (stream-cdr s) (stream-cdr t)))))
 (define int-pairs (pairs integers integers))
 
+(define (display-pairs number)
+  (define (inner count)
+    (when (< count number)
+      (printf "~a: " count)
+      (display (stream-ref int-pairs count))
+      (newline)
+      (inner (+ count 1))))
+  (inner 0))
+(displayln "------")
+(display-pairs 40)
+(displayln "------")
 #|
 Exercise 3.66
 -------------  
@@ -638,6 +649,7 @@ getting bogged down.)
 (stream-ref int-pairs 11)
 
 #|
+The pairs, ordered by column and annotated with when they are produced: 
 0:(1 1)     1:(1 2)     3:(1 3)   5:(1 4)   7:(1 5)   9:(1 6)   11:(1 7)
             2:(2 2)     4:(2 3)   8:(2 4)
                         6:(3 3)  10:(3 4)
@@ -668,3 +680,11 @@ getting bogged down.)
 (displayln "It seems like to find (1 n) it takes roughly 2n iterations.")
 (displayln "Every row above 1 seems to roughly double the iteration count again, eg")
 (displayln "so (2 n) is roughly double (1 n).")
+
+#|
+Exercise 3.67
+-------------
+Modify the pairs procedure so that (pairs integers integers) will produce the
+stream of all pairs of integers (i,j) (without the condition i < j). Hint: You
+will need to mix in an additional stream.
+|#
