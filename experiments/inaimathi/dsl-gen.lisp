@@ -1,3 +1,16 @@
+;;;;;;;;;; Comparison ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; 1. Approach		 - Templates
+;; 2. How		 - Quotes
+;; 3. When		 - Compile-time (`eval` at "runtime", but careful with that)
+;; 4. Reuse		 - Compiler, paser, runtime
+;; 5. Guarantee		 - Syntax valid
+;; 6. Code inspection	 - Yes
+;; 7. IO		 - Always, but it gets tricky at the edges
+;; 8. Homogeneous	 - Yes
+;; 9. CSP		 - Yes (can call external terms from macros)
+;; 10. Encapsulation	 - Yes
+;; 11. Modularity	 - Yes
+
 (defpackage :dsl-gen (:use :cl :optima))
 (in-package :dsl-gen)
 
@@ -16,7 +29,9 @@
 ;; A more idiomatic power macro
 (defmacro loopow (n x)
   (assert (numberp n))
-  `(* ,@(loop repeat n collect x)))
+  (let ((term (gensym)))
+    `(let ((,term ,x))
+       (* ,@(loop repeat n collect term)))))
 
 (loopow 5 6)
 (let ((n 37))
@@ -61,7 +76,7 @@
      (not (qbf-eval a env)))
     ((list '=> a b)
      (qbf-eval `(-or ,b (-and (-not ,b) (-not ,a))) env))
-    ((list 'forall a b)
+    ((list '-forall a b)
      (flet ((try-with (bool) (qbf-eval b (extend env a bool))))
        (and (try-with '-true) (try-with '-false))))
     ((list '-var x)
@@ -84,7 +99,7 @@
      `(not (qbf-evalm ,a ,env)))
     ((list '=> a b)
      `(qbf-evalm (-or ,b (-and (-not ,b) (-not ,a))) ,env))
-    ((list 'forall a b)
+    ((list '-forall a b)
      `(flet ((try-with (bool) (qbf-evalm ,b (extend env ,a bool))))
 	(and (try-with '-true) (try-with '-false))))
     ((list '-var x)
