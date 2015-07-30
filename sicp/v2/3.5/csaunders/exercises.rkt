@@ -382,15 +382,15 @@
                 (cons-stream 0 smoothed-readings))))
 
 (displayln "exercise 3.77")
-(define (integral delayed-integrand initial-value dt)
+(define (delayed-integral delayed-integrand initial-value dt)
   (cons-stream initial-value
                (let [(integrand (force delayed-integrand))]
                  (if (stream-null? integrand)
                      the-empty-stream
-                     (integral (delay (stream-cdr integrand))
-                               (+ (* dt (stream-car integrand))
-                                  initial-value)
-                               dt)))))
+                     (delayed-integral (delay (stream-cdr integrand))
+                                       (+ (* dt (stream-car integrand))
+                                          initial-value)
+                                       dt)))))
 
 (displayln "exercise 3.78")
 (define (solve-2nd a b dt y0 dy0)
@@ -416,7 +416,46 @@
     (define diL (add-streams
                  (scale-stream vC (/ 1 L))
                  (scale-stream iL (- (/ R L)))))
-    (stream-map (lambda v i)
-                (cons v i)
+    (stream-map (lambda (v i)
+                  (cons v i))
                 dvC diL))
   step)
+
+(displayln "exercise 3.81")
+(define (make-random-stream seed requests)
+  (define (random-update x)
+    (remainder (+ (* 13 x) 5)
+               24))
+  
+  (define (dispatch pair)
+    (let [(command (car pair))
+          (value (cdr pair))]
+      (cond [(eq? 'generate command)
+             (random-update value)]
+            [(eq? 'reset command)
+             (random-update seed)]
+            [else (error "MAKE-RANDOM-SEED -- unknown command" command)])))
+  
+  (define randoms
+    (cons-stream (random-update seed)
+                 (stream-map dispatch
+                             (stream-map cons requests randoms))))
+  randoms)
+(define (make-stream lst)
+  (if (empty? lst)
+      the-empty-stream
+      (cons-stream (car lst)
+                   (make-stream (cdr lst)))))
+
+(define messages (make-stream '(generate generate reset generate generate reset generate generate)))
+(define random-seq (make-random-stream 5 messages))
+
+(define (print-stream stream entries)
+  (if (= 0 entries)
+      'done
+      (begin
+        (displayln (stream-car stream))
+        (print-stream (stream-cdr stream) (- entries 1)))))
+(print-stream random-seq 8)
+
+
