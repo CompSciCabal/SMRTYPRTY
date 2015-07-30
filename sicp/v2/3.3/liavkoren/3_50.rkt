@@ -687,4 +687,34 @@ Exercise 3.67
 Modify the pairs procedure so that (pairs integers integers) will produce the
 stream of all pairs of integers (i,j) (without the condition i < j). Hint: You
 will need to mix in an additional stream.
+
+---
+If the original stream is build from the recursive decomposition:
+(S0 T0) | (S0 T1) (S0 T2) ...
+-------------------------
+        | (S1 T1) (S1 T2) ...
+                  (S2 T2)
+
+Then we just need to create another stream that is the transverse of this stream 
+and interleave the two streams together 
 |#
+
+; produce the transposed stream of bottom-pairs, starting from (S1 T0)...
+(define (bottom-pairs s t)
+  (cons-stream
+   (list (stream-car s) (stream-car t))
+   (interleave
+    (stream-map (lambda (x) (list x (stream-car t)))
+                (stream-cdr s))
+    (bottom-pairs (stream-cdr s) (stream-cdr t)))))
+
+(define bottom-stream (bottom-pairs (stream-cdr integers) integers))
+(define all-pairs (interleave int-pairs bottom-stream))
+(newline )
+(displayln "Exercise 3.67:")
+(displayln "We just need to create another stream that is the transverse of the  pairs stream")
+(displayln "and interleave the two streams together.")
+(displayln "> (stream-ref all-pairs 0)") 
+(displayln "'(1 1)")
+(displayln "> (stream-ref all-pairs 1)")
+(displayln "'(2 1)")
