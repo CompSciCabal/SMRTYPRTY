@@ -372,8 +372,9 @@
 
 (displayln "exercise 3.76")
 (define (smooth input-stream)
-  (define previous-values (cons-stream 0 input-stream))
-  (stream-map (lambda (a b) (/ (+ a b) 2)) input-stream previous-values))
+  (define next-stream (stream-cdr input-stream))
+  (define stream-pairs (stream-map + input-stream next-stream))
+  (stream-map (lambda (sum) (/ sum 2)) stream-pairs))
 
 (define (better-make-zero-crossings input-stream smooth)
   (let [(smoothed-readings (smooth input-stream))]
