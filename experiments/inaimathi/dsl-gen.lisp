@@ -78,7 +78,7 @@
      (qbf-eval `(-or ,b (-and (-not ,b) (-not ,a))) env))
     ((list '-forall a b)
      (flet ((try-with (bool) (qbf-eval b (extend env a bool))))
-       (and (try-with '-true) (try-with '-false))))
+       (and (try-with t) (try-with nil))))
     ((list '-var x)
      (funcall env x))))
 
@@ -101,7 +101,7 @@
      `(qbf-evalm (-or ,b (-and (-not ,b) (-not ,a))) ,env))
     ((list '-forall a b)
      `(flet ((try-with (bool) (qbf-evalm ,b (extend env ,a bool))))
-	(and (try-with '-true) (try-with '-false))))
+	(and (try-with t) (try-with nil))))
     ((list '-var x)
      (funcall env x))))
 
