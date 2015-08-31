@@ -208,3 +208,59 @@
       (let* [(right (right-list-of-values (rest-operands exps) env))
              (left  (eval (first-operand exps) env))]
         (cons left right))))
+
+
+(displayln "exercise 4.2")
+#|
+a.
+The problem with Louis's approach is that everything would be considered as an
+application due to the definition of `application?` (all applications are simply
+pairs)
+|#
+
+;; b.
+(define (louis-application exp) (tagged-list? exp 'call))
+(define (louis-operator exp) (cadr exp))
+(define (louis-operands exp) (cddr exp))
+
+(displayln "exercise 4.3")
+
+(define lookup (make-hash))
+(define (get key) (hash-ref lookup key))
+(define (add key proc) (hash-set! lookup key proc))
+
+
+(define (text-of-quotation-with-env exp env)
+  (text-of-quotation exp))
+(add 'quote text-of-quotation-with-env) ;; with-env is just to ensure a consistent API
+(add 'set! eval-assignment)
+(add 'define eval-definition)
+(add 'if eval-if)
+
+(define (eval-lambda exp env)
+  (make-procedure (lambda-parameters exp)
+                  (lambda-body exp)
+                  env))
+(add 'lambda eval-lambda)
+
+(define (eval-sequence exp env)
+  (eval-sequence (begin-actions exp) env))
+(add 'begin eval-sequence)
+
+(define (eval-cond exp env)
+  (eval (cond->if exp) env))
+(add 'cond eval-cond)
+
+(define (eval-application exp env)
+  (apply (eval (operator exp) env)
+         (list-of-values (operands exp) env)))
+
+(define (is-defined? tag)
+  (hash-has-key? lookup tag))
+
+(define (data-directed-eval exp env)
+  (cond [(self-evaluating? exp) exp]
+        [(variable? exp) (lookup-variable-value exp env)]
+        [(is-defined? (car exp)) ((get (car exp)) exp env)]
+        [(application? exp) (eval-application exp env)]
+        [else (error "Unknown expression type -- EVAL" exp)]))
