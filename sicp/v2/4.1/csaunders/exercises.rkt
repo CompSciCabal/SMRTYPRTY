@@ -242,10 +242,8 @@ pairs)
                   (lambda-body exp)
                   env))
 (add 'lambda eval-lambda)
-
-(define (eval-sequence exp env)
-  (eval-sequence (begin-actions exp) env))
-(add 'begin eval-sequence)
+(add 'begin (lambda (exp env)
+              (eval-sequence (begin-actions exp) env)))
 
 (define (eval-cond exp env)
   (eval (cond->if exp) env))
@@ -264,3 +262,73 @@ pairs)
         [(is-defined? (car exp)) ((get (car exp)) exp env)]
         [(application? exp) (eval-application exp env)]
         [else (error "Unknown expression type -- EVAL" exp)]))
+
+(displayln "exercise 4.4")
+#|
+These would get mounted by doing the following to eval:
+[(and? exp) (eval-and (cdr exp) env)]
+[(or? exp) (eval-or (cdr exp) env)]
+|#
+(define (and? exp) (tagged-list? 'and exp))
+(define (or? exp) (tagged-list? 'or exp))
+
+(define (eval-and exp env)
+  (cond [(null? exp) true]
+        [(true? (apply (car exp) env)) (eval-and (cdr exp) env)]
+        [else false]))
+
+(define (eval-or exp env)
+  (cond [(null? exp) false]
+        [(true? (apply (car exp) env)) true]
+        [else (eval-or (cdr exp) env)]))
+
+#|
+For the derived expressions we'd do something like this:
+[(and? exp) (eval (and->if (cdr exp) env))]
+[(or? exp) (eval (or->if (cdr exp) env))]
+|#
+(define (and-clauses exp) (cdr exp))
+(define (or-clauses exp) (cdr exp))
+
+(define (and->if exps env) (expand-and-clauses (and-clauses exp)))
+(define (expand-and-clauses clauses)
+  (if (null? clauses)
+      'true
+      (let [(first (car clauses))
+            (rest (cdr clauses))]
+        (make-if first
+                 (expand-and-clauses rest)
+                 'false))))
+
+(define (or->if exps env) (expand-or-clauses (or-clauses exp)))
+(define (expand-or-clauses clauses)
+  (if (null? clauses)
+      'false
+      (let [(first (car clauses))
+            (rest (cdr clauses))]
+        (make-if first
+                 'true
+                 (expand-or-clauses rest)))))
+
+(displayln "exercise 4.5")
+
+(define (stabby-clause? clause) (eq? '=> (cadr clause)))
+(define (stabby-clause-actions clause) (caddr clause))
+
+(define (improved-cond-actions clause)
+  (if (stabby-clause? clause)
+      (list (stabby-clause-actions clause) (cond-predicate clause))
+      (sequence->exp (cond-actions clause))))
+
+(define (extended-expand-clauses clauses)
+  (if (null? clauses)
+      'false
+      (let [(first (car clauses))
+            (rest (cdr clauses))]
+        (if (cond-else-clause? first)
+            (if (null? rest)
+                (sequence->exp (cond-actions first))
+                (error "ELSE clause isn't last -- COND-IF" clauses))
+            (make-if (cond-predicate first)
+                     (improved-cond-actions first)
+                     (expand-clauses rest))))))
