@@ -332,3 +332,71 @@ For the derived expressions we'd do something like this:
             (make-if (cond-predicate first)
                      (improved-cond-actions first)
                      (expand-clauses rest))))))
+
+(displayln "exercise 4.6")
+(define (let? exp) (tagged-list? exp 'let))
+(define (let-defs exp) (cadr exp))
+(define (let-body exp) (caddr exp))
+
+(define (let->combination exp)
+  (expand-let (let-defs exp) (let-body exp) '() '()))
+
+#|
+This solution is iterative but suffers from the problem
+that it builds up the arguments list in reverse order.
+
+The variables will have the same names and values, but
+instead of showing up in order '((lambda (a b c) body) (1 2 3))
+we'll end up with something that looks like this:
+'((lambda (c b a) body) (3 2 1))
+
+The results of the computation will be the same
+|#
+(define (expand-let defs body arguments expressions)
+  ;; ('let [(a (+ 1 2)) (b (+ 2 3)) ...] body)
+  (define (variable-name) (caar defs))
+  (define (variable-expr) (cdar defs))
+  (if (null? defs)
+      (cons (make-lambda arguments body) expressions)
+      (expand-let (cdr defs)
+                  body
+                  (cons variable-name arguments)
+                  (cons variable-expr expressions))))
+
+(displayln "exercise 4.7")
+#|
+Let* can be implemented by simply creating a bunch
+of lets that only define a single value and continuously
+recur until there aren't any lets remaining.
+|#
+(define (let*->nested-lets exp)
+  (transform-let* (cadr exp) (cddr exp)))
+
+(define (transform-let* assignment body)
+  (if (null? assignment)
+      (cons 'let (cons assignment body))
+      (list 'let
+            (list (car assignment))
+            (transform-let* (cdr assignment) body))))
+
+(displayln "exercise 4.8")
+(define (improved-let->combination exp)
+  (expand-let (let-defs exp) (let-body exp) '() '()))
+
+(define (expand-named-let name bindings body)
+  (define (var-names bindings)
+    (if (null? bindings)
+        '()
+        (cons (caar bindings)
+              (var-names (cdr bindings)))))
+  (define (var-values bindings)
+    (if (null? bindings)
+        '()
+        (cons (cdar bindings)
+              (var-values (cdr bindings)))))
+  
+  (sequence->exp
+   (list (cons 'define
+               (cons (cons name (var-names bindings))
+                     body))
+         (cons name (var-values bindings)))))
