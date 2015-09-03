@@ -400,3 +400,56 @@ recur until there aren't any lets remaining.
                (cons (cons name (var-names bindings))
                      body))
          (cons name (var-values bindings)))))
+
+(displayln "exercise 4.9")
+
+#|
+('while condition body)
+(while
+  (< i 10)
+  (set! i (+ i 1)))
+
+(define (while cond body)
+  (define (while-loop)
+    (if (cond)
+        (begin
+          (body)
+          (while-loop))
+         #f))
+  (while-loop))
+|#
+
+(define (while? exp) (tagged-list? exp 'while))
+(define (while->combination exp)
+  (define (while-condition) (cadr exp))
+  (define (while-body) (caddr exp))
+  (list
+   (list 'define
+         (list 'while-loop)
+         (make-if (while-condition)
+                  (sequence->exp
+                   (list (while-body))
+                   (list 'while-loop))
+                  'done))
+   (list 'while-loop)))
+
+(displayln "exercise 4.10")
+;; I honestly don't have anything here for this. This Scheme language that
+;; we have been implementing has a lot of the features that I'd want that
+;; aren't in racket (i.e. always need else in an if clause, etc.)
+;;
+;; Maybe something that would be useful would be making it possible to set!
+;; multiple things from a single call:
+;; (set! a 1 b 2 c 3)
+;;
+(define (extended-eval-assignment exp env)
+  (define (done?) (null? exp))
+  (define (assignment-variable exp) (cadr exp))
+  (define (assignment-value exp) (caddr exp))
+  (if (done?) 'ok
+      ;; Which environment is getting modified by set-variable-value?
+      ;; Will those values get saved in `env` or do I need to capture
+      ;; that environment and pass it around?
+      (begin (set-variable-value! assignment-variable
+                                  (eval (assignment-value) env))
+             (extended-eval-assignment (cdr exp) env))))
