@@ -2,6 +2,12 @@
 
 ;; Pre-requisites
 
+;; Capture the underlying system eval and apply
+(require (only-in racket/base
+                  [eval eval-in-underlying-scheme]
+                  [apply apply-in-underlying-scheme]))
+
+
 ;; Missing definitions
 (define (lookup-variable-value) '())
 (define (make-procedure) '())
@@ -317,7 +323,7 @@ For the derived expressions we'd do something like this:
 
 (define (improved-cond-actions clause)
   (if (stabby-clause? clause)
-      (list (stabby-clause-actions clause) (cond-predicate clause))
+      (list (stabby-clause-actions clause) (list (cond-predicate clause)))
       (sequence->exp (cond-actions clause))))
 
 (define (extended-expand-clauses clauses)
@@ -355,7 +361,7 @@ The results of the computation will be the same
 (define (expand-let defs body arguments expressions)
   ;; ('let [(a (+ 1 2)) (b (+ 2 3)) ...] body)
   (define (variable-name) (caar defs))
-  (define (variable-expr) (cdar defs))
+  (define (variable-expr) (cadar defs))
   (if (null? defs)
       (cons (make-lambda arguments body) expressions)
       (expand-let (cdr defs)
