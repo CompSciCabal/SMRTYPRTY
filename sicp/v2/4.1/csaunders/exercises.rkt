@@ -2,6 +2,12 @@
 
 ;; Pre-requisites
 
+;; Capture the underlying system eval and apply
+(require (only-in racket/base
+                  [eval eval-in-underlying-scheme]
+                  [apply apply-in-underlying-scheme]))
+
+
 ;; Missing definitions
 (define (lookup-variable-value) '())
 (define (make-procedure) '())
@@ -208,3 +214,248 @@
       (let* [(right (right-list-of-values (rest-operands exps) env))
              (left  (eval (first-operand exps) env))]
         (cons left right))))
+
+
+(displayln "exercise 4.2")
+#|
+a.
+The problem with Louis's approach is that everything would be considered as an
+application due to the definition of `application?` (all applications are simply
+pairs)
+|#
+
+;; b.
+(define (louis-application exp) (tagged-list? exp 'call))
+(define (louis-operator exp) (cadr exp))
+(define (louis-operands exp) (cddr exp))
+
+(displayln "exercise 4.3")
+
+(define lookup (make-hash))
+(define (get key) (hash-ref lookup key))
+(define (add key proc) (hash-set! lookup key proc))
+
+
+(define (text-of-quotation-with-env exp env)
+  (text-of-quotation exp))
+(add 'quote text-of-quotation-with-env) ;; with-env is just to ensure a consistent API
+(add 'set! eval-assignment)
+(add 'define eval-definition)
+(add 'if eval-if)
+
+(define (eval-lambda exp env)
+  (make-procedure (lambda-parameters exp)
+                  (lambda-body exp)
+                  env))
+(add 'lambda eval-lambda)
+(add 'begin (lambda (exp env)
+              (eval-sequence (begin-actions exp) env)))
+
+(define (eval-cond exp env)
+  (eval (cond->if exp) env))
+(add 'cond eval-cond)
+
+(define (eval-application exp env)
+  (apply (eval (operator exp) env)
+         (list-of-values (operands exp) env)))
+
+(define (is-defined? tag)
+  (hash-has-key? lookup tag))
+
+(define (data-directed-eval exp env)
+  (cond [(self-evaluating? exp) exp]
+        [(variable? exp) (lookup-variable-value exp env)]
+        [(is-defined? (car exp)) ((get (car exp)) exp env)]
+        [(application? exp) (eval-application exp env)]
+        [else (error "Unknown expression type -- EVAL" exp)]))
+
+(displayln "exercise 4.4")
+#|
+These would get mounted by doing the following to eval:
+[(and? exp) (eval-and (cdr exp) env)]
+[(or? exp) (eval-or (cdr exp) env)]
+|#
+(define (and? exp) (tagged-list? 'and exp))
+(define (or? exp) (tagged-list? 'or exp))
+
+(define (eval-and exp env)
+  (cond [(null? exp) true]
+        [(true? (apply (car exp) env)) (eval-and (cdr exp) env)]
+        [else false]))
+
+(define (eval-or exp env)
+  (cond [(null? exp) false]
+        [(true? (apply (car exp) env)) true]
+        [else (eval-or (cdr exp) env)]))
+
+#|
+For the derived expressions we'd do something like this:
+[(and? exp) (eval (and->if (cdr exp) env))]
+[(or? exp) (eval (or->if (cdr exp) env))]
+|#
+(define (and-clauses exp) (cdr exp))
+(define (or-clauses exp) (cdr exp))
+
+(define (and->if exps env) (expand-and-clauses (and-clauses exp)))
+(define (expand-and-clauses clauses)
+  (if (null? clauses)
+      'true
+      (let [(first (car clauses))
+            (rest (cdr clauses))]
+        (make-if first
+                 (expand-and-clauses rest)
+                 'false))))
+
+(define (or->if exps env) (expand-or-clauses (or-clauses exp)))
+(define (expand-or-clauses clauses)
+  (if (null? clauses)
+      'false
+      (let [(first (car clauses))
+            (rest (cdr clauses))]
+        (make-if first
+                 'true
+                 (expand-or-clauses rest)))))
+
+(displayln "exercise 4.5")
+
+(define (stabby-clause? clause) (eq? '=> (cadr clause)))
+(define (stabby-clause-actions clause) (caddr clause))
+
+(define (improved-cond-actions clause)
+  (if (stabby-clause? clause)
+      (list (stabby-clause-actions clause) (list (cond-predicate clause)))
+      (sequence->exp (cond-actions clause))))
+
+(define (extended-expand-clauses clauses)
+  (if (null? clauses)
+      'false
+      (let [(first (car clauses))
+            (rest (cdr clauses))]
+        (if (cond-else-clause? first)
+            (if (null? rest)
+                (sequence->exp (cond-actions first))
+                (error "ELSE clause isn't last -- COND-IF" clauses))
+            (make-if (cond-predicate first)
+                     (improved-cond-actions first)
+                     (expand-clauses rest))))))
+
+(displayln "exercise 4.6")
+(define (let? exp) (tagged-list? exp 'let))
+(define (let-defs exp) (cadr exp))
+(define (let-body exp) (caddr exp))
+
+(define (let->combination exp)
+  (expand-let (let-defs exp) (let-body exp) '() '()))
+
+#|
+This solution is iterative but suffers from the problem
+that it builds up the arguments list in reverse order.
+
+The variables will have the same names and values, but
+instead of showing up in order '((lambda (a b c) body) (1 2 3))
+we'll end up with something that looks like this:
+'((lambda (c b a) body) (3 2 1))
+
+The results of the computation will be the same
+|#
+(define (expand-let defs body arguments expressions)
+  ;; ('let [(a (+ 1 2)) (b (+ 2 3)) ...] body)
+  (define (variable-name) (caar defs))
+  (define (variable-expr) (cadar defs))
+  (if (null? defs)
+      (cons (make-lambda arguments body) expressions)
+      (expand-let (cdr defs)
+                  body
+                  (cons variable-name arguments)
+                  (cons variable-expr expressions))))
+
+(displayln "exercise 4.7")
+#|
+Let* can be implemented by simply creating a bunch
+of lets that only define a single value and continuously
+recur until there aren't any lets remaining.
+|#
+(define (let*->nested-lets exp)
+  (transform-let* (cadr exp) (cddr exp)))
+
+(define (transform-let* assignment body)
+  (if (null? assignment)
+      (cons 'let (cons assignment body))
+      (list 'let
+            (list (car assignment))
+            (transform-let* (cdr assignment) body))))
+
+(displayln "exercise 4.8")
+(define (improved-let->combination exp)
+  (expand-let (let-defs exp) (let-body exp) '() '()))
+
+(define (expand-named-let name bindings body)
+  (define (var-names bindings)
+    (if (null? bindings)
+        '()
+        (cons (caar bindings)
+              (var-names (cdr bindings)))))
+  (define (var-values bindings)
+    (if (null? bindings)
+        '()
+        (cons (cdar bindings)
+              (var-values (cdr bindings)))))
+  
+  (sequence->exp
+   (list (cons 'define
+               (cons (cons name (var-names bindings))
+                     body))
+         (cons name (var-values bindings)))))
+
+(displayln "exercise 4.9")
+
+#|
+('while condition body)
+(while
+  (< i 10)
+  (set! i (+ i 1)))
+
+(define (while cond body)
+  (define (while-loop)
+    (if (cond)
+        (begin
+          (body)
+          (while-loop))
+         #f))
+  (while-loop))
+|#
+
+(define (while? exp) (tagged-list? exp 'while))
+(define (while->combination exp)
+  (define (while-condition) (cadr exp))
+  (define (while-body) (caddr exp))
+  (list
+   (list 'define
+         (list 'while-loop)
+         (make-if (while-condition)
+                  (sequence->exp
+                   (list (while-body))
+                   (list 'while-loop))
+                  'done))
+   (list 'while-loop)))
+
+(displayln "exercise 4.10")
+;; I honestly don't have anything here for this. This Scheme language that
+;; we have been implementing has a lot of the features that I'd want that
+;; aren't in racket (i.e. always need else in an if clause, etc.)
+;;
+;; Maybe something that would be useful would be making it possible to set!
+;; multiple things from a single call:
+;; (set! a 1 b 2 c 3)
+;;
+(define (extended-eval-assignment exp env)
+  (define (done?) (null? exp))
+  (define (assignment-variable exp) (cadr exp))
+  (define (assignment-value exp) (caddr exp))
+  (if (done?) 'ok
+      ;; Which environment is getting modified by set-variable-value?
+      ;; Will those values get saved in `env` or do I need to capture
+      ;; that environment and pass it around?
+      (begin (set-variable-value! assignment-variable
+                                  (eval (assignment-value) env))
+             (extended-eval-assignment (cdr exp) env))))
