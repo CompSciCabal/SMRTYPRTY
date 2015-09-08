@@ -9,7 +9,6 @@
 
 
 ;; Missing definitions
-(define (lookup-variable-value) '())
 (define (make-procedure) '())
 (define (primitive-procedure?) '())
 (define (apply-primitive-procedure) '())
@@ -17,9 +16,6 @@
 (define (procedure-body) '())
 (define (procedure-parameters) '())
 (define (procedure-environment) '())
-(define (extend-environment) '())
-(define (set-variable-value!) '())
-(define (define-variable) '())
 (define (true?) '())
 
 
@@ -93,7 +89,7 @@
   'ok)
 
 (define (eval-definition exp env)
-  (define-variable (definition-variable exp)
+  (define-variable! (definition-variable exp)
                    (eval (definition-value exp) env)
                    env)
   'ok)
@@ -459,3 +455,68 @@ recur until there aren't any lets remaining.
       (begin (set-variable-value! assignment-variable
                                   (eval (assignment-value) env))
              (extended-eval-assignment (cdr exp) env))))
+
+#| Environment Prerequisites |#
+(define (mcaar x) (mcar (mcar x)))
+(define (mcdar x) (mcdr (mcar x)))
+
+(define (enclosing-environment env) (cdr env))
+(define (first-frame env) (car env))
+(define the-empty-environment '())
+
+(displayln "exercise 4.11")
+(define (make-frame variables values)
+  (if (null? variables)
+      '()
+      (mcons (mcons (car variables) (car values))
+             (make-frame (cdr variables)
+                         (cdr values)))))
+
+(define (add-binding-to-frame! var val frame)
+  (mcons (mcons var val)
+         frame))
+
+(define (extend-environment vars vals base-env)
+  (if (= (length vars) (length vals))
+      (mcons (make-frame vars vals) base-env)
+      (if (< (length vars) (length vals))
+          (error "Too many arguments supplied" vars vals)
+          (error "Too few arguments supplied" vars vals))))
+
+(define (lookup-variable-value var env)
+  (define (env-loop env)
+    (define (scan bindings)
+      (cond ((null? bindings)
+             (env-loop (enclosing-environment env)))
+            ((eq? var (mcaar bindings))
+             (mcdar bindings))
+            (else (scan (mcdr bindings)))))
+    (if (eq? env the-empty-environment)
+        (error "Unbound variable" var)
+        (let ((frame (first-frame env)))
+          (scan frame))))
+  (env-loop env))
+
+(define (set-variable-value! var val env)
+  (define (env-loop env)
+    (define (scan bindings)
+      (cond ((null? bindings)
+             (env-loop (enclosing-environment env)))
+            ((eq? var (mcaar bindings))
+             (set-mcdr! (mcar bindings) val))
+            (else (scan (mcdr bindings)))))
+    (if (eq? env the-empty-environment)
+        (error "Unbound variable -- SET!" var)
+        (let ((frame (first-frame env)))
+          (scan frame))))
+  (env-loop env))
+
+(define (define-variable! var val env)
+  (let ((frame (first-frame env)))
+    (define (scan bindings)
+      (cond ((null? bindings)
+             (add-binding-to-frame! var val frame))
+            ((eq? var (mcaar bindings))
+             (set-mcdr! (mcar bindings)))
+            (else (scan (mcdr bindings)))))
+    (scan frame)))
