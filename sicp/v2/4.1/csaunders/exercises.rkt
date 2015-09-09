@@ -1,6 +1,7 @@
 #lang racket
 
 ;; Pre-requisites
+(require compatibility/mlist)
 
 ;; Capture the underlying system eval and apply
 (require (only-in racket/base
@@ -460,8 +461,8 @@ recur until there aren't any lets remaining.
 (define (mcaar x) (mcar (mcar x)))
 (define (mcdar x) (mcdr (mcar x)))
 
-(define (enclosing-environment env) (cdr env))
-(define (first-frame env) (car env))
+(define (enclosing-environment env) (mcdr env))
+(define (first-frame env) (mcar env))
 (define the-empty-environment '())
 
 (displayln "exercise 4.11")
@@ -515,8 +516,79 @@ recur until there aren't any lets remaining.
   (let ((frame (first-frame env)))
     (define (scan bindings)
       (cond ((null? bindings)
-             (add-binding-to-frame! var val frame))
+             (add-binding-to-frame! var val bindings))
             ((eq? var (mcaar bindings))
              (set-mcdr! (mcar bindings)))
             (else (scan (mcdr bindings)))))
     (scan frame)))
+
+(displayln "exercise 4.12")
+(define (environment-action var env on-exists on-missing)
+  (define (env-loop env)
+    (define (on-empty-bindings frame)
+      (if (null? on-missing)
+          (env-loop (enclosing-environment env))
+          (on-missing frame)))
+    (define (scan bindings)
+      (cond [(null? bindings)
+             (on-empty-bindings bindings)]
+            [(eq? var (mcaar bindings))
+             (on-exists bindings)]
+            [else (scan (mcdr bindings))]))
+    (if (eq? env the-empty-environment)
+        (error "Unbound variable -- ENVIRONMENT-ACTION" var)
+        (scan (first-frame env))))
+  (env-loop env))
+
+(define (simple-lookup-variable-value var env)
+  (environment-action var env
+                      (lambda (bindings) ;; on-exists
+                        (mcdar bindings))
+                      '())) ;; on-missing
+
+(define (simple-set-variable-value! var val env)
+  (environment-action var env
+                      (lambda (bindings) ;; on-exists
+                        (set-mcdr! (mcar bindings) val))
+                      '())) ;; on-missing
+
+(define (simple-define-variable! var val env)
+  (environment-action var env
+                      (lambda (bindings) ;; on-exists
+                        (set-mcdr! (mcar bindings) val))
+                      ;; From what I'm seeing. Frame and Bindings are the same thing
+                      ;; I probably made a mistake in naming things or something
+                      (lambda (frame) ;; on-missing
+                        (add-binding-to-frame! var val frame))))
+
+(displayln "exercise 4.13")
+;; If we design make-unbound! to only remove the first occurance of the variable definition, it's actually
+;; pretty easy to do using the previously defined `environment-action` procedure.
+;; If we want to completely blow away all bindings to a variable it would be a bit more involved and I think
+;; it would require duplicating a lot of the code in `environment-action`.
+
+(define (make-unbound! var env)
+  (environment-action var env
+                      (lambda (bindings) ;; on-exists
+                        (let [(bind-rest (mcdr bindings))]
+                          (set-mcdr! bindings (mcdr bind-rest))
+                          (set-mcar! bindings (mcar bind-rest))))
+                      '()))
+(define some-env (mlist (mlist (mcons 'a 1) (mcons 'b 2) (mcons 'c 3))))
+;; (displayln some-env)
+(make-unbound! 'b some-env)
+;; (displayln some-env)
+
+(displayln "exercise 4.14")
+#|
+The system version of map isn't expecting the data
+to be in the format that our metacircular evaluator
+is storing the data. As a result, we end up mapping
+over values incorrectly and don't apply things in the
+right way. (i.e. passing in symbol + instead of the <proc:+>
+to map)
+
+Eva Lu Ator on the other hand was able to push her
+map function through the internal eval/apply operations
+which properly destructure the data from it's representation.
+|#
