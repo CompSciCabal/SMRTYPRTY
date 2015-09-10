@@ -592,3 +592,14 @@ Eva Lu Ator on the other hand was able to push her
 map function through the internal eval/apply operations
 which properly destructure the data from it's representation.
 |#
+
+(displayln "exercise 4.15")
+
+#|
+If (halts? try try) were to return true, we'd run forever.
+Meanwhile, if (halts? try try) were to return false we'd get
+back 'halted. But this puts us in a paradox
+
+Turing proved that it's impossible to know for sure if a
+program will ever finish computation.
+|#
