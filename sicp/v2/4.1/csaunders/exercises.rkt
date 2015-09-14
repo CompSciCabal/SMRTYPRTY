@@ -603,3 +603,64 @@ back 'halted. But this puts us in a paradox
 Turing proved that it's impossible to know for sure if a
 program will ever finish computation.
 |#
+
+(displayln "exercise 4.16")
+(define (lookup-variable-value-with-unassigned var env)
+  (define (raise-or-return-value var val)
+    (if (eq? '*unassigned* val)
+        (error "Unbound variable" var)
+        val))
+  (define (env-loop env)
+    (define (scan bindings)
+      (cond ((null? bindings)
+             (env-loop (enclosing-environment env)))
+            ((eq? var (mcaar bindings))
+             (raise-or-return-value var (mcdar bindings)))
+            (else (scan (mcdr bindings)))))
+    (if (eq? env the-empty-environment)
+        (error "Unbound variable" var)
+        (let ((frame (first-frame env)))
+          (scan frame))))
+  (env-loop env))
+
+(define (scan-out-defines body)
+  ;; I found this one after trying out my own.
+  ;; While mine worked, it was pretty gross and this
+  ;; solution is far more readable and elegant.
+  ;; https://github.com/qiao/sicp-solutions/blob/a2fe069ba6909710a0867bdb705b2e58b2a281af/chapter4/4.16.scm
+  (let* [(definitions (filter definition? body))
+         (rest-expressions
+          (filter
+           (lambda (expr) (not (definition? body)))
+           body))
+         (vars (map definition-variable definitions))
+         (vals (map definition-value definitions))]
+    (define (make-unassigned-binding var)
+      (list var '*unassigned*))
+    (define (make-assignment var val)
+      (list 'set! var val))
+    (append (list 'let (map make-unassigned-binding vars))
+            (map make-assignment vars vals)
+            rest-expressions)))
+
+;; 4.16 c) make-procedure because that protects us from accidentally
+;; calling scan-out-defines
+
+(displayln "exercise 4.17")
+;; Nope not drawing anything
+;; Lets are transformed into lambdas which explains why
+;; the extra frame is created. This protects us from the
+;; outer environment.
+;; Simultaneous scope rule... no.
+
+(displayln "exercise 4.18")
+#| This will not work because when a and b are evaluated
+| the values they are trying to access will not be correct.
+| Instead they will be '*undefined* when actually trying to
+| use the values.
+| In the other implementation everything is fine because the
+| a lambda is created with [i.e. (lambda (y dy) ...)] and
+| evaluated with initial values of '*undefined*. The values
+| are then evaluated and set as expected.
+|#
+                               
