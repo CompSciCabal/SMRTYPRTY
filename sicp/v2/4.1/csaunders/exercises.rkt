@@ -663,4 +663,44 @@ program will ever finish computation.
 | evaluated with initial values of '*undefined*. The values
 | are then evaluated and set as expected.
 |#
-                               
+
+(displayln "exercise 4.19")
+#|
+| I support Alyssas view since b is trying to use a
+| value that is yet to be defined. We could reach out
+| to the outer scope, but that would be somewhat misleading
+| and it would be preferable to simply let the user know
+| that they have written weird code.
+|
+| One way to implement Evas solution would be to determine
+| if the definition is a constant one or an actual evaluation.
+| In the case of constants, we could ensure those are always
+| defined first. While this may help, it doesn't necessarily resolve
+| issues where some evaluations rely on others.
+|
+| Another alternative to that would basically be dependency
+| resolution, which opens a whole other can of worms.
+|#
+
+(displayln "exercise 4.20")
+;; a.
+(define (letrec-definitions exp) (cadr exp))
+(define (letrec-body exp) (caddr exp))
+
+(define (letrec exps env) (expand-letrec (letrec-definitions exps) (letrec-body exps)))
+(define (expand-letrec lets body)
+  (define vars (map car lets))
+  (define vals (map cdr lets))
+  (define initial-definitions (map (lambda (x) (list x '*undefined*)) vars))
+  (define set-definitions (map (lambda (var val) (list 'set! var val)) vars vals))
+  (list 'let
+        initial-definitions
+        (make-begin
+         set-definitions
+         body)))
+  
+;; b. The problem with Louis' logic is that odd? / even? cannot be declared in the same
+;; scope. If they were defined in nested lets, one wouldn't know about the other.
+;; Finally, if they were passed into a function as arguments, they would be missing the binding
+;; in order to both call eachother.
+;; The end result is that his approach doesn't work in practice and requires a function like letrec
