@@ -704,3 +704,146 @@ program will ever finish computation.
 ;; Finally, if they were passed into a function as arguments, they would be missing the binding
 ;; in order to both call eachother.
 ;; The end result is that his approach doesn't work in practice and requires a function like letrec
+
+(displayln "exercise 4.21")
+;; Factorial
+((lambda (n)
+   ((lambda (fact) (fact fact n))
+    (lambda (ft k)
+      (if (= k 1) 1 (* k (ft ft (- k 1)))))))
+ 10)
+
+;; a. Fibonacci
+;; Here is a typical iterative fibonacci sequence
+(define (fib n a b)
+  (if (= 0 n)
+      b
+      (fib (- n 1) (+ a b) a)))
+(fib 10 1 0)
+
+;; re-implemented using only lambdas
+((lambda (n)
+   ((lambda (fib) (fib fib n 1 0))
+    (lambda (fib n a b)
+      (if (= 0 n)
+          b
+          (fib fib (- n 1) (+ a b) a)))))
+ 10)
+
+#|
+b. Re-implement the following using lambdas
+(define (f x)
+  (define (even? n)
+    (if (= n 0) true (odd? (- n 1))))
+  (define (odd? n)
+    (if (= n 0) false (even? (- n 1))))
+  (even? x))
+|#
+(define (f x)
+  ((lambda (even? odd?) (even? even? odd? x))
+   (lambda (ev? od? n)
+     (if (= n 0) true (od? od? ev? (- n 1))))
+   (lambda (od? ev? n)
+     (if (= n 0) false (ev? ev? od? (- n 1))))))
+
+(displayln "exercise 4.22")
+;; Prereq - analyze function
+(define (analyze exp)
+  (cond ((self-evaluating? exp) 
+         (analyze-self-evaluating exp))
+        ((quoted? exp) (analyze-quoted exp))
+        ((variable? exp) (analyze-variable exp))
+        ((assignment? exp) (analyze-assignment exp))
+        ((definition? exp) (analyze-definition exp))
+        ((if? exp) (analyze-if exp))
+        ((lambda? exp) (analyze-lambda exp))
+        ((begin? exp) (analyze-sequence (begin-actions exp)))
+        ((cond? exp) (analyze (cond->if exp)))
+        ;; exercise 4.22
+        ((let? exp) (analyze (let->combination exp)))
+        ((application? exp) (analyze-application exp))
+        (else
+         (error "Unknown expression type -- ANALYZE" exp))))
+
+(define (analyze-self-evaluating exp)
+  (lambda (env) exp))
+
+(define (analyze-quoted exp)
+  (let [(qval (text-of-quotation exp))]
+    (lambda (env) qval)))
+
+(define (analyze-variable exp)
+  (lambda (env) (lookup-variable-value exp env)))
+
+(define (analyze-assignment exp)
+  (let [(var (assignment-variable exp))
+        (vproc (analyze (assignment-value exp)))]
+    (lambda (env)
+      (set-variable-value! var (vproc env) env)
+      'ok)))
+
+(define (analyze-definition exp)
+  (let [(var (definition-variable exp))
+        (vproc (analyze (definition-value exp)))]
+    (lambda (env)
+      (define-variable! var (vproc env) env)
+      'ok)))
+
+(define (analyze-if exp)
+  (let [(pproc (analyze (if-predicate exp)))
+        (cproc (analyze (if-consequent exp)))
+        (aproc (analyze (if-alternative exp)))]
+    (lambda (env)
+      (if (true? (pproc env))
+          (cproc env)
+          (aproc env)))))
+
+(define (analyze-lambda exp)
+  (let [(vars (lambda-parameters exp))
+        (bproc (analyze-sequence (lambda-body exp)))]
+    (lambda (env) (make-procedure vars bproc env))))
+
+(define (analyze-sequence exps)
+  (define (sequentially proc1 proc2)
+    (lambda (env) (proc1 env) (proc2 env)))
+  (define (loop first-proc rest-procs)
+    (if (null? rest-procs)
+        first-proc
+        (loop (sequentially first-proc (car rest-procs))
+              (cdr rest-procs))))
+  (let [(procs (map analyze exps))]
+    (if (null? procs)
+        (error "Empty sequence -- ANALYZE")
+        (loop (car procs) (cdr procs)))))
+
+(define (analyze-application exp)
+  (let [(fproc (analyze (operator exp)))
+        (aprocs (map analyze (operands exp)))]
+    (lambda (env)
+      (execute-application (fproc env)
+                           (map (lambda (aproc) (aproc env))
+                                aprocs)))))
+
+(define (execute-application proc args)
+  (cond [(primitive-procedure? proc)
+         (apply-primitive-procedure proc args)]
+        [(compound-procedure? proc)
+         ((procedure-body proc)
+          (extend-environment (procedure-parameters proc)
+                              args
+                              (procedure-environment proc)))]
+        [else (error "Unknown procedure type -- EXECUTE-APPLICATION" proc)]))
+
+(displayln "exercise 4.23")
+#|
+| Alyssa's implementation requires all analysis to be
+| evaluated for each function at runtime. The result is
+| an overhead that shouldn't need to happen.
+| 
+| While the textbooks implementation might appear more
+| complicated; it builds up a single large procedure to
+| evaluate, which means there is no runtime overhead.
+|#
+
+(displayln "exercise 4.24")
+;; Probably not...
