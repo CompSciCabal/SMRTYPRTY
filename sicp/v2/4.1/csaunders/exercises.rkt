@@ -847,3 +847,29 @@ b. Re-implement the following using lambdas
 
 (displayln "exercise 4.24")
 ;; Probably not...
+
+(displayln "exercise 4.25")
+#|
+| Because scheme is applicative order all the conditions are
+| evaluated so it requires a call to every child call
+| as well [i.e. (factorial 5) also calls (factorial <4, 3, ... -oo)]
+|
+| In a normal order evaluation this would not happen because the
+| because we would not evaluate (factorial 0).
+|
+| This is why _if_ needs to be a special form.
+|#
+
+(displayln "exercise 4.26")
+;; Implementation of unless that works in
+;; applicative order systems.
+;; I'm not doing all the book keeping to make unless
+;; a language feature
+;; An unless looks like '(unless test usual exception)
+;; We will assume that the car of the conditions has already
+;; been stripped off.
+(define (unless->if expr)
+  (define unless-pred (car expr))
+  (define unless-usual (cadr expr))
+  (define unless-excep (caddr expr))
+  (make-if unless-pred unless-excep unless-usual))
