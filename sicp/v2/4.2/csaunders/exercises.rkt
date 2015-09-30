@@ -301,7 +301,7 @@
 
 (define (user-print obj)
   (if (compound-procedure? obj)
-      (displayln (list 'compound-procedur
+      (displayln (list 'compound-procedure
                      (procedure-parameters obj)
                      (procedure-body obj)
                      '<proc-env>))
@@ -365,3 +365,128 @@ count => 2
 
 (displayln "exercise 4.31")
 ;; I'm going to skip this one as it's a bit involved
+
+(displayln "exercise 4.32")
+#|
+| Q. How are these streams lazier?
+|
+| A. Values from list entries aren't calculated
+|    until we actually need to use them. This
+|    includes _car_ which wasn't the case in our
+|    lazy list implementation in chapter 3.
+|
+|    Some examples of where this laziness is super
+|    helpful is the questions in chapter 3 where we
+|    were modelling electrical circuits. With this
+|    implementation, we wouldn't need to worry about
+|    the methods not being defined.
+|#
+
+(displayln "exercise 4.33")
+;.. inside (eval exp env)
+; ((quoted? exp) (eval-quoted exp env))
+;...
+(define (eval-quoted exp env)
+  (let [(text (text-of-quotation exp))]
+    (if (pair? text)
+        (eval (cons 'list
+                    (list 'quote (car exp))
+                    (list 'quote (cdr exp)))
+              env)
+        text)))
+
+(displayln "exercise 4.34")
+;; Most of this is just copy-pasta from
+;; https://wqzhang.wordpress.com/2010/04/21/sicp-exercise-4-34/
+;; There are a few parts that are confusing to me and I'm kinda
+;; lost.
+;; I know what I want to do... but don't know how to express it.
+;;
+;;... inside eval
+;; ((list-lambda? exp)
+;;    (make-list-procedure (lambda-parameters p)
+;;                         (lambda-body exp)
+;;                         env))
+;;...
+(define (normal-procedure? p)
+  (tagged-list? p 'procedure))
+(define (list-procedure? p)
+  (tagged-list? p 'list-procedure))
+
+(define (make-list-procedure params body env)
+  (list 'list-procedure params body env))
+
+(set! compound-procedure? (lambda (p)
+      (or (normal-procedure? p)
+          (list-procedure? p))))
+
+(define max-elts 5)
+
+(define (list-proc->list proc count)
+  (define (apply-proc-to-list proc lst env)
+    ;; ????
+    (eval-sequence (procedure-body proc)
+                   (extend-environment
+                    (procedure-parameters proc)
+                    lst
+                    (procedure-environment proc))))
+  (define (list-element option)
+    (force-it (apply-proc-to-list (actual-value option the-global-environment) 
+                                  (list proc)
+                                  the-global-environment)))
+  (define (list-peek x n)
+    (if (list-procedure? x)
+        (if (= n 0)
+            '(......)
+            (list-proc->list x n))
+        x))
+  (cons (list-peek (list-element 'car) max-elts)
+        (list-peek (list-element 'cdr (- count 1)))))
+
+(define (improved-user-print obj)
+  (define (display-normal obj)
+    (displayln (list 'compound-procedure
+                     (procedure-parameters obj)
+                     (procedure-body obj)
+                     '<proc-env>)))
+  
+  (define (display-list obj)
+    (displayln (list-proc->list obj max-elts)))
+  
+  (cond
+    [(normal-procedure? obj) (display-normal obj)]
+    [(list-procedure? obj) (display-list obj)]
+    [else (displayln obj)]))
+
+(displayln "exercise 4.35")
+(define (amb . args) '())
+(define (require p) (if (not p) (amb) 'ok))
+(define (an-int-starting-from i)
+  (amb i (an-int-starting-from (+ i 1))))
+
+(define (an-integer-between low high)
+  (require (<= low high))
+  (amb low (an-integer-between (+ low 1) high)))
+
+(displayln "exercise 4.36")
+#|
+| replacing an-integer-between with an-int-starting-from
+| isn't sufficient because it wouldn't create limits
+| that we would need in order to ensure that there is
+| an upper limit being applied to k.
+|#
+
+(define (a-pythagorean-triple-from low)
+  (let* [(i (an-int-starting-from low))
+         (isq (* i i))
+         (j (an-integer-between i (/ (- isq 1) 2)))
+         (jsq (* j j))
+         (k (sqrt (+ isq jsq)))]
+    (require (integer? k))
+    (list i j k)))
+
+(displayln "exercise 4.37")
+;; Ben is correct because he ensures that the upper
+;; limit is clamped. Therefore, he reduces the total
+;; search space. Exercise 4.36 has an infinite search space.
+  
