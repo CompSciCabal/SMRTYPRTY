@@ -1,14 +1,12 @@
-\documentclass{article}
-
-\usepackage{default}
-\newcommand{\s}[1]{\parbox{7em}{#1}}
-\newcommand{\m}[1]{\parbox{23em}{#1}}
-
+\documentclass[12pt]{article}
+\usepackage[margin=.5in]{geometry}
 \begin{document}
-\begin{tabular}[b] {l l l l}
+\begin{tabular}[b] {p{.1\textwidth} p{.15\textwidth} p{.22\textwidth} p{.4\textwidth}}
 Expression & Name & Say & Meaning \\ \\
-$\mathcal{P}$ & Script P & \s{Proposition} & \m{Something to be proved} \\
-$\mathcal{P}(\it{a})$ & Script P sub a & \s{Proposition about tree $\it{a}$} & \m{Something to be proved about abstract syntax tree $\it{a}$}
+$\mathcal{P}$ & Script P & Proposition & Something to be proved \\
+$\mathcal{P}(\it{a})$ & Script P of $\it{a}$ & Proposition about tree $\it{a}$ & Something to be proved about abstract syntax tree $\it{a}$
+
+
 \end{tabular}
 
 \end{document}
