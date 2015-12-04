@@ -5,24 +5,24 @@
 \usepackage{proof}
 \usepackage{hyperref}
 
-\usepackage[margin=.5in]{geometry}
+\usepackage[margin=.25in]{geometry}
 \begin{document}
-\section*{Chapter 1}
-\begin{tabular}[b] {p{.15\textwidth} p{.15\textwidth} p{.22\textwidth} p{.4\textwidth}}
-Expression & Name & Say & Meaning \\ \\
-$\mathcal{P}$ & Script P & Proposition & Something to be proved \\
-$\mathcal{P}(\it{a})$ & Script P of $\it{a}$ & Proposition about tree $\it{a}$ & Something to be proved about abstract syntax tree $\it{a}$ \\
-$\mathcal{O}$ & Script O & Operator & An operator that can be used in an AST \\
-$\mathcal{O}(\it{a})$ & Script O of $\it{a}$ & Operator of arity $\it{a}$ & An operator of a given arity \\
-$\mathcal{X}_{\it{s}}$ & Script X sub s & Variable $\it{x}$ of sort $\it{s}$ & A variable $\it{x}$ of sort $\it{s}$ \\
-$\{ \it{X}_{s} \} _{\it{s} \in \mathcal{S}}$  & Family & Set $ \it{X} $ of s & a sort-indexed family of disjoint finite sets $ \it{X}_s $ of variables $\it{x}$ of sort $ \it{s} $ \\
-$\left[ \it{b} / \it{x}\right] \it{a}$ & Substitution & Substitute $\it{b}$ for $\it{x}$ in $\it{a}$ & Substitute $\it{b}$ for $\it{x}$ in $\it{a}$ \\
-$ \it{x}_1, ... ,\it{x}_{\it{n}}.\it{a} $ & Abstractor & Bind variables $\it{x_n}$ to expression $\it{a}$ & Bind variables $\it{x_n}$ to expression $\it{a}$ \\
-$ \overrightarrow{\it{x}} $ & X arrow & List of $\it{x}s$ & $ \it{x}_1, ... ,\it{x}_{\it{n}} $ \\
-$ \rho : \overrightarrow{\it{x}} \leftrightarrow \overrightarrow{\it{x}}'$ & Fresh renaming & Freshen $ \it{x} $ in $ \it{a} $ renaming & A bijection between $ \overrightarrow{\it{x}} $ and $ \overrightarrow{\it{x}}' $ where $ \overrightarrow{\it{x}}'$ is fresh for $\it{X}$ . \\
-$\widehat{\rho}_i (a_i)$ & Rho hat sub i & Rename result & The result of applying the renaming $ \rho $ to $ \it{a} $ \\
-$ =_\alpha $ & Equal alpha & $ \it{\alpha-equivalence} $ & Equal trees up to renaming \\
-$ \overset{\Delta}{=} $ & & & \\
+\begin{tabular}[b] {p{.05\textwidth} p{.13\textwidth} p{.15\textwidth} p{.22\textwidth} p{.32\textwidth}}
+Page & Expression & Name & Say & Meaning \\ \\
+5& $\mathcal{P}$ & Script P & Proposition & Something to be proved \\
+5& $\mathcal{P}(\it{a})$ & Script P of $\it{a}$ & Proposition about tree $\it{a}$ & Something to be proved about AST $\it{a}$ \\
+5& $\mathcal{O}$ & Script O & Operator & An operator that can be used in an AST \\
+5& $\mathcal{O}(\it{a})$ & Script O of $\it{a}$ & Operator of arity $\it{a}$ & An operator of a given arity \\
+5& $\mathcal{X}_{\it{s}}$ & Script X sub s & Variables $\it{x}$ of sort $\it{s}$ & Variables $\it{x}$ of sort $\it{s}$ \\
+5& $\it{S} $ & S & A set of sorts & A set of sorts \\
+5& $ \{ \it{X}_{s} \} _{\it{s} \in \mathcal{S}}$  & Family & Family $ \it{X} $ of $\it{s}$ & a sort-indexed family of disjoint finite sets $ \it{X}_s $ of variables $\it{x}$ of sort $ \it{s} $\\
+6& $\left[ \it{b} / \it{x}\right] \it{a}$ & Substitution & Substitute $\it{b}$ for $\it{x}$ in $\it{a}$ & Substitute  $\it{b}$ for $\it{x}$ in $\it{a}$ \\
+7& $ \it{x}_1, ... ,\it{x}_{\it{n}}.\it{a} $ & Abstractor & Bind variables $\it{x_n}$ to expression $\it{a}$ & Bind variables $\it{x_n}$ to expression $\it{a}$ \\
+8& $ \overrightarrow{\it{x}} $ & X arrow & List of $\it{x}s$ & $ \it{x}_1, ... ,\it{x}_{\it{n}} $ \\
+8& $ \rho : \overrightarrow{\it{x}} \leftrightarrow \overrightarrow{\it{x}}'$ & Fresh renaming & Freshen $ \it{x} $ using renaming $ \rho $ & A bijection between $ \overrightarrow{\it{x}} $ and $ \overrightarrow{\it{x}}' $ where $ \overrightarrow{\it{x}}'$ is fresh. \\
+8& $\widehat{\rho}_{\it{i}} (a_{\it{i}})$ & Rho hat sub i & Rename result & The result of applying the renaming $ \rho_ {\it{i}} $ to $ \it{a}_{\it{i}} $ \\
+8& $x =_\alpha y$ & Equal alpha & $ \it{\alpha}$-$\it{equivalence} $ & Trees x and y equal up to renaming \\
+9& $x \overset{\Delta}{=} y$ & Delta equals & Definitially equals & Trees x and y are definitionally equal \\
 \end{tabular}
 
 \end{document}
