@@ -1,5 +1,98 @@
-(define input-prompt "<<< ? ")
-(define output-prompt ">>> result: ")
+; Data directed dispatch table
+; ============================
+
+; See section 3.3 https://sarabander.github.io/sicp/html/3_002e3.xhtml#DOCF152 and
+; Chapter 2 for details. 
+
+(define (make-table)
+  (let ((local-table (list '*table*)))
+    (define (lookup key-1 key-2)
+      (let ((subtable (assoc key-1 (cdr local-table))))
+        (if subtable
+            (let ((record (assoc key-2 (cdr subtable))))
+                       (if record (cdr record) #f))
+            #f)))
+    (define (insert! key-1 key-2 value)
+      (let ((subtable (assoc key-1 (cdr local-table))))
+        (if subtable
+            (let ((record (assoc key-2 (cdr subtable))))
+                       (if record
+                           (set-cdr! record value)
+                           (set-cdr! subtable (cons (cons key-2 value) (cdr subtable)))))
+            (set-cdr! local-table (cons (list key-1 (cons key-2 value)) (cdr local-table)))))
+      'ok)
+    (define (dispatch m)
+      (cond ((eq? m 'get) lookup)
+            ((eq? m 'put) insert!)
+            (else (error "Unknown operation: TABLE" m))))
+    dispatch))
+
+(define table (make-table))
+
+(define operation-table (make-table))
+(define get (operation-table 'get))
+(define put (operation-table 'put))
+
+(define (tagged-list? exp tag)
+  (if (pair? exp)
+      (eq? (car exp) tag)
+      #f))
+
+; Stream stuff
+; ============
+
+(define the-empty-stream '())
+
+(define (display-line x)
+  (newline)
+  (display x))
+
+(define (memo-proc proc)
+  (let ((already-run? #f) (result #f))
+    (lambda ()
+      (if (not already-run?)
+          (begin (set! result (proc))
+                 (set! already-run? #t)
+                 result)
+          result))))
+
+(define (cons-stream a b) (cons a (delay b)))
+
+(define (stream-car stream) 
+  (car stream))
+
+(define (stream-cdr stream) (force (cdr stream)))
+
+(define (stream-null? s) (equal? s the-empty-stream))
+
+(define (stream-for-each proc s)
+  (if (stream-null? s)
+      'done
+      (begin 
+        (proc (stream-car s))
+        (stream-for-each proc 
+                         (stream-cdr s)))))
+(define (stream-map proc s)
+  (if (stream-null? s)
+      the-empty-stream
+      (cons-stream 
+       (proc (stream-car s))
+       (stream-map proc (stream-cdr s)))))
+
+(define (stream-append s1 s2)
+  (if (stream-null? s1)
+      s2
+      (cons-stream 
+       (stream-car s1)
+       (stream-append (stream-cdr s1) s2))))
+
+(define (display-stream s) (stream-for-each display-line s))
+
+; 4.4.4.1 The driver loop
+; =======================
+
+(define input-prompt "? ")
+(define output-prompt "> ")
 
 #| "When the query is instantiated, any variables that remain unbound are transformed
 back to theinput representation before being printed. These transformations are
@@ -28,13 +121,17 @@ prevent variable name collisions. |#
              (qeval q (singleton-stream '()))))
            (query-driver-loop)))))
 
+(define (prompt-for-input string)
+  (newline) (newline) 
+  (display string) (newline))
+
 (define (instantiate exp frame unbound-var-handler)
   (define (copy exp)
     (cond ((var? exp)
            (let ((binding (binding-in-frame exp frame)))
              (if binding
                  (copy (binding-value binding))
-                 (unbound-var-handler))))
+                 (unbound-var-handler exp frame))))
           ((pair? exp) (cons (copy (car exp))
                              (copy (cdr exp))))
           (else exp)))
@@ -92,8 +189,10 @@ it cannot be extended. |#
    (lambda (frame)
      (if (stream-null?
           (qeval (negated-query operands) (singleton-stream frame)))
+         (singleton-stream frame)
           the-empty-stream))
    frame-stream))
+(put 'not 'qeval negate)
 
 #| Each frame in the stream is used to instantiate the variables in the pattern,
 the indicated predicate is applied, and the frames for which the predicate returns
@@ -113,6 +212,8 @@ it must not evaluate the arguments, since they are already the actual arguments,
 expressions whose evaluation (in Lisp) will produce the arguments."
 
 Ie: `> ?amount 30000` |#
+(define user-initial-environment (scheme-report-environment 5))
+
 (define (execute exp)
   (apply
    (eval (predicate exp) user-initial-environment)
@@ -198,7 +299,7 @@ rules (selected by fetch-rules, 4.4.4.5) and combines the resulting streams of f
       (cond ((var? exp) (make-new-variable exp rule-application-id))
             ((pair? exp) (cons (tree-walk (car exp)) (tree-walk (cdr exp))))
             (else exp)))
-    (tree-walk rule))))
+    (tree-walk rule)))
 
 #| The unification algorithm is implemented as a procedure that takes as inputs two patterns
 and a frame and returns either the extended frame or the symbol failed. The unifier is like
@@ -227,7 +328,7 @@ If both parties to the match are unbound, we may bind either to the other.
 
 |#
 
-(define (extend-if-possbile var val fram)
+(define (extend-if-possible var val frame)
   (let ((binding (binding-in-frame var frame)))
     (cond (binding (unify-match (binding-value binding) val frame))
           ((var? val) (let ((binding (binding-in-frame val frame)))  ; ***  
@@ -240,13 +341,13 @@ If both parties to the match are unbound, we may bind either to the other.
 (define (depends-on? exp var frame)
   (define (tree-walk e)
     (cond ((var? e) (if (equal? var e)
-                        true
+                        #t
                         (let ((b (binding-in-frame e frame)))
                           (if b
                               (tree-walk (binding-value b))
-                              false))))
+                              #f))))
           ((pair? e) (or (tree-walk (car e)) (tree-walk (cdr e))))
-          (else false)))
+          (else #f)))
   (tree-walk exp))
 
 
@@ -276,7 +377,7 @@ If both parties to the match are unbound, we may bind either to the other.
 (define (fetch-rules pattern frame)
   (if (use-index? pattern)
       (get-indexed-rules pattern)
-      (gat-all-rules)))
+      (get-all-rules)))
 
 (define (get-all-rules) THE-RULES)
 
@@ -313,7 +414,7 @@ If both parties to the match are unbound, we may bind either to the other.
     (if (indexable? pattern)
         (let ((key (index-key-of pattern)))
           (let ((current-rule-stream (get-stream key 'rule-stream)))
-            (put key 'rule-stream (cons rule current-rule-stream)))))))
+            (put key 'rule-stream (cons-stream rule current-rule-stream)))))))
 
 (define (indexable? pat)
   (or (constant-symbol? (car pat))
@@ -364,6 +465,7 @@ Question: What is flatten-stream doing? |#
 (define (singleton-stream x)
   (cons-stream x the-empty-stream))
 
+
 ; 4.4.4.7: Query Syntax Procedures
 ; ================================
 
@@ -384,7 +486,7 @@ Question: What is flatten-stream doing? |#
   (car (contents exp)))
 
 ; The syntax definitions for the and, or, not, and lisp-value special forms:
-(define (empty-conjection? exps) (null? exps))
+(define (empty-conjunction? exps) (null? exps))
 (define (first-conjunct exps) (car exps))
 (define (rest-conjuncts exps) (cdr exps))
 (define (empty-disjunction? exps) (null? exps))
@@ -398,9 +500,9 @@ Question: What is flatten-stream doing? |#
 (define (rule? statement) (tagged-list? statement 'rule))
 (define (conclusion rule) (cadr rule))
 (define (rule-body rule)
-  (null? (cddr rule)
-         '(always-true)
-         (caddr rule)))
+  (if (null? (cddr rule))
+      '(always-true)
+      (caddr rule)))
 
 ; query-syntax-process transform a pattern from, eg:
 ; (job ?x ?y) into (job (? x) (? y))
@@ -446,3 +548,114 @@ Question: What is flatten-stream doing? |#
 ; 4.4.4.8 Frames and Bindings
 ; ===========================
 
+; Frames are represented as lists of bindings, which are variable-value pairs: 
+(define (make-binding variable value) (cons variable value))
+(define (binding-variable binding) (car binding))
+(define (binding-value binding) (cdr binding))
+(define (binding-in-frame variable frame) (assoc variable frame))
+(define (extend variable value frame) (cons (make-binding variable value) frame))
+
+
+
+
+; Add assertions to DB
+; ====================
+
+(define (add assertion)
+  (let ((q (query-syntax-process assertion)))
+    (add-rule-or-assertion! q))
+  (newline)
+  (display "Startup assertion added")
+  )
+(add '(address (Bitdiddle Ben) 
+                  (Slumerville (Ridge Road) 10)))
+(add '(job (Bitdiddle Ben) (computer wizard)))                  
+(add '(salary (Bitdiddle Ben) 60000))
+
+(add '(address (Hacker Alyssa P) 
+                  (Cambridge (Mass Ave) 78)))
+(add '(job (Hacker Alyssa P) (computer programmer)))
+(add '(salary (Hacker Alyssa P) 40000))
+(add '(supervisor (Hacker Alyssa P) (Bitdiddle Ben)))
+
+(add '(address (Fect Cy D) 
+                  (Cambridge (Ames Street) 3)))
+
+(add '(rule (lives-near ?person-1 ?person-2)
+               (and (address ?person-1 
+                             (?town . ?rest-1))
+                    (address ?person-2 
+                             (?town . ?rest-2))
+                    (not (same ?person-1 ?person-2)))))
+(add '(rule (same ?x ?x)))
+
+(add '(job (Fect Cy D) (computer programmer)))
+(add '(salary (Fect Cy D) 35000))
+(add '(supervisor (Fect Cy D) (Bitdiddle Ben)))
+
+(add '(address (Tweakit Lem E) 
+                  (Boston (Bay State Road) 22)))
+(add '(job (Tweakit Lem E) (computer technician)))
+(add '(salary (Tweakit Lem E) 25000))
+(add '(supervisor (Tweakit Lem E) (Bitdiddle Ben)))
+(add '(address (Reasoner Louis) 
+                  (Slumerville (Pine Tree Road) 80)))
+(add '(job (Reasoner Louis) 
+              (computer programmer trainee)))
+(add '(salary (Reasoner Louis) 30000))
+(add '(supervisor (Reasoner Louis) 
+                     (Hacker Alyssa P)))
+
+(add '(supervisor (Bitdiddle Ben) (Warbucks Oliver)))
+(add '(address (Warbucks Oliver) 
+                  (Swellesley (Top Heap Road))))
+(add '(job (Warbucks Oliver) 
+              (administration big wheel)))
+(add '(salary (Warbucks Oliver) 150000))
+
+(add '(address (Scrooge Eben) 
+                  (Weston (Shady Lane) 10)))
+(add '(job (Scrooge Eben) 
+              (accounting chief accountant)))
+(add '(salary (Scrooge Eben) 75000))
+(add '(supervisor (Scrooge Eben) (Warbucks Oliver)))
+
+(add '(address (Cratchet Robert) 
+                  (Allston (N Harvard Street) 16)))
+(add '(job (Cratchet Robert) (accounting scrivener)))
+(add '(salary (Cratchet Robert) 18000))
+(add '(supervisor (Cratchet Robert) (Scrooge Eben)))
+
+(add '(address (Aull DeWitt) 
+                  (Slumerville (Onion Square) 5)))
+(add '(job (Aull DeWitt) (administration secretary)))
+(add '(salary (Aull DeWitt) 25000))
+(add '(supervisor (Aull DeWitt) (Warbucks Oliver)))
+
+(add '(can-do-job (computer wizard) 
+                     (computer programmer)))
+
+(add '(can-do-job (computer wizard) 
+                     (computer technician)))
+
+(add '(can-do-job (computer programmer)
+                     (computer programmer trainee)))
+
+(add '(can-do-job (administration secretary)
+                     (administration big wheel)))
+
+(add '(rule (wheel ?person)
+      (and (supervisor ?middle-manager 
+                       ?person)
+           (supervisor ?x ?middle-manager))))
+
+(add '(rule (outranked-by ?staff-person ?boss)
+      (or (supervisor ?staff-person ?boss)
+          (and (supervisor ?staff-person 
+                           ?middle-manager)
+               (outranked-by ?middle-manager 
+                             ?boss)))))
+
+; GO
+; ==
+(query-driver-loop)
