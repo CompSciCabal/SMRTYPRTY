@@ -333,7 +333,7 @@ If both parties to the match are unbound, we may bind either to the other.
     (cond (binding (unify-match (binding-value binding) val frame))
           ((var? val) (let ((binding (binding-in-frame val frame)))  ; ***  
                         (if binding
-                            (unify-match var (binding-value binding frame))
+                            (unify-match var (binding-value binding) frame)
                             (extend var val frame))))
           ((depends-on? val var frame) 'failed) ; ***  This is for binding that imply a fixed-point equation
           (else (extend var val frame)))))
@@ -655,6 +655,25 @@ Question: What is flatten-stream doing? |#
                            ?middle-manager)
                (outranked-by ?middle-manager 
                              ?boss)))))
+
+(add '(meeting accounting (Monday 9am)))
+(add '(meeting administration (Monday 10am)))
+(add '(meeting computer (Wednesday 3pm)))
+(add '(meeting administration (Friday 1pm)))
+(add '(meeting whole-company (Wednesday 4pm)))
+
+(add '(rule (append-to-form () ?y ?y)))
+(add '(rule (append-to-form (?u . ?v) ?y (?u . ?z))
+      (append-to-form ?v ?y ?z)))
+
+(add '(rule
+ (meeting-time ?person ?day-and-time)
+ (or
+  (meeting whole-company ?day-and-time)
+  (and
+   (job ?person (?division . ?job))
+   (meeting ?division ?day-and-time)
+   ))))
 
 ; GO
 ; ==
