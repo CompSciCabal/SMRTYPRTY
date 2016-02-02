@@ -10,6 +10,8 @@ The [classic Friday night meetings](https://github.com/CompSciCabal/SMRTYPRTY/wi
 
 We're also [reading SICP again](https://github.com/CompSciCabal/SMRTYPRTY/wiki/Reading-Schedule!-SICP-Mark-II), because it was so much fun the first time!
 
+And given how popular reading SICP has become, we've created a [SICP reading group meetup](http://www.meetup.com/SICP-TO/) for it, and are working on a [new schedule](https://github.com/CompSciCabal/SMRTYPRTY/wiki/Reading-Schedule!-SICP-Mark-III).
+
 ### Also
 
 We have a [mailing list](https://groups.google.com/forum/#!forum/cs-cabal) and a [google plus](https://plus.google.com/communities/101341712823792967748) and a [twitterer](https://twitter.com/cscabal)
