@@ -22,12 +22,32 @@ Page & Expression & Name & Say & Meaning \\ \\
 8& $ \rho : \overrightarrow{\it{x}} \leftrightarrow \overrightarrow{\it{x}}'$ & Fresh renaming & Freshen $ \it{x} $ using renaming $ \rho $ & A bijection between $ \overrightarrow{\it{x}} $ and $ \overrightarrow{\it{x}}' $ where $ \overrightarrow{\it{x}}'$ is fresh. \\
 8& $\widehat{\rho}_{\it{i}} (a_{\it{i}})$ & Rho hat sub i & Rename result & The result of applying the renaming $ \rho_ {\it{i}} $ to $ \it{a}_{\it{i}} $ \\
 8& $x =_\alpha y$ & Equal alpha & $ \it{\alpha}$-$\it{equivalence} $ & Trees x and y equal up to renaming \\
-9& $x \overset{\Delta}{=} y$ & Delta equals & Definitially equals & Trees x and y are definitionally equal \\
-13& $\tau$ type& type & type $\tau$ & Judgement that $\tau$ is a type \\
-13& $\it{e} : \tau$ & expression type & expression $\it{e}$ is of type $\tau$ & Judgement that expression $\it{e}$ is of type $\tau$ \\
-13& $\it{e} \Downarrow \it{v}$ & expression value & expression $\it{e}$ has value $\it{v} $ & Judgement that expression $\it{e}$ has value $\it{v} $\\
-14& $\infer {\it{J}} {\it{J}_{1}...\it{J}_{\it{k}}}$  & surfboard & infers & Judgements ${\it{J}_{1}...\it{J}_{\it{k}}}$ infer judgement ${\it{J}}$\\
+9& $x \overset{\Delta}{=} y$ & Delta equals & Replacement & Replace expression x with expression y \\
+13& $\tau$ type& Type & Type $\tau$ & Judgement that $\tau$ is a type \\
+13& $\it{e} : \tau$ & Colon &  $\it{e}$ is of type $\tau$ & Judgement that expression $\it{e}$ is of type $\tau$ \\
+13& $\it{e} \Downarrow \it{v}$ & Down arrow &  $\it{e}$ has value $\it{v} $ & Judgement that expression $\it{e}$ has value $\it{v} $\\
+14& $\infer {\it{J}} {\it{J}_{1}...\it{J}_{\it{k}}}$  & Surfboard & Infers & Judgements ${\it{J}_{1}...\it{J}_{\it{k}}}$ infer judgement ${\it{J}}$\\
+23 & ${\it{J}_{1}...\it{J}_{\it{k}}} \vdash_{\mathcal{R}} \mathcal{K}$ & Turnstile & Entails & Given $\mathcal{R}$ and $\it{J}$ infer $\mathcal{K}$\\
+23 & $\Gamma$ & Gamma & Judgements Gamma & A finite set of judgements \\
+23 & $\Delta$ & Delta & Judgements Delta & A finite set of judgements \\
+25 & $\Gamma \models_{\it{R}} \it{J}$ & Double turnstile & Admissible & $\vdash_{\it{R}} \Gamma$ implies $\vdash_{\it{R}} \it{J}$ \\
+28 & $\bigtriangledown$ & Down triangle & Generic derivation & Generic derivation \\
+41 & $\it{s} \mapsto \it{s'}$ & Bar arrow & Transistion  & State $\it{s}$ transitions to state $\it{s'}$ \\
 
+42 & $\it{s} \mapsto ^{*} \it{s'}$ & Bar arrow star & Iterated transistion  & State $\it{s}$ transitions to state $\it{s'}$ over more than zero transitions \\
+
+42 & $\it{s} \mapsto ^{n} \it{s'}$ & Bar arrow n & N times iterated transistion  & State $\it{s}$ transitions to state $\it{s'}$ over n transitions \\
+
+44 & $\mathcal{E}$  & Script E & Expression context & Expression context \\
+
+45 & $\circ $ & Circle & Hole & Placeholder to put an instruction \\
+46 & $ \it{e} \equiv \it{e}' $ & Equivalent & Definitional equivalence & $\it{e}$ is definitionally equivalent to $\it{e}'$ \\
+
+58 & $\it{e}??$ & Wrong & E goes wrong & Expression $\it{e}$ goes wrong \\
+
+58 & $\it{e} \Downarrow ^{\it{k}}\it{v}$  & Downarrow k & E evaluates in k steps & Expression $ \it{e}$ evaluates to $\it{v}$ in $\it{k}$ steps\\
+
+166 &$ \bot$ & Bottom & Bottom & Totally undefined partial function \\
 \end{tabular}
 
 \end{document}
