@@ -144,10 +144,9 @@
   (/ (+ x y) 2))
 
 (define (good-enough? guess)
-  (< (abs (/ (- (improve guess x) guess) guess)) 0.001))
-
-(define (good-enough? guess x)
-  (< (abs (- (square guess) x)) 0.001))
+  (< (abs (/ (- (improve guess x) guess)
+             guess))
+     0.001))
 
 (define (squart x)
   (sqrt-iter 1.0 x))
