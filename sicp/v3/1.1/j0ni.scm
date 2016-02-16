@@ -143,7 +143,7 @@
 (define (average x y)
   (/ (+ x y) 2))
 
-(define (good-enough? guess)
+(define (good-enough? guess x)
   (< (abs (/ (- (improve guess x) guess)
              guess))
      0.001))
