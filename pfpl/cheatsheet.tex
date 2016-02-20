@@ -5,24 +5,78 @@
 \usepackage{proof}
 \usepackage{hyperref}
 
-\usepackage[margin=.5in]{geometry}
+\usepackage[margin=.25in]{geometry}
 \begin{document}
-\section*{Chapter 1}
-\begin{tabular}[b] {p{.15\textwidth} p{.15\textwidth} p{.22\textwidth} p{.4\textwidth}}
-Expression & Name & Say & Meaning \\ \\
-$\mathcal{P}$ & Script P & Proposition & Something to be proved \\
-$\mathcal{P}(\it{a})$ & Script P of $\it{a}$ & Proposition about tree $\it{a}$ & Something to be proved about abstract syntax tree $\it{a}$ \\
-$\mathcal{O}$ & Script O & Operator & An operator that can be used in an AST \\
-$\mathcal{O}(\it{a})$ & Script O of $\it{a}$ & Operator of arity $\it{a}$ & An operator of a given arity \\
-$\mathcal{X}_{\it{s}}$ & Script X sub s & Variable $\it{x}$ of sort $\it{s}$ & A variable $\it{x}$ of sort $\it{s}$ \\
-$\{ \it{X}_{s} \} _{\it{s} \in \mathcal{S}}$  & Family & Set $ \it{X} $ of s & a sort-indexed family of disjoint finite sets $ \it{X}_s $ of variables $\it{x}$ of sort $ \it{s} $ \\
-$\left[ \it{b} / \it{x}\right] \it{a}$ & Substitution & Substitute $\it{b}$ for $\it{x}$ in $\it{a}$ & Substitute $\it{b}$ for $\it{x}$ in $\it{a}$ \\
-$ \it{x}_1, ... ,\it{x}_{\it{n}}.\it{a} $ & Abstractor & Bind variables $\it{x_n}$ to expression $\it{a}$ & Bind variables $\it{x_n}$ to expression $\it{a}$ \\
-$ \overrightarrow{\it{x}} $ & X arrow & List of $\it{x}s$ & $ \it{x}_1, ... ,\it{x}_{\it{n}} $ \\
-$ \rho : \overrightarrow{\it{x}} \leftrightarrow \overrightarrow{\it{x}}'$ & Fresh renaming & Freshen $ \it{x} $ in $ \it{a} $ renaming & A bijection between $ \overrightarrow{\it{x}} $ and $ \overrightarrow{\it{x}}' $ where $ \overrightarrow{\it{x}}'$ is fresh for $\it{X}$ . \\
-$\widehat{\rho}_i (a_i)$ & Rho hat sub i & Rename result & The result of applying the renaming $ \rho $ to $ \it{a} $ \\
-$ =_\alpha $ & Equal alpha & $ \it{\alpha-equivalence} $ & Equal trees up to renaming \\
-$ \overset{\Delta}{=} $ & & & \\
+\section*{Cheat Sheet}
+\begin{tabular}[b] {p{.05\textwidth} p{.13\textwidth} p{.15\textwidth} p{.22\textwidth} p{.32\textwidth}}
+Page & Expression & Name & Say & Meaning \\ \\
+5& $\mathcal{P}$ & Script P & Proposition & Something to be proved \\
+5& $\mathcal{P}(\it{a})$ & Script P of $\it{a}$ & Proposition about tree $\it{a}$ & Something to be proved about AST $\it{a}$ \\
+5& $\mathcal{O}$ & Script O & Operator & An operator that can be used in an AST \\
+5& $\mathcal{O}(\it{a})$ & Script O of $\it{a}$ & Operator of arity $\it{a}$ & An operator of a given arity \\
+5& $\mathcal{X}_{\it{s}}$ & Script X sub s & Variables $\it{x}$ of sort $\it{s}$ & Variables $\it{x}$ of sort $\it{s}$ \\
+5& $\it{S} $ & S & A set of sorts & A set of sorts \\
+5& $ \{ \it{X}_{s} \} _{\it{s} \in \mathcal{S}}$  & Family & Family $ \it{X} $ of $\it{s}$ & a sort-indexed family of disjoint finite sets $ \it{X}_s $ of variables $\it{x}$ of sort $ \it{s} $\\
+6& $\left[ \it{b} / \it{x}\right] \it{a}$ & Substitution & Substitute $\it{b}$ for $\it{x}$ in $\it{a}$ & Substitute  $\it{b}$ for $\it{x}$ in $\it{a}$ \\
+7& $ \it{x}_1, ... ,\it{x}_{\it{n}}.\it{a} $ & Abstractor & Bind variables $\it{x_n}$ to expression $\it{a}$ & Bind variables $\it{x_n}$ to expression $\it{a}$ \\
+8& $ \overrightarrow{\it{x}} $ & X arrow & List of $\it{x}s$ & $ \it{x}_1, ... ,\it{x}_{\it{n}} $ \\
+8& $ \rho : \overrightarrow{\it{x}} \leftrightarrow \overrightarrow{\it{x}}'$ & Fresh renaming & Freshen $ \it{x} $ using renaming $ \rho $ & A bijection between $ \overrightarrow{\it{x}} $ and $ \overrightarrow{\it{x}}' $ where $ \overrightarrow{\it{x}}'$ is fresh. \\
+8& $\widehat{\rho}_{\it{i}} (a_{\it{i}})$ & Rho hat sub i & Rename result & The result of applying the renaming $ \rho_ {\it{i}} $ to $ \it{a}_{\it{i}} $ \\
+8& $x =_\alpha y$ & Equal alpha & $ \it{\alpha}$-$\it{equivalence} $ & Trees x and y equal up to renaming \\
+9& $x \overset{\Delta}{=} y$ & Delta equals & Replacement & Replace expression x with expression y \\
+13& $\tau$ type& Type & Type $\tau$ & Judgement that $\tau$ is a type \\
+13& $\it{e} : \tau$ & Colon &  $\it{e}$ is of type $\tau$ & Judgement that expression $\it{e}$ is of type $\tau$ \\
+13& $\it{e} \Downarrow \it{v}$ & Down arrow &  $\it{e}$ has value $\it{v} $ & Judgement that expression $\it{e}$ has value $\it{v} $\\
+14& $\infer {\it{J}} {\it{J}_{1}...\it{J}_{\it{k}}}$  & Surfboard & Infers & Judgements ${\it{J}_{1}...\it{J}_{\it{k}}}$ infer judgement ${\it{J}}$\\
+23 & ${\it{J}_{1}...\it{J}_{\it{k}}} \vdash_{\mathcal{R}} \mathcal{K}$ & Turnstile & Entails & Given $\mathcal{R}$ and $\it{J}$ infer $\mathcal{K}$\\
+23 & $\Gamma$ & Gamma & Judgements Gamma & A finite set of judgements \\
+23 & $\Delta$ & Delta & Judgements Delta & A finite set of judgements \\
+25 & $\Gamma \models_{\it{R}} \it{J}$ & Double turnstile & Admissible & $\vdash_{\it{R}} \Gamma$ implies $\vdash_{\it{R}} \it{J}$ \\
+28 & $\bigtriangledown$ & Down triangle & Generic derivation & Generic derivation \\
+36 & $ \it{n} ::= \it{s} $ & Colon colon equals & The syntax of $\it{n}$ is $\it{s}$ & Specifies the syntax of $\it{n}$ \\
+36 & $;$ & Semicolon & And & Separates arguments to expressionsin abstact notation\\
+
+41 & $\it{s} \longmapsto \it{s'}$ & Bar arrow & Transistion  & State $\it{s}$ transitions to state $\it{s'}$ \\
+
+42 & $\it{s} \longmapsto ^{*} \it{s'}$ & Bar arrow star & Iterated transistion  & State $\it{s}$ transitions to state $\it{s'}$ over more than zero transitions \\
+
+42 & $\it{s} \longmapsto ^{n} \it{s'}$ & Bar arrow n & N times iterated transistion  & State $\it{s}$ transitions to state $\it{s'}$ over n transitions \\
+
+44 & $\mathcal{E}$  & Script E & Expression context & Expression context \\
+
+45 & $\circ $ & Circle & Hole & Placeholder to put an instruction \\
+46 & $ \it{e} \equiv \it{e}' $ & Equivalent & Definitional equivalence & $\it{e}$ is definitionally equivalent to $\it{e}'$ \\
+
+58 & $\it{e}??$ & Wrong & E goes wrong & Expression $\it{e}$ goes wrong \\
+
+\end{tabular}
+\newpage
+
+\begin{tabular}[b] {p{.05\textwidth} p{.13\textwidth} p{.15\textwidth} p{.22\textwidth} p{.32\textwidth}}
+Page & Expression & Name & Say & Meaning \\ \\
+
+58 & $\it{e} \Downarrow ^{\it{k}}\it{v}$  & Downarrow k & E evaluates in k steps & Expression $ \it{e}$ evaluates to $\it{v}$ in $\it{k}$ steps\\
+
+63 & $\{\it{f}\}$ & Brace brackets & Function & Surround function $\it{f}$ in abstract notation \\
+
+63 & $\it{f}.\it{e}$ & Dot & Dot & Introduces the scope $\it{e}$ of a function $\it{f}$ in abstract notation \\
+64 & $\it{f}(\tau_1):\tau_2$ & Function & Function definition & A function taking an argument of type $\tau_1$ and returning a value of type $\tau_2$ \\
+
+64 & $\mathcal{|[}\it{x/e/f}\mathcal{]|}\it{e'}$ & Script bracket & Function substitution & Function substitution \\
+
+65 & $\tau_1 \to \tau_2$ & Right arrow & Maps to & A total function that maps elements of type $\tau_1$ to elements of type $\tau_2$ \\
+65 & $\lambda $ & Lambda & Lambda & Abstraction \\
+71 & $\hookrightarrow$ & Hook arrow & If & Choice selector \\
+71 & $|$ & Bar & Either & A choice \\
+71 & $\overline{\it{n}}$ & Overline & Succession & The the succession expression corresponding to the number n \\
+76 & $\lceil n \rceil$ & Divided hat & G$\ddot{o}$del numbering & G$\ddot{o}$del numbering \\
+
+166 & $\mapsto$ & Short bar arrow & Maps to & Function definition \\
+166 &$ \bot$ & Bottom & Bottom & Totally undefined partial function \\
+167 & $\tau_1 \rightharpoonup \tau_2$ & Harpoon & Partial function & Partial function \\
+175 & $ \simeq $ & Tilde equal & Isomorphism & Isomorphism \\
+177 & $\_$ & Underscore & Underscore & Unfree variable \\
+
 \end{tabular}
 
 \end{document}
