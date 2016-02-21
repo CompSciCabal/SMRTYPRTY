@@ -252,3 +252,64 @@
   (if (< n 3)
       n
       (iter 2 2 1 0)))
+
+;; Exercise 1.12
+
+;; The following pattern of numbers is called Pascal’s triangle.
+
+;;          1
+;;        1   1
+;;      1   2   1
+;;    1   3   3   1
+;;  1   4   6   4   1
+;;        . . .
+
+;; The numbers at the edge of the triangle are all 1, and each number
+;; inside the triangle is the sum of the two numbers above it.35 Write
+;; a procedure that computes elements of Pascal’s triangle by means of
+;; a recursive process.
+
+(define (p1 r)
+  (define (partition lst)
+    (if (null? (cdr lst))
+        '()
+        (cons (cons (car lst)
+                    (list (cadr lst)))
+              (partition (cdr lst)))))
+  (define (sum-pairs lst)
+    (if (null? lst)
+        '()
+        (cons (apply + (car lst))
+              (sum-pairs (cdr lst)))))
+  (if (= r 1)
+      '(1)
+      (cons 1 (reverse (cons 1 (sum-pairs (partition (p1 (- r 1)))))))))
+
+;; An earlier time through, I had come up with another solution for
+;; this:
+
+(define (p2 r)
+  (define (len lst n)
+    (if (null? lst)
+        n
+        (len (cdr lst) (inc n))))
+  (define (p-row last-row this-row)
+    (if (= (len last-row 0) 1)
+        (reverse (cons 1 this-row))
+        (p-row (cdr last-row)
+               (cons (+ (car last-row)
+                        (cadr last-row))
+                     this-row))))
+  (cond ((= r 1) '(1))
+        ((= r 2) '(1 1))
+        (else (p-row (p2 (- r 1)) '(1)))))
+
+;; I was surprised to find just now that this version is *much*
+;; slower. I'm interested to know why. Maybe something to talk about.
+
+;; Exercise 1.13: Prove that Fib(n) is the closest integer to φn/√5,
+;; where φ=(1+√5)/2. Hint: Let ψ=(1-√5)/2. Use induction and the
+;; definition of the Fibonacci numbers (see 1.2.2) to prove that
+;; Fib(n)=(φn-ψn)/√5.
+
+;; Deferring this...
