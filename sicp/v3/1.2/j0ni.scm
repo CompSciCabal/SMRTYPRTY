@@ -1,4 +1,5 @@
 (require-extension sicp)
+(require-extension numbers)
 
 ;; SICP Chapter 1, Section 1.2, Procedures and the Processes they
 ;; Generate
@@ -177,3 +178,77 @@
 
 (define (pow x y)
   (apply * (repeat y x)))
+
+;; Tree Recursion - fibonacci
+
+(define (fib-recursive n)
+  (cond ((= n 0) 0)
+        ((= n 1) 1)
+        (else (+ (fib-recursive (- n 1))
+                 (fib-recursive (- n 2))))))
+
+;; Iterative version
+
+(define (fib-iterative n)
+  (fib-iter 1 0 n))
+
+(define (fib-iter a b count)
+  (if (= count 0)
+      b
+      (fib-iter (+ a b) a (- count 1))))
+
+;; Coin counting
+
+(define (count-change amount)
+  (cc amount 5))
+
+(define (cc amount kinds-of-coins)
+  (cond ((= amount 0) 1)
+        ((or (< amount 0)
+             (= kinds-of-coins 0))
+         0)
+        (else
+         (+ (cc amount (- kinds-of-coins 1))
+            (cc (- amount (first-denomination
+                           kinds-of-coins))
+                kinds-of-coins)))))
+
+(define (first-denomination kinds-of-coins)
+  (cond ((= kinds-of-coins 1) 1)
+        ((= kinds-of-coins 2) 5)
+        ((= kinds-of-coins 3) 10)
+        ((= kinds-of-coins 4) 25)
+        ((= kinds-of-coins 5) 50)))
+
+;; From the book:
+
+;; Count-change generates a tree-recursive process with redundancies
+;; similar to those in our first implementation of fib. (It will take
+;; quite a while for that 292 to be computed.) On the other hand, it
+;; is not obvious how to design a better algorithm for computing the
+;; result, and we leave this problem as a challenge.
+
+;; LOL @ "take quite a while". Maybe in 1985.
+
+;; Exercise 1.11
+
+;; A function f is defined by the rule that f(n)=n if n<3 and
+;; f(n)=f(n−1)+2f(n−2)+3f(n−3) if n≥3. Write a procedure that computes
+;; f by means of a recursive process. Write a procedure that computes
+;; f by means of an iterative process.
+
+(define (f-recursive n)
+  (if (< n 3)
+      n
+      (+ (f-recursive (- n 1))
+         (* 2 (f-recursive (- n 2)))
+         (* 3 (f-recursive (- n 3))))))
+
+(define (f-iterative n)
+  (define (iter c x y z)
+    (if (= c n)
+        x
+        (iter (+ c 1) (+ x (* 2 y) (* 3 z)) x y)))
+  (if (< n 3)
+      n
+      (iter 2 2 1 0)))
