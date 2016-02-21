@@ -112,4 +112,59 @@ and h for positive integer values of n . For example, (k n) computes 5 n 2.|#
 ; negative and floats do not terminate
 ; 2^2^2...n times, (Knuth up arrow).
 
+#|
+Exercise 1.11
+=============
+
+A function f is defined by the rule that
+
+f ( n ) = n if n < 3 and
+f ( n ) = f (n - 1) + 2f (n - 2) + 3f(n - 3) if n ≥ 3.
+
+Write a procedure that computes f by means of a recursive process.
+Write a procedure that computes f by means of an iterative process. 
+|#
+
+(define (f-recurse n)
+  (if (< n 3)
+      n
+      (+ (f-recurse (- n 1)) (* 2 (f-recurse (- n 2))) (* 3 (f-recurse (- n 3))))))
+
+; f(0) = 0
+; f(1) = 1
+; f(2) = 2
+; f(3) = f(2) + 2f(1) + 3f(0) = 2 + 2 + 0 = 4
+; f(4) = f(3) + 2f(2) + 3f(1) = 4 + 2 * 2 + 3 * 1 = 11
+; f(5) = f(4) + 2f(3) + 3f(2) = 11 + 2*4 + 3*2 = 25
+; f(6) = f(5) + 2f(4) + 3f(3) = 22 + 20 + 9 = 59  <-- 
+
+; f(n) = f(n - 1) + 2f(n - 2) + 3f(n - 3)
+
+#|
+
+This was hard to figure out, and I find the text's discussion of the fib transform a <- a + b; b <- a
+to be actively misleading. However once I drew the following table, the solution was clear:
+
+acc  a  b  c  n
+---------------
+4    2  1  0  3
+11   4  2  1  4
+25  11  4  2  5
+59  25 11  4  6
+.
+.
+.
+
+|#
+
+(define (f-iter n)
+  (define (inner a b c count)
+    (if (= 0 count)
+        (+ a (* 2 b) (* 3 c))
+        (inner (+ a (* 2 b) (* 3 c)) a b (- count 1))
+        ))
+  (if (< n 3)
+      n
+      (inner 2 1 0 (- n 3))))
+
 
