@@ -49,12 +49,12 @@
 ;; Exercise 1.10: The following procedure computes a mathematical
 ;; function called Ackermann’s function.
 
-(define (A x y)
-  (cond ((= y 0) 0)
-        ((= x 0) (* 2 y))
-        ((= y 1) 2)
-        (else (A (- x 1)
-                 (A x (- y 1))))))
+(define (A m n)
+  (cond ((= n 0) 0)
+        ((= m 0) (* 2 n))
+        ((= n 1) 2)
+        (else (A (- m 1)
+                 (A m (- n 1))))))
 
 ;; what are the values of the following expressions?
 
@@ -84,6 +84,13 @@
 ;; 32
 
 (define (h n) (A 2 n))
+
+;; (A 2 2)
+;; (A 1 (A 2 1))
+;; (A 1 2)
+;; (A 0 (A 1 1))
+;; (A 0 2)
+;; 4
 
 ;; (A 2 4)
 ;; (A 1 (A 2 3))
@@ -142,4 +149,31 @@
 
 ;; (f n) computes 2n
 ;; (g n) computes 2^n
-;; (h n) computes 2^(n*2)
+
+;; (h n) computes n^h(n-1)
+
+;; Mind blown. I can't quite grasp it, and I also note that the
+;; definition of this fn on wikipedia is slightly different, though
+;; only in the base cases.
+
+;; Kevin found a great discussion on Wolfram Alpha:
+;;   http://mathworld.wolfram.com/AckermannFunction.html
+
+;; Things I found useful to have around while working:
+
+(define (range x)
+  (define (iter x y)
+    (if (= x 0)
+        y
+        (iter (- x 1) (cons x y))))
+  (iter x '()))
+
+(define (repeat x y)
+  (define (iter x z)
+    (if (= x 0)
+        z
+        (iter (- x 1) (cons y z))))
+  (iter x '()))
+
+(define (pow x y)
+  (apply * (repeat y x)))
