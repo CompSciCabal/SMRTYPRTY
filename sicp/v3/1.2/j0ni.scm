@@ -633,10 +633,10 @@
   (try-it (+ 1 (random (- n 1)))))
 
 (define (fast-prime? n times)
-  (cond ((= times 0) true)
+  (cond ((= times 0) #t)
         ((fermat-test n)
          (fast-prime? n (- times 1)))
-        (else false)))
+        (else #f)))
 
 ;; Exercise 1.21: Use the smallest-divisor procedure to find the
 ;; smallest divisor of each of the following numbers: 199, 1999,
@@ -693,12 +693,12 @@
 ;; three smallest primes > 100,000: 100,003, 100,019, 100,043
 ;; three smallest primes > 1,000,000: 1,000,003, 1,000,033, 1,000,037
 
-(define (demonstrate-growth x y)
-  (search-for-primes x (+ x 50))
+(define (demonstrate-growth f x y)
+  (f x (+ x 50))
   (if (not (>= x y))
-      (demonstrate-growth (* x 10) y)))
+      (demonstrate-growth f (* x 10) y)))
 
-;; #;1575> (demonstrate-growth 100000 10000000000000)
+;; #;1575> (demonstrate-growth search-for-primes 100000 10000000000000)
 ;; 100003 *** 0
 ;; 100019 *** 0
 ;; 100043 *** 0
@@ -722,3 +722,132 @@
 ;; 100000000019 *** 125
 ;; 1000000000039 *** 353
 ;; 10000000000037 *** 1134
+
+;; Exercise 1.23: The smallest-divisor procedure shown at the start of
+;; this section does lots of needless testing: After it checks to see
+;; if the number is divisible by 2 there is no point in checking to
+;; see if it is divisible by any larger even numbers. This suggests
+;; that the values used for test-divisor should not be 2, 3, 4, 5, 6,
+;; …, but rather 2, 3, 5, 7, 9, …. To implement this change, define a
+;; procedure next that returns 3 if its input is equal to 2 and
+;; otherwise returns its input plus 2. Modify the smallest-divisor
+;; procedure to use (next test-divisor) instead of (+ test-divisor 1).
+;; With timed-prime-test incorporating this modified version of
+;; smallest-divisor, run the test for each of the 12 primes found in
+;; Exercise 1.22. Since this modification halves the number of test
+;; steps, you should expect it to run about twice as fast. Is this
+;; expectation confirmed? If not, what is the observed ratio of the
+;; speeds of the two algorithms, and how do you explain the fact that
+;; it is different from 2?
+
+(define (smallest-divisor2 n)
+  (find-divisor2 n 2))
+
+(define (find-divisor2 n test-divisor)
+  (cond ((> (square test-divisor) n)
+         n)
+        ((divides? test-divisor n)
+         test-divisor)
+        (else (find-divisor2
+               n
+               (next test-divisor)))))
+
+(define (next divisor)
+  (if (= divisor 2)
+      3
+      (+ divisor 2)))
+
+(define (prime2? n)
+  (= n (smallest-divisor2 n)))
+
+(define (timed-prime-test2 n)
+  (start-prime-test2 n (time->milliseconds (current-time))))
+
+(define (start-prime-test2 n start-time)
+  (if (prime2? n)
+      (report-prime n (- (time->milliseconds (current-time))
+                         start-time))))
+
+(define (search-for-primes2 x y)
+  (timed-prime-test2 x)
+  (if (not (= x (- y 1)))
+      (search-for-primes2 (inc x) y)))
+
+;; #;1756> (demonstrate-growth search-for-primes2 100000 100000000000000)
+;; 100003 *** 0
+;; 100019 *** 0
+;; 100043 *** 0
+;; 100049 *** 0
+;; 1000003 *** 0
+;; 1000033 *** 1
+;; 1000037 *** 0
+;; 1000039 *** 0
+;; 10000019 *** 1
+;; 100000007 *** 4
+;; 100000037 *** 8
+;; 100000039 *** 6
+;; 100000049 *** 3
+;; 1000000007 *** 14
+;; 1000000009 *** 31
+;; 1000000021 *** 11
+;; 1000000033 *** 30
+;; 10000000019 *** 49
+;; 10000000033 *** 58
+;; 100000000003 *** 132
+;; 100000000019 *** 129
+;; 1000000000039 *** 402
+;; 10000000000037 *** 1262
+;; 100000000000031 *** 3782
+;; #;1760> (demonstrate-growth search-for-primes2 100000 100000000000000)
+;; 100003 *** 1
+;; 100019 *** 0
+;; 100043 *** 0
+;; 100049 *** 0
+;; 1000003 *** 0
+;; 1000033 *** 0
+;; 1000037 *** 0
+;; 1000039 *** 0
+;; 10000019 *** 0
+;; 100000007 *** 6
+;; 100000037 *** 3
+;; 100000039 *** 2
+;; 100000049 *** 5
+;; 1000000007 *** 10
+;; 1000000009 *** 9
+;; 1000000021 *** 19
+;; 1000000033 *** 24
+;; 10000000019 *** 35
+;; 10000000033 *** 28
+;; 100000000003 *** 99
+;; 100000000019 *** 91
+;; 1000000000039 *** 232
+;; 10000000000037 *** 805
+;; 100000000000031 *** 2440
+;; #;1765>
+
+;; It runs in about 1/3 the time.
+
+;; Deferring the why, I need to sleep
+
+;; Exercise 1.24: Modify the timed-prime-test procedure of Exercise
+;; 1.22 to use fast-prime? (the Fermat method), and test each of the
+;; 12 primes you found in that exercise. Since the Fermat test has
+;; Θ(logn) growth, how would you expect the time to test primes near
+;; 1,000,000 to compare with the time needed to test primes near 1000?
+;; Do your data bear this out? Can you explain any discrepancy you
+;; find?
+
+(define (timed-prime-test3 n)
+  (start-prime-test3 n (time->milliseconds (current-time))))
+
+(define (start-prime-test3 n start-time)
+  (if (fast-prime? n 100)
+      (report-prime n (- (time->milliseconds (current-time))
+                         start-time))))
+
+(define (search-for-primes3 x y)
+  (timed-prime-test3 x)
+  (if (not (= x (- y 1)))
+      (search-for-primes3 (inc x) y)))
+
+;; confused! It stops working 1bn...
