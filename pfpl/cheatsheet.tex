@@ -30,7 +30,7 @@ Page & Expression & Name & Say & Meaning \\ \\
 14& $\infer {\it{J}} {\it{J}_{1}...\it{J}_{\it{k}}}$  & Surfboard & Infers & Judgements ${\it{J}_{1}...\it{J}_{\it{k}}}$ infer judgement ${\it{J}}$\\
 23 & ${\it{J}_{1}...\it{J}_{\it{k}}} \vdash_{\mathcal{R}} \mathcal{K}$ & Turnstile & Entails & Given $\mathcal{R}$ and $\it{J}$ infer $\mathcal{K}$\\
 23 & $\Gamma$ & Gamma & Judgements Gamma & A finite set of judgements \\
-23 & $\Delta$ & Delta & Judgements Delta & A finite set of judgements \\
+23 & $\Delta$ & Delta & Judgements Delta & A finite set of type judgements \\
 25 & $\Gamma \models_{\it{R}} \it{J}$ & Double turnstile & Admissible & $\vdash_{\it{R}} \Gamma$ implies $\vdash_{\it{R}} \it{J}$ \\
 28 & $\bigtriangledown$ & Down triangle & Generic derivation & Generic derivation \\
 36 & $ \it{n} ::= \it{s} $ & Colon colon equals & The syntax of $\it{n}$ is $\it{s}$ & Specifies the syntax of $\it{n}$ \\
@@ -66,16 +66,26 @@ Page & Expression & Name & Say & Meaning \\ \\
 
 65 & $\tau_1 \to \tau_2$ & Right arrow & Maps to & A total function that maps elements of type $\tau_1$ to elements of type $\tau_2$ \\
 65 & $\lambda $ & Lambda & Lambda & Abstraction \\
-71 & $\hookrightarrow$ & Hook arrow & If & Choice selector \\
+71 & $\hookrightarrow$ & Hook arrow & Select & Deconstructor selector \\
 71 & $|$ & Bar & Either & A choice \\
 71 & $\overline{\it{n}}$ & Overline & Succession & The the succession expression corresponding to the number n \\
 76 & $\lceil n \rceil$ & Divided hat & G$\ddot{o}$del numbering & G$\ddot{o}$del numbering \\
 
+81 & $<>$ & Angle brackets & Null tuple & Null tuple \\
+81 & $<e_1,e_2>$ & Angle brackets & Ordered pair & Ordered pair \\
+81 & $e.$l & Left & Left projection & Select left member of the ordered pair \\
+81 & $e.$r & Right & Right projection & Select right member of the ordered pair \\
+
+121 & $t.\tau$ & Dot & Type operator & Bind $t$ to type $\tau$ \\
+133 & $ \cong $ & Tilde equal & Isomorphism & Isomorphism \\
+157 & $::$ & Colon colon & Kind type constructor & Maps types to types \\
 166 & $\mapsto$ & Short bar arrow & Maps to & Function definition \\
 166 &$ \bot$ & Bottom & Bottom & Totally undefined partial function \\
 167 & $\tau_1 \rightharpoonup \tau_2$ & Harpoon & Partial function & Partial function \\
-175 & $ \simeq $ & Tilde equal & Isomorphism & Isomorphism \\
 177 & $\_$ & Underscore & Underscore & Unfree variable \\
+185 & $\Lambda$ & Lambda & Lambda calculus & The lambda calculus \\
+188 & Y & Y & Y Combinator & The Y combinator \\
+190 & $x^{\dagger}$ & Superscript cross & Superscript cross & Language isomorphism \\
 
 \end{tabular}
 
