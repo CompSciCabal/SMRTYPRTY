@@ -111,3 +111,70 @@
 ;; (f (f 2))
 ;; (f (f 2))
 ;; (f 2) --> uh oh
+
+;; skipping some of the mathy ones :D
+
+;; ----------------------------------------------
+;; exercise 1.40
+
+;; f(x) = x^3 + ax^2 + bx + c
+
+(define (cubic a b c)
+	(lambda (x)
+		(+  (* x x x)
+			(* a x x)
+			(* b x)
+			c)))
+
+;; ----------------------------------------------
+;; exercise 1.41
+
+(define (double fn)
+	(lambda (x) (fn (fn x))))
+
+;; ----------------------------------------------
+;; exercise 1.42
+
+(define (compose fn1 fn2) ; yay comp!
+	(lambda (x) (fn1 (fn2 x)))) 
+
+;; I wonder if you can use an undefined number of args in fn params of a define. In which case can abstract compose for any number of fns, not just 2
+;; if so, then 1.43 becomes pretty easy, assuming you write an apply fn
+
+;; ----------------------------------------------
+;; exercise 1.43
+
+(define (repeated fn n)
+	(if (= n 1)
+		fn
+		(compose fn 
+				 (repeated fn (dec n)))))
+
+;; ----------------------------------------------
+;; exercise 1.44
+
+;; pretty simple -- return fn that averages up fn of x, x + dx, and x - dx
+
+(define (smooth fn dx)
+	(labmda (x)
+		(/	(+  (fn x)
+				(fn (+ x dx))
+				(fn (- x dx)))
+			3)))
+
+;; ----------------------------------------------
+;; exercise 1.45
+
+(define (nth-roots x y n)
+	(labmda (x)
+		)) ;; herp derp? No time left, but don't think I'm going down the right path. Will try again later.
+
+;; ----------------------------------------------
+;; exercise 1.46
+
+(define (iterative-improve good-enough? improve-guess)
+	(define (iterate guess)
+		(if (good-enough? guess)
+			guess
+			(iterate (improve-guess guess))))
+	iterate)
