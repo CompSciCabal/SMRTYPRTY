@@ -825,7 +825,7 @@
 ;; 100000000000031 *** 2440
 ;; #;1765>
 
-;; It runs in about 1/3 the time.
+;; It runs in about 2/3 the time.
 
 ;; Deferring the why, I need to sleep
 
@@ -841,7 +841,7 @@
   (start-prime-test3 n (time->milliseconds (current-time))))
 
 (define (start-prime-test3 n start-time)
-  (if (fast-prime? n 100)
+  (if (fast-prime? n 10000)
       (report-prime n (- (time->milliseconds (current-time))
                          start-time))))
 
@@ -851,3 +851,16 @@
       (search-for-primes3 (inc x) y)))
 
 ;; confused! It stops working 1bn...
+
+;; Max did an excellent writeup of this, it's due to float arithmetic.
+;;   https://gist.github.com/mveytsman/318fe8646b14347c39eb
+
+;; Exercise 1.25: Alyssa P. Hacker complains that we went to a lot of
+;; extra work in writing expmod. After all, she says, since we already
+;; know how to compute exponentials, we could have simply written
+
+(define (expmod2 base exp m)
+  (remainder (fast-expt base exp) m))
+
+;; Is she correct? Would this procedure serve as well for our fast
+;; prime tester? Explain.
