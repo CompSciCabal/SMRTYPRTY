@@ -146,3 +146,119 @@
 
 (define (width r)
   (cdr (cdr r)))
+
+;; 2.1.3 What is meant by data
+
+(define (cons-1 x y)
+  (define (dispatch m)
+    (cond ((= m 0) x)
+          ((= m 1) y)
+          (else
+           (error "Argument not 0 or 1:
+                   CONS" m))))
+  dispatch)
+
+(define (car-1 z) (z 0))
+(define (cdr-1 z) (z 1))
+
+;; Exercise 2.4: Here is an alternative procedural representation of
+;; pairs. For this representation, verify that (car (cons x y)) yields
+;; x for any objects x and y.
+
+(define (cons-2 x y)
+  (lambda (m) (m x y)))
+
+(define (car-2 z)
+  (z (lambda (p q) p)))
+
+;; What is the corresponding definition of cdr? (Hint: To verify that
+;; this works, make use of the substitution model of 1.1.5.)
+
+(define (cdr-2 z)
+  (z (lambda (p q) q)))
+
+;; Exercise 2.5: Show that we can represent pairs of nonnegative
+;; integers using only numbers and arithmetic operations if we
+;; represent the pair a and b as the integer that is the product
+;; 2^a3^b. Give the corresponding definitions of the procedures cons,
+;; car, and cdr.
+
+(define (pow a b)
+  (define (iter acc count)
+    (if (= count 0)
+        acc
+        (iter (* acc a) (- count 1))))
+  (iter 1 b))
+
+(define (cons-3 a b)
+  (* (pow 2 a)
+     (pow 3 b)))
+
+;; The property of this combination which allows us to extract a and b
+;; is known as the fundamental theorem of arithmetic - 2 and 3 are
+;; prime and share no common factors. This means that we can divide by
+;; 2 until all that is left is a power of 3, or vice versa.
+
+(define (power-reduce y x)
+  (if (= 0 (remainder x y))
+      (power-reduce y (/ x y))
+      x))
+
+(define (power-count y x)
+  (define (iter acc n)
+    (if (= n y)
+        acc
+        (iter (inc acc) (/ n y))))
+  (iter 1 x))
+
+(define (car-3 x)
+  (power-count 2 (power-reduce 3 x)))
+
+(define (cdr-3 x)
+  (power-count 3 (power-reduce 2 x)))
+
+;; Exercise 2.6: In case representing pairs as procedures wasn’t
+;; mind-boggling enough, consider that, in a language that can
+;; manipulate procedures, we can get by without numbers (at least
+;; insofar as nonnegative integers are concerned) by implementing 0
+;; and the operation of adding 1 as
+
+(define zero (lambda (f) (lambda (x) x)))
+
+(define (add-1 n)
+  (lambda (f) (lambda (x) (f ((n f) x)))))
+
+;; This representation is known as Church numerals, after its
+;; inventor, Alonzo Church, the logician who invented the λ-calculus.
+
+;; Define one and two directly (not in terms of zero and add-1).
+;; (Hint: Use substitution to evaluate (add-1 zero)). Give a direct
+;; definition of the addition procedure + (not in terms of repeated
+;; application of add-1).
+
+;; (add-1 zero)
+;; (add-1 (lambda (f) (lambda (x) x)))
+;; (lambda (f) (lambda (x) (f (((lambda (f1) (lambda (x) x)) f) x))))
+;; (lambda (f) (lambda (x) (f ((lambda (x) x) x))))
+
+(define one
+  (lambda (f) (lambda (x) (f x))))
+
+;; (add-1 (add-1 zero))
+;; (add-1 (lambda (f) (lambda (x) (f x))))
+;; (lambda (f) (lambda (x) (f (((lambda (f1) (lambda (x) (f1 x))) f) x))))
+;; (lambda (f) (lambda (x) (f ((lambda (x) (f x)) x))))
+
+(define two
+  (lambda (f) (lambda (x) (f (f x)))))
+
+;; We can make use of the repeated application of f, which corresponds
+;; with the number represented, to apply add-1 enough times.
+
+(define (church-add a b)
+  ((a add-1) b))
+
+;; this is useful for testing:
+
+(define (church->int x)
+  ((x inc) 0))
