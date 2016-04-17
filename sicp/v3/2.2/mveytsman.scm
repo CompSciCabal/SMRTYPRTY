@@ -313,11 +313,10 @@ x
 ;; of the tree arranged in left-to-right order. For example,
 
 (define (fringe tree)
-  (if (pair? tree)
-      (if (null? (cdr tree))
-          (fringe (car tree))
-          (append (fringe (car tree)) (fringe (cdr tree))))
-      (list tree)))
+  (cond ((null? tree) nil)
+        ((not (pair? tree)) (list tree))
+        (else (append (fringe (car tree))
+                      (fringe (cdr tree))))))
 
 (define x 
   (list (list 1 2) (list 3 4)))
@@ -459,3 +458,280 @@ x
 ;; It works by induction. The subsets of an empty set is empty. If the S' is the
 ;; set S with the element x added, then the subsets of S' are all the subsets of
 ;; S, along with each of those subsets with x included in them.
+
+
+;; -----------------------------------------------
+;; Exercise 2.33: Fill in the missing expressions to complete the following
+;; definitions of some basic list-manipulation operations as accumulations:
+
+(define (map p sequence)
+  (accumulate (lambda (x y) (cons (p x) y))
+              nil sequence))
+
+(define (append seq1 seq2)
+  (accumulate cons seq2 seq1))
+
+(define (length sequence)
+  (accumulate (lambda (x acc) (inc acc)) 0 sequence))
+
+;; ------------------------------------------------
+
+;; Exercise 2.34: Evaluating a polynomial in xx at a given value of xx can be
+;; formulated as an accumulation. We evaluate the polynomial
+
+;; a_n^x + a_{n-1}x^{n-1} + ... + a_1x + a_0
+;; using a well-known algorithm called Horner’s rule, which structures the computation as
+;; (... (a_nx+a_{n-1}x+...+a_1)x+a_0
+
+;; In other words, we start with anan, multiply by xx, add a_{n-1}, multiply by
+;; x, and so on, until we reach a0.
+
+;; Fill in the following template to produce a procedure that evaluates a
+;; polynomial using Horner’s rule. Assume that the coefficients of the
+;; polynomial are arranged in a sequence, from a_0 through a_n.
+
+(define
+  (horner-eval x coefficient-sequence)
+  (accumulate
+   (lambda (this-coeff higher-terms)
+     (+ this-coeff (* higher-terms x)))
+   0
+   coefficient-sequence))
+
+For example, to compute 1+3x+5x^3+x^5 at x=2 you would evaluate
+
+(horner-eval 2 (list 1 3 0 5 0 1))
+
+
+;; -------------------------------
+;; Exercise 2.35: Redefine count-leaves from 2.2.2 as an accumulation:
+
+(define (count-leaves t)
+  (accumulate + 0 (map (lambda (x)
+                         (if (pair? x)
+                             (count-leaves x)
+                             1)) t)))
+
+
+;; -------------------------------
+
+;; Exercise 2.36: The procedure accumulate-n is similar to accumulate except
+;; that it takes as its third argument a sequence of sequences, which are all
+;; assumed to have the same number of elements. It applies the designated
+;; accumulation procedure to combine all the first elements of the sequences,
+;; all the second elements of the sequences, and so on, and returns a sequence
+;; of the results. For instance, if s is a sequence containing four sequences,
+;; ((1 2 3) (4 5 6) (7 8 9) (10 11 12)), then the value of (accumulate-n + 0 s)
+;; should be the sequence (22 26 30). Fill in the missing expressions in the
+;; following definition of accumulate-n:
+
+(define (accumulate-n op init seqs)
+  (if (null? (car seqs))
+      nil
+      (cons (accumulate op init (map car seqs))
+            (accumulate-n op init (map cdr seqs)))))
+
+(accumulate-n + 0 '((1 2 3) (4 5 6) (7 8 9) (10 11 12)))
+;; => (22 26 30)
+
+;; -------------------------------------------------------
+
+;; Exercise 2.37: Suppose we represent vectors v = (v_i) as sequences of
+;; numbers, and matrices m = (m_{ij}) as sequences of vectors (the rows of the
+;; matrix). For example, the matrix
+;; 1 2 3 4
+;; 4 5 6 6
+;; 6 7 8 9
+
+;; is represented as the sequence ((1 2 3 4) (4 5 6 6) (6 7 8 9)). With this
+;; representation, we can use sequence operations to concisely express the basic
+;; matrix and vector operations. These operations (which are described in any
+;; book on matrix algebra) are the following: (dot-product v w)(matrix-*-vector
+;; m v)(matrix-*-matrix m n)(transpose m)returns the sumΣiviwi;returns the
+;; vectort,whereti=Σjmijvj;returns the matrixp,wherepij=Σkmiknkj;returns the
+;; matrixn,wherenij=mji. (dot-product v w)returns the sumΣiviwi;(matrix-*-vector
+;; m v)returns the vectort,whereti=Σjmijvj;(matrix-*-matrix m n)returns the
+;; matrixp,wherepij=Σkmiknkj;(transpose m)returns the matrixn,wherenij=mji. We
+;; can define the dot product as83
+
+(define (dot-product v w)
+  (accumulate + 0 (map * v w)))
+
+;; Fill in the missing expressions in the following procedures for computing the other matrix operations. (The procedure accumulate-n is defined in Exercise 2.36.)
+
+(define (matrix-*-vector m v)
+  (map (lambda (row)
+         (dot-product row v)) m))
+
+(define (transpose mat)
+  (accumulate-n (lambda (row m)
+                  (cons row m)) nil mat))
+
+(define (matrix-*-matrix m n)
+  (let ((cols (transpose n)))
+    (map (lambda (row)
+           (map (lambda (col)
+                  (dot-product row col))
+                cols)) m)))
+
+
+;; ---------------------------------------------
+
+;; Exercise 2.38: The accumulate procedure is also known as fold-right, because
+;; it combines the first element of the sequence with the result of combining
+;; all the elements to the right. There is also a fold-left, which is similar to
+;; fold-right, except that it combines elements working in the opposite
+;; direction:
+
+(define (fold-left op initial sequence)
+  (define (iter result rest)
+    (if (null? rest)
+        result
+        (iter (op result (car rest))
+              (cdr rest))))
+  (iter initial sequence))
+
+
+;; What are the values of
+
+(fold-right / 1 (list 1 2 3))
+;; => 1.5
+(fold-left  / 1 (list 1 2 3))
+;; => 0.166666666666667
+(fold-right list nil (list 1 2 3))
+;; => (1 (2 (3 ())))
+(fold-left  list nil (list 1 2 3))
+;; => (((() 1) 2) 3)
+
+;; Give a property that op should satisfy to guarantee that fold-right and fold-left will produce the same values for any sequence.
+
+;; op has to be commutative (and possibly associative)
+
+
+;; -----------------------------------------------------
+
+;; Exercise 2.39: Complete the following definitions of reverse (Exercise 2.18)
+;; in terms of fold-right and fold-left from Exercise 2.38:
+
+(define (reverse2 sequence)
+  (fold-right 
+   (lambda (x y) (append y (list x))) nil sequence))
+
+(reverse2 '(1 2 3 5))
+
+(define (reverse2 sequence)
+  (fold-left 
+   (lambda (x y) (cons y x)) nil sequence))
+
+;; --------------------------------------------------------------
+
+;; Exercise 2.40: Define a procedure unique-pairs that, given an integer n,
+;; generates the sequence of pairs (i,j) with 1≤j<i≤n. Use
+;; unique-pairs to simplify the definition of prime-sum-pairs given above.
+
+(define (unique-pairs n)
+  (flatmap
+   (lambda (i)
+     (map (lambda (j) 
+            (list i j))
+          (enumerate-interval 
+           1
+           (- i 1))))
+   (enumerate-interval 1 n)))
+
+(define (prime-sum-pairs n)
+  (map make-pair-sum
+       (filter 
+        prime-sum?
+        (unique-pairs n))))
+
+;; Exercise 2.41: Write a procedure to find all ordered triples of distinct
+;; positive integers i, j, and k less than or equal to a given integer n
+;; that sum to a given integer s.
+
+(define (unique-triples n)
+  (flatmap
+   (lambda (i)
+     (map (lambda (j)
+            (cons i j))
+          (unique-pairs (- i 1))))
+   (enumerate-interval 1 n)))
+
+(define (sum seq)
+  (accumulate + 0 seq))
+
+(define (bounded-sum-triples n s)
+  (filter
+   (lambda (triple) (= s (sum triple)))
+   (unique-triples n)))
+
+
+;; --------------------------------------------------------------
+
+;; Exercise 2.42: The “eight-queens puzzle” asks how to place eight queens on a
+;; chessboard so that no queen is in check from any other (i.e., no two queens
+;; are in the same row, column, or diagonal). One possible solution is shown in
+;; Figure 2.8. One way to solve the puzzle is to work across the board, placing
+;; a queen in each column. Once we have placed k−1k−1 queens, we must place the
+;; kthkth queen in a position where it does not check any of the queens already
+;; on the board. We can formulate this approach recursively: Assume that we have
+;; already generated the sequence of all possible ways to place k−1k−1 queens in
+;; the first k−1k−1 columns of the board. For each of these ways, generate an
+;; extended set of positions by placing a queen in each row of the kthkth
+;; column. Now filter these, keeping only the positions for which the queen in
+;; the kthkth column is safe with respect to the other queens. This produces the
+;; sequence of all ways to place kk queens in the first kk columns. By
+;; continuing this process, we will produce not only one solution, but all
+;; solutions to the puzzle.
+
+;; We implement this solution as a procedure queens, which returns a sequence of
+;; all solutions to the problem of placing nn queens on an n×nn×n chessboard.
+;; Queens has an internal procedure queen-cols that returns the sequence of all
+;; ways to place queens in the first kk columns of the board.
+
+(define (queens board-size)
+  (define (queen-cols k)
+    (if (= k 0)
+        (list empty-board)
+        (filter
+         (lambda (positions) 
+           (safe? k positions))
+         (flatmap
+          (lambda (rest-of-queens)
+            (map (lambda (new-row)
+                   (adjoin-position 
+                    new-row 
+                    k 
+                    rest-of-queens))
+                 (enumerate-interval 
+                  1 
+                  board-size)))
+          (queen-cols (- k 1))))))
+  (queen-cols board-size))
+
+;; In this procedure rest-of-queens is a way to place k−1k−1 queens in the first
+;; k−1k−1 columns, and new-row is a proposed row in which to place the queen for
+;; the kthkth column. Complete the program by implementing the representation
+;; for sets of board positions, including the procedure adjoin-position, which
+;; adjoins a new row-column position to a set of positions, and empty-board,
+;; which represents an empty set of positions. You must also write the procedure
+;; safe?, which determines for a set of positions, whether the queen in the
+;; kthkth column is safe with respect to the others. (Note that we need only
+;; check whether the new queen is safe—the other queens are already guaranteed
+;; safe with respect to each other.)
+
+(define empty-board '())
+
+(define (adjoin-position row col positions)
+  (cons (cons row col) positions))
+
+(define (safe? k positions)
+  ;; We assume the kth one is the first one anyway
+  (let ((new-queen (car positions)))
+    (accumulate (lambda (pos safe)
+                  (and safe
+                       (and (not (= (car pos)
+                                    (car new-queen)))
+                            (not (= (cdr pos)
+                                    (cdr new-queen)))
+                            (not ())))) #t (cdr positions))))
