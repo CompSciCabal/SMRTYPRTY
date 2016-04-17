@@ -161,7 +161,7 @@
 
 ;; Since 2 and 3 are relatively prime, we can just find how many factors of two and three go into 2^a*3^b to find a and b
 
-(define (cons a b)
+(define (cons2 a b)
   (* (expt 2 a) (expt 3 b)))
 
 ;; Compute number of times e divides n
@@ -215,6 +215,9 @@
 
 (define two (lambda (f) (lambda (x) (f (f x)))))
 
+(define (church->int n)
+  ((n inc) 0))
+
 ;; ------------------------------------------------------------------------------
 
  (define (add-interval x y)
@@ -235,6 +238,7 @@
     (make-interval (min p1 p2 p3 p4)
                    (max p1 p2 p3 p4))))
 
+;; bug 
 (define (div-interval x y)
   (mul-interval x 
                 (make-interval 
@@ -301,7 +305,7 @@
 ;; Likewise, for division (assuming that 1 < A_l < A_u < B_l < B_u)
 
 ;; A / B = (A_l,A_u) * (1/B_l,1/B_u) = (A_l/B_u, A_u/B_l)
-;; The width is (A_u/B-l - A_l/B_u)/2 = (A_u*B_u - A_l*B_l)/2
+;; The width is (A_u/B-l - A_l/B_u)/2 = (A_u*B_u - A_l*B_l)/2(B_u*B_l)
 ;; Which is not a function of the widths.
 
 ;; ---------------------------------------------------------------------------------
@@ -338,10 +342,11 @@
   ;; An interval's upper bound is negative, thus it's entirely negative
   (define (negative-interval? n)
     (negative? (upper-bound n)))
+
   (let ((x-l (lower-bound x))
         (x-u (upper-bound x))
         (y-l (lower-bound y))
-        (y-u (uppper-bound y)))
+        (y-u (upper-bound y)))
 
 
     (cond ((and (positive-interval? x) ;; Both are positive
