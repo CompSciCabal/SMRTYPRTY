@@ -722,16 +722,58 @@ For example, to compute 1+3x+5x^3+x^5 at x=2 you would evaluate
 
 (define empty-board '())
 
+(define (make-pos row col)
+  (cons row col))
+
+(define row car)
+(define col cdr)
+
 (define (adjoin-position row col positions)
-  (cons (cons row col) positions))
+  (cons (make-pos row col) positions))
+
+
+(define (same-row? pos1 pos2)
+  (= (row pos1) (row pos2)))
+
+(define (same-col? pos1 pos2)
+  (= (col pos1) (col pos2)))
+
+(define (same-diag? pos1 pos2)
+  (or (= (+ (row pos1) (col pos1))
+         (+ (row pos2) (col pos2)))
+      (= (- (row pos1) (col pos1))
+         (- (row pos2) (col pos2)))))
 
 (define (safe? k positions)
   ;; We assume the kth one is the first one anyway
   (let ((new-queen (car positions)))
     (accumulate (lambda (pos safe)
                   (and safe
-                       (and (not (= (car pos)
-                                    (car new-queen)))
-                            (not (= (cdr pos)
-                                    (cdr new-queen)))
-                            (not ())))) #t (cdr positions))))
+                       (and (not (same-row? pos new-queen))
+                            (not (same-col? pos new-queen))
+                            (not (same-diag? pos new-queen)))))
+                #t (cdr positions))))
+
+
+;; Exercise 2.43: Louis Reasoner is having a terrible time doing Exercise 2.42.
+;; His queens procedure seems to work, but it runs extremely slowly. (Louis
+;; never does manage to wait long enough for it to solve even the 6×66×6 case.)
+;; When Louis asks Eva Lu Ator for help, she points out that he has interchanged
+;; the order of the nested mappings in the flatmap, writing it as
+
+;; (flatmap
+;;  (lambda (new-row)
+;;    (map (lambda (rest-of-queens)
+;;           (adjoin-position 
+;;            new-row k rest-of-queens))
+;;         (queen-cols (- k 1))))
+;;  (enumerate-interval 1 board-size))
+
+;; Explain why this interchange makes the program run slowly. Estimate how long
+;; it will take Louis’s program to solve the eight-queens puzzle, assuming that
+;; the program in Exercise 2.42 solves the puzzle in time T.
+
+;; Instead of solving the puzzle for k-1 before solving the k case, Louis'
+;; program grows the solution backwards and solves the k-1 case 8 times for
+;; every row, ad nauseam. It will take 8!*T time to solve (I am not sure of
+;; this!)
