@@ -473,13 +473,12 @@
           (else
            (error "unprecedented combination of intervals!")))))
 
-;; After debugging her program, Alyssa shows it to a potential user,
-;; who complains that her program solves the wrong problem. He wants a
-;; program that can deal with numbers represented as a center value
-;; and an additive tolerance; for example, he wants to work with
-;; intervals such as 3.5 ±± 0.15 rather than [3.35, 3.65]. Alyssa
-;; returns to her desk and fixes this problem by supplying an
-;; alternate constructor and alternate selectors:
+;; After debugging her program, Alyssa shows it to a potential user, who
+;; complains that her program solves the wrong problem. He wants a program that
+;; can deal with numbers represented as a center value and an additive
+;; tolerance; for example, he wants to work with intervals such as 3.5 ±± 0.15
+;; rather than [3.35, 3.65]. Alyssa returns to her desk and fixes this problem
+;; by supplying an alternate constructor and alternate selectors:
 
 (define (make-center-width c w)
   (make-interval (- c w) (+ c w)))
@@ -494,9 +493,81 @@
         (lower-bound i))
      2))
 
-;; Unfortunately, most of Alyssa’s users are engineers. Real
-;; engineering situations usually involve measurements with only a
-;; small uncertainty, measured as the ratio of the width of the
-;; interval to the midpoint of the interval. Engineers usually specify
-;; percentage tolerances on the parameters of devices, as in the
-;; resistor specifications given earlier.
+;; Unfortunately, most of Alyssa’s users are engineers. Real engineering
+;; situations usually involve measurements with only a small uncertainty,
+;; measured as the ratio of the width of the interval to the midpoint of the
+;; interval. Engineers usually specify percentage tolerances on the parameters
+;; of devices, as in the resistor specifications given earlier.
+
+;; Exercise 2.12: Define a constructor make-center-percent that takes a center
+;; and a percentage tolerance and produces the desired interval. You must also
+;; define a selector percent that produces the percentage tolerance for a given
+;; interval. The center selector is the same as the one shown above.
+
+(define (make-center-percent c t)
+  (make-center-width c (* c (/ t 100))))
+
+(define (percent i)
+  (* 100 (/ (width i) (center i))))
+
+;; Exercise 2.13: Show that under the assumption of small percentage tolerances
+;; there is a simple formula for the approximate percentage tolerance of the
+;; product of two intervals in terms of the tolerances of the factors. You may
+;; simplify the problem by assuming that all numbers are positive.
+
+;; Nope, I don't think I will.
+
+(define (par1 r1 r2)
+  (div-interval
+   (mul-interval r1 r2)
+   (add-interval r1 r2)))
+
+(define (par2 r1 r2)
+  (let ((one (make-interval 1 1)))
+    (div-interval
+     one
+     (add-interval
+      (div-interval one r1)
+      (div-interval one r2)))))
+
+;; Lem complains that Alyssa’s program gives different answers for the two ways
+;; of computing. This is a serious complaint.
+
+;; Exercise 2.14: Demonstrate that Lem is right. Investigate the behavior of the
+;; system on a variety of arithmetic expressions. Make some intervals A and B,
+;; and use them in computing the expressions A/A and A/B. You will get the most
+;; insight by using intervals whose width is a small percentage of the center
+;; value. Examine the results of the computation in center-percent form (see
+;; Exercise 2.12).
+
+(define (verify-program-flaw)
+  (define a (make-interval 100 101))
+  (define b (make-interval 200 201))
+
+  (let ((r1 (par1 a b))
+        (r2 (par2 a b)))
+    (print (upper-bound r1) " " (upper-bound r2))
+    (print (lower-bound r1) " " (lower-bound r2))
+    (print (center r1) " " (width r1) " " (percent r1))
+    (print (center r2) " " (width r2) " " (percent r2))))
+
+;; #;1763> (verify-program-flaw)
+;; 67.67 67.2218543046358
+;; 66.2251655629139 66.6666666666667
+;; 66.947582781457 0.72241721854305 1.07907886816661
+;; 66.9442604856512 0.277593818984542 0.414664105586828
+
+;; Exercise 2.15: Eva Lu Ator, another user, has also noticed the different
+;; intervals computed by different but algebraically equivalent expressions. She
+;; says that a formula to compute with intervals using Alyssa’s system will
+;; produce tighter error bounds if it can be written in such a form that no
+;; variable that represents an uncertain number is repeated. Thus, she says,
+;; par2 is a “better” program for parallel resistances than par1. Is she right?
+;; Why?
+
+;; lol
+
+;; Exercise 2.16: Explain, in general, why equivalent algebraic expressions may
+;; lead to different answers. Can you devise an interval-arithmetic package that
+;; does not have this shortcoming, or is this task impossible? (Warning: This
+;; problem is very difficult.)
