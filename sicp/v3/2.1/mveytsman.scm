@@ -375,7 +375,7 @@
 
           ((negative-interval? x) ;; x negative, y spans 0
            (make-interval (* x-l y-u)
-                          (* x-u y-l)))
+                          (* x-l y-l)))
 
           ((positive-interval? y) ;; x spans 0, y positive
            (make-interval (* x-l y-u)
