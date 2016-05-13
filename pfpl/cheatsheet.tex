@@ -123,7 +123,7 @@ N & P & Expression & Name & Say & Meaning \\ \\
 p{.22\textwidth} p{.32\textwidth}}
 N & P & Expression & Name & Say & Meaning \\ \\
 
-40& 71 & $\hookrightarrow$ & Hook arrow & Select & Deconstructor selector \\
+40& 71 & $\hookrightarrow$ & Hook arrow & Select & Selector (used in System T recursion, sum types, and product types)\\
 41& 71 & $|$ & Bar & Either & A choice \\
 42& 71 & $\overline{\it{n}}$ & Overline & Church numbering & The Church numbering \\
 43& 76 & $\lceil n \rceil$ & Divided hat & G$\ddot{o}$del numbering & The G$\ddot{o}$del numbering \\
@@ -146,29 +146,31 @@ N & P & Expression & Name & Say & Meaning \\ \\
 
 48& 87 & l.$e$ & Left & Left injection & Create sum type element using left type \\
 49& 87 & r.$e$ & Right & Right injection & Create sum type element using right type \\
+50& 93 & $\triangleq$ & Delta equals & Delta equals & Replacement \\
 \end{tabular}
+
 \subsection*{VI. Infinite Data Types}
 \subsubsection*{14 Generic Programming}
 \begin{tabular}[b] {p{.025\textwidth} p{.025\textwidth} p{.13\textwidth} p{.15\textwidth} 
 p{.22\textwidth} p{.32\textwidth}}
 N & P & Expression & Name & Say & Meaning \\ \\
 
-50& 121 & $t.\tau$ & Dot & Type operator & Bind $t$ to type $\tau$ \\
+51& 121 & $t.\tau$ & Dot & Type operator & Bind $t$ to type $\tau$ \\
 \end{tabular}
 \subsubsection*{15 Inductive and Coinductive Types}
 \begin{tabular}[b] {p{.025\textwidth} p{.025\textwidth} p{.13\textwidth} p{.15\textwidth} 
 p{.22\textwidth} p{.32\textwidth}}
 N & P & Expression & Name & Say & Meaning \\ \\
 
-51& 133 & $ \cong $ & Tilde equal & Isomorphism & Isomorphism \\
+52& 133 & $ \cong $ & Tilde equal & Isomorphism & Isomorphism \\
 \end{tabular}
 \subsection*{VII. Variable Types}
 \subsubsection*{17 Abstract Types}
 \begin{tabular}[b] {p{.025\textwidth} p{.025\textwidth} p{.13\textwidth} p{.15\textwidth} 
 p{.22\textwidth} p{.32\textwidth}}
 N & P & Expression & Name & Say & Meaning \\ \\
-52 & 149 & $\exists(t.\tau)$ & Existential quantifier & Exists & Defines an interface \\
-53 & 153 & $\forall(t.\tau\longrightarrow\tau_2)$ & Universal quantifier & For all & Defines universal type \\
+53 & 149 & $\exists(t.\tau)$ & Existential quantifier & Exists & Defines an interface \\
+54 & 153 & $\forall(t.\tau\longrightarrow\tau_2)$ & Universal quantifier & For all & Defines universal type \\
 \end{tabular}
 
 \subsubsection*{18 Higher Kinds}
@@ -177,7 +179,7 @@ p{.22\textwidth} p{.32\textwidth}}
 N & P & Expression & Name & Say & Meaning \\ \\
 
 
-54& 157 & $::$ & Colon colon & Kind type constructor & Maps types to types \\
+55& 157 & $::$ & Colon colon & Kind type constructor & Maps types to types \\
 \end{tabular}
 \subsection*{VIII. Partiality and Recursive Types}
 \subsubsection*{19 System PCF of Recursive Functions}
@@ -185,9 +187,9 @@ N & P & Expression & Name & Say & Meaning \\ \\
 p{.22\textwidth} p{.32\textwidth}}
 N & P & Expression & Name & Say & Meaning \\ \\
 
-55& 166 & $\mapsto$ & Short bar arrow & Maps to & Function definition \\
-56& 166 &$ \bot$ & Bottom & Bottom & Totally undefined partial function \\
-57& 167 & $\tau_1 \rightharpoonup \tau_2$ & Harpoon & Partial function & Partial function \\
+56& 166 & $\mapsto$ & Short bar arrow & Maps to & Function definition \\
+57& 166 &$ \bot$ & Bottom & Bottom & Totally undefined partial function \\
+58& 167 & $\tau_1 \rightharpoonup \tau_2$ & Harpoon & Partial function & Partial function \\
 \end{tabular}
 
 \subsubsection*{20 System FPC of Recursive Types}
@@ -196,7 +198,7 @@ p{.22\textwidth} p{.32\textwidth}}
 N & P & Expression & Name & Say & Meaning \\ \\
 
 
-58& 177 & $\_$ & Underscore & Underscore & Unfree variable \\
+59& 177 & $\_$ & Underscore & Underscore & Unfree variable \\
 \end{tabular}
 \subsection*{IX. Dynamic Types}
 \subsubsection*{21 The Untyped $\lambda$-Calculus}
@@ -204,10 +206,29 @@ N & P & Expression & Name & Say & Meaning \\ \\
 p{.22\textwidth} p{.32\textwidth}}
 N & P & Expression & Name & Say & Meaning \\ \\
 
-59& 185 & $\Lambda$ & Lambda & Lambda calculus & The lambda calculus \\
-60& 188 & Y & Y & Y Combinator & The Y combinator \\
-61& 190 & $x^{\dagger}$ & Superscript cross & Superscript cross & Language isomorphism \\
+60& 185 & $\Lambda$ & Lambda & Lambda calculus & The lambda calculus \\
+61& 188 & Y & Y & Y Combinator & The Y combinator \\
+62& 190 & $x^{\dagger}$ & Superscript cross & Superscript cross & Language isomorphism \\
 
 \end{tabular}
 
+\subsection*{X. Subtyping}
+\subsubsection*{24 Structural Subtyping}
+\begin{tabular}[b] {p{.025\textwidth} p{.025\textwidth} p{.13\textwidth} p{.15\textwidth} 
+p{.22\textwidth} p{.32\textwidth}}
+N & P & Expression & Name & Say & Meaning \\ \\
+
+63& 213 & $\tau'<:\tau$ & Subtype & $\tau'$ is a subtype of $\tau$ & $\tau'$ is a subtype of $\tau$ \\
+
+\end{tabular}
+
+\subsection*{XI. Dynamic Dispatch}
+\subsubsection*{27 Inheritance}
+\begin{tabular}[b] {p{.025\textwidth} p{.025\textwidth} p{.13\textwidth} p{.15\textwidth} 
+p{.22\textwidth} p{.32\textwidth}}
+N & P & Expression & Name & Say & Meaning \\ \\
+
+64& 252 & $()^{\ddagger}$ & Isomorphism & Isomorphism & $()^{\ddagger}$ is a method isomorphism \\
+
+\end{tabular}
 \end{document}
