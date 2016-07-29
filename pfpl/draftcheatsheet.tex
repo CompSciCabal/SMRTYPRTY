@@ -238,15 +238,49 @@ N & P & Expression & Name & Say & Meaning \\ \\
 p{.22\textwidth} p{.32\textwidth}}
 N & P & Expression & Name & Say & Meaning \\ \\
 
-65& 258 & $\epsilon$ & Epsilon & Empty frame & Empty frame\\
-66& 258 & (\textemdash) & Frame hole & Frame hole & A place to put an evaluated expression into a frame\\
-67& 258 & $k;f$ & Stack with frame & Stack $k$ with frame $f$  & Stack $k$ has frame $f$ at the bottom\\
-68& 258 & $\vartriangleright$ & Right triangle & Evaluate and push & Evaluate an expression and push the result into a stack frame \\
-69& 258 & $\vartriangleleft$ & Left triangle & Push & Push evaluated result into a frame\\
-70& 259 & $\vartriangleleft:\tau$ & Triangle colon & Push expression of type $\tau$ & Push expression of type $\tau$\\
+65& 257 & $k \vartriangleright e$ & Right triangle & Evaluation state & Evaluate $e$ on $k$ \\
+66& 257 & $k \vartriangleleft e$ & Left triangle & Return state & Evaluate $k$ on $e$\\
+67& 258 & $\epsilon$ & Epsilon & Empty frame & Empty frame\\
+68& 258 & (\textemdash) & Frame hole & Frame hole & A place to put an evaluated expression into a frame\\
+69& 258 & $k;f$ & Stack with frame & Stack $k$ with frame $f$  & Stack $k$ has frame $f$ at the bottom\\
+70& 259 & $k \vartriangleleft:\tau$ & Triangle colon & Stack $k$ expects value of type $\tau$ & Stack $k$ expects value of type $\tau$\\
 71& 259 & $f:\tau\rightsquigarrow\tau'$ & Squiggle arrow & Transform & Frame $f$ transforms expression of type $\tau$ into expression of type $\tau'$\\
 72& 261 & $s \looparrowright e$ & Loop arrow & Unravel & State $s$ goes to expression $e$ \\
 73& 261 & $k \bowtie e = e'$ & Bowtie & Goes to & Stack $k$ and expression $e$ goes to expression $e'$\\
+
+\end{tabular}
+\subsubsection*{29 Exceptions}
+\begin{tabular}[b] {p{.025\textwidth} p{.025\textwidth} p{.13\textwidth} p{.15\textwidth} 
+p{.22\textwidth} p{.32\textwidth}}
+N & P & Expression & Name & Say & Meaning \\ \\
+
+74& 266 & $k \blacklozenge$ & Dark left triangle & Failed & Stack $k$ is in a failed state \\
+
+\end{tabular}
+
+\subsection*{XIII. Symbolic Data}
+\subsubsection*{31 Symbols}
+\begin{tabular}[b] {p{.025\textwidth} p{.025\textwidth} p{.13\textwidth} p{.15\textwidth} 
+p{.22\textwidth} p{.32\textwidth}}
+N & P & Expression & Name & Say & Meaning \\ \\
+
+75 & 282 & $a \sim \tau$ & Tilde & Define $a$ & Define symbol $a$ as type $\tau$ \\
+76 & 282 & $\Sigma$ & Sigma & Symbol context & Set of symbol definitions \\
+77 & 284 & $'a$ & Quote & Symbol reference & Symbol reference \\
+\end{tabular}
+
+\subsubsection*{32 Fluid Binding}
+\begin{tabular}[b] {p{.025\textwidth} p{.025\textwidth} p{.13\textwidth} p{.15\textwidth} 
+p{.22\textwidth} p{.32\textwidth}}
+N & P & Expression & Name & Say & Meaning \\ \\
+
+\end{tabular}
+
+\subsection*{XIV. Mutable State}
+\subsubsection*{34 Modernized Algol}
+\begin{tabular}[b] {p{.025\textwidth} p{.025\textwidth} p{.13\textwidth} p{.15\textwidth} 
+p{.22\textwidth} p{.32\textwidth}}
+N & P & Expression & Name & Say & Meaning \\ \\
 
 \end{tabular}
 
