@@ -273,9 +273,9 @@ N & P & Expression & Name & Say & Meaning \\ \\
 \begin{tabular}[b] {p{.025\textwidth} p{.025\textwidth} p{.13\textwidth} p{.15\textwidth} 
 p{.22\textwidth} p{.32\textwidth}}
 N & P & Expression & Name & Say & Meaning \\ \\
-78 & 290 & $\mu ' \otimes a \hookrightarrow e$ & Tensor product & Tensor product &  Map symbol $a$ to expression $e$\\
-79 & 290 & $\mu ' \otimes a \hookrightarrow \bullet$ & Tensor product & Tensor product &  Symbol $a$ is undefined\\
-80 & 290 & $\mu ' \otimes a \hookrightarrow $ \underline{ } & Tensor product & Tensor product &  Symbol $a$ is indeterminate\\
+78 & 290 & $\mu ' \otimes a \hookrightarrow e$ & Tensor product & Extended by &  Map symbol $a$ to expression $e$\\
+79 & 290 & $\mu ' \otimes a \hookrightarrow \bullet$ & Tensor product & Extended by &  Symbol $a$ is undefined\\
+80 & 290 & $\mu ' \otimes a \hookrightarrow $ \underline{ } & Tensor product & Extended by &  Symbol $a$ is indeterminate\\
 
 \end{tabular}
 
@@ -285,10 +285,11 @@ N & P & Expression & Name & Say & Meaning \\ \\
 p{.22\textwidth} p{.32\textwidth}}
 N & P & Expression & Name & Say & Meaning \\ \\
 
-81& 308 & $a := e$ & Colon equals & Assign & Assign $e$ to $a$\\
-82 & 308 & $*a$ & Star & Reference & Get the value of $a$\\
-82 & 309 & $ m \| \mu $& State & State & Command $m$ with memory map $\mu$\\
-83 & 314 & $ m \thicksim \tau$ & Dotted tilde & Dotted tilde & Command $m$ returns a value of type $\tau$\\
+81& 308 & $x \leftarrow e ; m$ & Left arrow & Sequence & Execute command $m$ with $e$ substituted for $x$ \\
+82& 308 & $a := e$ & Colon equals & Assign & Assign $e$ to $a$\\
+83 & 308 & $*a$ & Star & Reference & Get the value of $a$\\
+84 & 309 & $ m \| \mu $& State & State & Command $m$ with memory map $\mu$\\
+85 & 314 & $ m \thicksim \tau$ & Dotted tilde & Dotted tilde & Command $m$ returns a value of type $\tau$\\
 \end{tabular}
 
 \end{document}
