@@ -287,9 +287,27 @@ N & P & Expression & Name & Say & Meaning \\ \\
 
 81& 308 & $x \leftarrow e ; m$ & Left arrow & Sequence & Execute command $m$ with $e$ substituted for $x$ \\
 82& 308 & $a := e$ & Colon equals & Assign & Assign $e$ to $a$\\
-83 & 308 & $*a$ & Star & Reference & Get the value of $a$\\
+83 & 308 & $*a$ & Star & Contents & Get the value of $a$\\
 84 & 309 & $ m \| \mu $& State & State & Command $m$ with memory map $\mu$\\
 85 & 314 & $ m \thicksim \tau$ & Dotted tilde & Dotted tilde & Command $m$ returns a value of type $\tau$\\
+\end{tabular}
+
+\subsubsection*{35 Assignable References}
+\begin{tabular}[b] {p{.025\textwidth} p{.025\textwidth} p{.13\textwidth} p{.15\textwidth} 
+p{.22\textwidth} p{.32\textwidth}}
+N & P & Expression & Name & Say & Meaning \\ \\
+
+86 & 320 & $ \& a $ & Ampersand & Reference & Reference to assignable \\
+ 
+\end{tabular}
+
+\subsubsection*{36 Lazy Evaluation}
+\begin{tabular}[b] {p{.025\textwidth} p{.025\textwidth} p{.13\textwidth} p{.15\textwidth} 
+p{.22\textwidth} p{.32\textwidth}}
+N & P & Expression & Name & Say & Meaning \\ \\
+
+87 & 333 & $ \Longrightarrow $ & Long right arrow & Implies & Implication (low precedence) \\
+ 
 \end{tabular}
 
 \end{document}
