@@ -273,9 +273,9 @@ N & P & Expression & Name & Say & Meaning \\ \\
 \begin{tabular}[b] {p{.025\textwidth} p{.025\textwidth} p{.13\textwidth} p{.15\textwidth} 
 p{.22\textwidth} p{.32\textwidth}}
 N & P & Expression & Name & Say & Meaning \\ \\
-78 & 290 & $\mu ' \otimes a \hookrightarrow e$ & Tensor product & Extended by &  Map symbol $a$ to expression $e$\\
-79 & 290 & $\mu ' \otimes a \hookrightarrow \bullet$ & Tensor product & Extended by &  Symbol $a$ is undefined\\
-80 & 290 & $\mu ' \otimes a \hookrightarrow $ \underline{ } & Tensor product & Extended by &  Symbol $a$ is indeterminate\\
+78 & 290 & $\mu ' \otimes a \hookrightarrow e$ & Circle times & Extended by &  Map symbol $a$ to expression $e$\\
+79 & 290 & $\mu ' \otimes a \hookrightarrow \bullet$ & Circle times & Extended by &  Symbol $a$ is undefined\\
+80 & 290 & $\mu ' \otimes a \hookrightarrow $ \underline{ } & Circle times & Extended by &  Symbol $a$ is indeterminate\\
 
 \end{tabular}
 
@@ -308,6 +308,34 @@ N & P & Expression & Name & Say & Meaning \\ \\
 
 87 & 333 & $ \Longrightarrow $ & Long right arrow & Implies & Implication (low precedence) \\
  
+\end{tabular}
+
+\subsection*{XV. Parallelism}
+\subsubsection*{37 Nested Parallelism}
+\begin{tabular}[b] {p{.025\textwidth} p{.025\textwidth} p{.13\textwidth} p{.15\textwidth} 
+p{.22\textwidth} p{.32\textwidth}}
+N & P & Expression & Name & Say & Meaning \\ \\
+
+88& 344 & $c_1 \otimes c_2 $ & Circle times  & Parallel cost & Cost of executing in parallel \\
+88& 344 & $c_1 \oplus c_2 $ & Circle plus  & Sequential cost & Cost of executing in sequence \\
+90& 350 & $a_1 \hookrightarrow s_1 \otimes a_2 \hookrightarrow s_2$ & Circle times  & Parallel join & Join local states \\
+\end{tabular}
+
+\subsection*{XVI. Concurrency and Distribution}
+\subsubsection*{39 Process Calculus}
+\begin{tabular}[b] {p{.025\textwidth} p{.025\textwidth} p{.13\textwidth} p{.15\textwidth} 
+p{.22\textwidth} p{.32\textwidth}}
+N & P & Expression & Name & Say & Meaning \\ \\
+
+91& 365 & $ \$ E$ & Dollar  & Synchronize & Synchronize parallel processes \\
+92& 365 & $E_1 + E_2 $ & Plus  & Choice & Pick one of 2 expressions \\
+93& 365 & $?a;P$ & Query  & Query & Query a channel \\
+94& 365 & $!a;P$ & Bang  & Signal & Signal a channel \\
+95 & 367 & $ P_1 \otimes P_2 $  & Circle times & Composition & Compose 2 concurrent processes \\
+96 & 369 & $ *P $  & Star & Replication & Replicate process $P$ \\
+97 & 373 & $ ! a ( e ; P ) $  & Bang & Send & Send expression $e$ on channel $a$ to process $P$ \\
+98 & 373 & $ ? a ( x . P ) $  & Query & Receive & Receive expression $e$ on channel $a$ in process $P$ \\
+
 \end{tabular}
 
 \end{document}
