@@ -178,8 +178,8 @@ N & P & Expression & Name & Say & Meaning \\ \\
 p{.22\textwidth} p{.32\textwidth}}
 N & P & Expression & Name & Say & Meaning \\ \\
 
-
 55& 157 & $::$ & Colon colon & Kind type constructor & Maps types to types \\
+56 & 158 & $e_1[e_2] $ & Bracket & Application & Apply (call) function \\
 \end{tabular}
 \subsection*{VIII. Partiality and Recursive Types}
 \subsubsection*{19 System PCF of Recursive Functions}
@@ -187,9 +187,9 @@ N & P & Expression & Name & Say & Meaning \\ \\
 p{.22\textwidth} p{.32\textwidth}}
 N & P & Expression & Name & Say & Meaning \\ \\
 
-56& 166 & $\mapsto$ & Short bar arrow & Maps to & Function definition \\
-57& 166 &$ \bot$ & Bottom & Bottom & Totally undefined partial function \\
-58& 167 & $\tau_1 \rightharpoonup \tau_2$ & Harpoon & Partial function & Partial function \\
+57& 166 & $\mapsto$ & Short bar arrow & Maps to & Function definition \\
+58& 166 &$ \bot$ & Bottom & Bottom & Totally undefined partial function \\
+59& 167 & $\tau_1 \rightharpoonup \tau_2$ & Harpoon & Partial function & Partial function \\
 \end{tabular}
 
 \subsubsection*{20 System FPC of Recursive Types}
@@ -198,7 +198,7 @@ p{.22\textwidth} p{.32\textwidth}}
 N & P & Expression & Name & Say & Meaning \\ \\
 
 
-59& 177 & $\_$ & Underscore & Underscore & Unfree variable \\
+60& 177 & $\_$ & Underscore & Underscore & Unfree variable \\
 \end{tabular}
 \subsection*{IX. Dynamic Types}
 \subsubsection*{21 The Untyped $\lambda$-Calculus}
@@ -206,9 +206,9 @@ N & P & Expression & Name & Say & Meaning \\ \\
 p{.22\textwidth} p{.32\textwidth}}
 N & P & Expression & Name & Say & Meaning \\ \\
 
-60& 185 & $\Lambda$ & Lambda & Lambda calculus & The lambda calculus \\
-61& 188 & Y & Y & Y Combinator & The Y combinator \\
-62& 190 & $x^{\dagger}$ & Superscript cross & Superscript cross & Language isomorphism \\
+61& 185 & $\Lambda$ & Lambda & Lambda calculus & The lambda calculus \\
+62& 188 & Y & Y & Y Combinator & The Y combinator \\
+63& 190 & $x^{\dagger}$ & Superscript cross & Superscript cross & Language isomorphism \\
 
 \end{tabular}
 
@@ -218,7 +218,7 @@ N & P & Expression & Name & Say & Meaning \\ \\
 p{.22\textwidth} p{.32\textwidth}}
 N & P & Expression & Name & Say & Meaning \\ \\
 
-63& 213 & $\tau'<:\tau$ & Subtype & $\tau'$ is a subtype of $\tau$ & $\tau'$ is a subtype of $\tau$ \\
+64& 213 & $\tau'<:\tau$ & Subtype & $\tau'$ is a subtype of $\tau$ & $\tau'$ is a subtype of $\tau$ \\
 
 \end{tabular}
 
@@ -228,7 +228,7 @@ N & P & Expression & Name & Say & Meaning \\ \\
 p{.22\textwidth} p{.32\textwidth}}
 N & P & Expression & Name & Say & Meaning \\ \\
 
-64& 252 & $()^{\ddagger}$ & Isomorphism & Isomorphism & $()^{\ddagger}$ is a method isomorphism \\
+65& 252 & $()^{\ddagger}$ & Isomorphism & Isomorphism & $()^{\ddagger}$ is a method isomorphism \\
 
 \end{tabular}
 
@@ -238,15 +238,15 @@ N & P & Expression & Name & Say & Meaning \\ \\
 p{.22\textwidth} p{.32\textwidth}}
 N & P & Expression & Name & Say & Meaning \\ \\
 
-65& 257 & $k \vartriangleright e$ & Right triangle & Evaluation state & Evaluate $e$ on $k$ \\
-66& 257 & $k \vartriangleleft e$ & Left triangle & Return state & Evaluate $k$ on $e$\\
-67& 258 & $\epsilon$ & Epsilon & Empty frame & Empty frame\\
-68& 258 & (\textemdash) & Frame hole & Frame hole & A place to put an evaluated expression into a frame\\
-69& 258 & $k;f$ & Stack with frame & Stack $k$ with frame $f$  & Stack $k$ has frame $f$ at the bottom\\
-70& 259 & $k \vartriangleleft:\tau$ & Triangle colon & Stack $k$ expects value of type $\tau$ & Stack $k$ expects value of type $\tau$\\
-71& 259 & $f:\tau\rightsquigarrow\tau'$ & Squiggle arrow & Transform & Frame $f$ transforms expression of type $\tau$ into expression of type $\tau'$\\
-72& 261 & $s \looparrowright e$ & Loop arrow & Unravel & State $s$ goes to expression $e$ \\
-73& 261 & $k \bowtie e = e'$ & Bowtie & Goes to & Stack $k$ and expression $e$ goes to expression $e'$\\
+66& 257 & $k \vartriangleright e$ & Right triangle & Evaluation state & Evaluate $e$ on $k$ \\
+67& 257 & $k \vartriangleleft e$ & Left triangle & Return state & Evaluate $k$ on $e$\\
+68& 258 & $\epsilon$ & Epsilon & Empty frame & Empty frame\\
+69& 258 & (\textemdash) & Frame hole & Frame hole & A place to put an evaluated expression into a frame\\
+70& 258 & $k;f$ & Stack with frame & Stack $k$ with frame $f$  & Stack $k$ has frame $f$ at the bottom\\
+71& 259 & $k \vartriangleleft:\tau$ & Triangle colon & Stack $k$ expects value of type $\tau$ & Stack $k$ expects value of type $\tau$\\
+72& 259 & $f:\tau\rightsquigarrow\tau'$ & Squiggle arrow & Transform & Frame $f$ transforms expression of type $\tau$ into expression of type $\tau'$\\
+73& 261 & $s \looparrowright e$ & Loop arrow & Unravel & State $s$ goes to expression $e$ \\
+74& 261 & $k \bowtie e = e'$ & Bowtie & Goes to & Stack $k$ and expression $e$ goes to expression $e'$\\
 
 \end{tabular}
 \subsubsection*{29 Exceptions}
@@ -254,7 +254,7 @@ N & P & Expression & Name & Say & Meaning \\ \\
 p{.22\textwidth} p{.32\textwidth}}
 N & P & Expression & Name & Say & Meaning \\ \\
 
-74& 266 & $k \blacklozenge$ & Dark left triangle & Failed & Stack $k$ is in a failed state \\
+75& 266 & $k \blacklozenge$ & Dark left triangle & Failed & Stack $k$ is in a failed state \\
 
 \end{tabular}
 
@@ -264,18 +264,18 @@ N & P & Expression & Name & Say & Meaning \\ \\
 p{.22\textwidth} p{.32\textwidth}}
 N & P & Expression & Name & Say & Meaning \\ \\
 
-75 & 282 & $a \sim \tau$ & Tilde & Define $a$ & Define symbol $a$ as type $\tau$ \\
-76 & 282 & $\Sigma$ & Sigma & Symbol context & Set of symbol definitions \\
-77 & 284 & $'a$ & Quote & Symbol reference & Symbol reference \\
+76 & 282 & $a \sim \tau$ & Tilde & Define $a$ & Define symbol $a$ as type $\tau$ \\
+77 & 282 & $\Sigma$ & Sigma & Symbol context & Set of symbol definitions \\
+78 & 284 & $'a$ & Quote & Symbol reference & Symbol reference \\
 \end{tabular}
 
 \subsubsection*{32 Fluid Binding}
 \begin{tabular}[b] {p{.025\textwidth} p{.025\textwidth} p{.13\textwidth} p{.15\textwidth} 
 p{.22\textwidth} p{.32\textwidth}}
 N & P & Expression & Name & Say & Meaning \\ \\
-78 & 290 & $\mu ' \otimes a \hookrightarrow e$ & Circle times & Extended by &  Map symbol $a$ to expression $e$\\
-79 & 290 & $\mu ' \otimes a \hookrightarrow \bullet$ & Circle times & Extended by &  Symbol $a$ is undefined\\
-80 & 290 & $\mu ' \otimes a \hookrightarrow $ \underline{ } & Circle times & Extended by &  Symbol $a$ is indeterminate\\
+79 & 290 & $\mu ' \otimes a \hookrightarrow e$ & Circle times & Extended by &  Map symbol $a$ to expression $e$\\
+80 & 290 & $\mu ' \otimes a \hookrightarrow \bullet$ & Circle times & Extended by &  Symbol $a$ is undefined\\
+81 & 290 & $\mu ' \otimes a \hookrightarrow $ \underline{ } & Circle times & Extended by &  Symbol $a$ is indeterminate\\
 
 \end{tabular}
 
@@ -285,11 +285,11 @@ N & P & Expression & Name & Say & Meaning \\ \\
 p{.22\textwidth} p{.32\textwidth}}
 N & P & Expression & Name & Say & Meaning \\ \\
 
-81& 308 & $x \leftarrow e ; m$ & Left arrow & Sequence & Execute command $m$ with $e$ substituted for $x$ \\
-82& 308 & $a := e$ & Colon equals & Assign & Assign $e$ to $a$\\
-83 & 308 & $*a$ & Star & Contents & Get the value of $a$\\
-84 & 309 & $ m \| \mu $& State & State & Command $m$ with memory map $\mu$\\
-85 & 314 & $ m \thicksim \tau$ & Dotted tilde & Dotted tilde & Command $m$ returns a value of type $\tau$\\
+82& 308 & $x \leftarrow e ; m$ & Left arrow & Sequence & Execute command $m$ with $e$ substituted for $x$ \\
+83& 308 & $a := e$ & Colon equals & Assign & Assign $e$ to $a$\\
+84 & 308 & $*a$ & Star & Contents & Get the value of $a$\\
+85 & 309 & $ m \| \mu $& State & State & Command $m$ with memory map $\mu$\\
+86 & 314 & $ m \thicksim \tau$ & Dotted tilde & Dotted tilde & Command $m$ returns a value of type $\tau$\\
 \end{tabular}
 
 \subsubsection*{35 Assignable References}
@@ -297,7 +297,7 @@ N & P & Expression & Name & Say & Meaning \\ \\
 p{.22\textwidth} p{.32\textwidth}}
 N & P & Expression & Name & Say & Meaning \\ \\
 
-86 & 320 & $ \& a $ & Ampersand & Reference & Reference to assignable \\
+87 & 320 & $ \& a $ & Ampersand & Reference & Reference to assignable \\
  
 \end{tabular}
 
@@ -306,7 +306,7 @@ N & P & Expression & Name & Say & Meaning \\ \\
 p{.22\textwidth} p{.32\textwidth}}
 N & P & Expression & Name & Say & Meaning \\ \\
 
-87 & 333 & $ \Longrightarrow $ & Long right arrow & Implies & Implication (low precedence) \\
+88 & 333 & $ \Longrightarrow $ & Long right arrow & Implies & Implication (low precedence) \\
  
 \end{tabular}
 
@@ -316,9 +316,9 @@ N & P & Expression & Name & Say & Meaning \\ \\
 p{.22\textwidth} p{.32\textwidth}}
 N & P & Expression & Name & Say & Meaning \\ \\
 
-88& 344 & $c_1 \otimes c_2 $ & Circle times  & Parallel cost & Cost of executing in parallel \\
-88& 344 & $c_1 \oplus c_2 $ & Circle plus  & Sequential cost & Cost of executing in sequence \\
-90& 350 & $a_1 \hookrightarrow s_1 \otimes a_2 \hookrightarrow s_2$ & Circle times  & Parallel join & Join local states \\
+89& 344 & $c_1 \otimes c_2 $ & Circle times  & Parallel cost & Cost of executing in parallel \\
+90& 344 & $c_1 \oplus c_2 $ & Circle plus  & Sequential cost & Cost of executing in sequence \\
+91& 350 & $a_1 \hookrightarrow s_1 \otimes a_2 \hookrightarrow s_2$ & Circle times  & Parallel join & Join local states \\
 \end{tabular}
 
 \subsection*{XVI. Concurrency and Distribution}
@@ -327,22 +327,22 @@ N & P & Expression & Name & Say & Meaning \\ \\
 p{.22\textwidth} p{.32\textwidth}}
 N & P & Expression & Name & Say & Meaning \\ \\
 
-91& 365 & $ \$ E$ & Dollar  & Synchronize & Synchronize parallel processes \\
-92& 365 & $E_1 + E_2 $ & Plus  & Choice & Pick one of 2 expressions \\
-93& 365 & $?a;P$ & Query  & Query & Query a channel \\
-94& 365 & $!a;P$ & Bang  & Signal & Signal a channel \\
-95 & 367 & $ P_1 \otimes P_2 $  & Circle times & Composition & Compose 2 concurrent processes \\
-96 & 367 & $P \overset{\alpha}{\longmapsto} P' $ & Maps to & Steps & $P$ steps to $P'$ if action $\alpha$ is permissible \\
-97 & 369 & $ *P $  & Star & Replication & Replicate process $P$ \\
-98 & 370 & $ \nu a . P $ & Nu & New channel & Declare new channel $a$ in process $P$ \\
-99 & 371 & $P \overset{\alpha}{\underset{\Sigma}{\longmapsto}} P' $ & Maps to & Steps & $P$ steps to $P'$ if action $\alpha$ is permissible in context $\Sigma$ \\
-100 & 373 & $ ! a ( e ; P ) $  & Bang & Send & Send expression $e$ on channel $a$ to process $P$ \\
-101 & 373 & $ ? a ( x . P ) $  & Query & Receive & Receive expression $e$ on channel $a$ in process $P$ \\
-102 & 376 & $ \tau $ chan & Tau & Channel type & Channel of type $\tau$ \\
-103 & 376 & $ \& a $ & Ampersand & Channel reference & Reference to channel $a$ \\
-104 & 376 & $ !!(e_1;e_2;P) $ & Bang bang & Send & Send message on channel $e_1$  \\
-105 & 376 & $ ??(e;x.P) $ & Query query & Receive & Receive message on channel $e$  \\
-106 & 377 & $ @ $ & At & Map & Maps lambda expressions to PiC \\
+92& 365 & $ \$ E$ & Dollar  & Synchronize & Synchronize parallel processes \\
+93& 365 & $E_1 + E_2 $ & Plus  & Choice & Pick one of 2 expressions \\
+94& 365 & $?a;P$ & Query  & Query & Query a channel \\
+95& 365 & $!a;P$ & Bang  & Signal & Signal a channel \\
+96 & 367 & $ P_1 \otimes P_2 $  & Circle times & Composition & Compose 2 concurrent processes \\
+97 & 367 & $P \overset{\alpha}{\longmapsto} P' $ & Maps to & Steps & $P$ steps to $P'$ if action $\alpha$ is permissible \\
+98 & 369 & $ *P $  & Star & Replication & Replicate process $P$ \\
+99 & 370 & $ \nu a . P $ & Nu & New channel & Declare new channel $a$ in process $P$ \\
+100 & 371 & $P \overset{\alpha}{\underset{\Sigma}{\longmapsto}} P' $ & Maps to & Steps & $P$ steps to $P'$ if action $\alpha$ is permissible in context $\Sigma$ \\
+101 & 373 & $ ! a ( e ; P ) $  & Bang & Send & Send expression $e$ on channel $a$ to process $P$ \\
+102 & 373 & $ ? a ( x . P ) $  & Query & Receive & Receive expression $e$ on channel $a$ in process $P$ \\
+103 & 376 & $ \tau $ chan & Tau & Channel type & Channel of type $\tau$ \\
+104 & 376 & $ \& a $ & Ampersand & Channel reference & Reference to channel $a$ \\
+105 & 376 & $ !!(e_1;e_2;P) $ & Bang bang & Send & Send message on channel $e_1$  \\
+106 & 376 & $ ??(e;x.P) $ & Query query & Receive & Receive message on channel $e$  \\
+107 & 377 & $ @ $ & At & Map & Maps lambda expressions to PiC \\
 \end{tabular}
 
 \subsubsection*{40 Concurrent Algol}
@@ -350,9 +350,9 @@ N & P & Expression & Name & Say & Meaning \\ \\
 p{.22\textwidth} p{.32\textwidth}}
 N & P & Expression & Name & Say & Meaning \\ \\
 
-107& 382 & $ P_1 \otimes P_2 $ & Circle times  & Concurrent & Run processes $P_1$ and $P_2$ concurrently \\
-108 & 382 & $ \nu a ~\tau . p $ & Nu & New channel & Create a new chanell \\
-109 & 383 & $ m \overset{\alpha}{\underset{\Sigma}{\Rightarrow}} \nu \Sigma ' \{ m' \otimes p'\} $ & Fat right arrow & Transitions & Command $m$ transitions to command $m'$ while creating new channels $\Sigma$  and
+108& 382 & $ P_1 \otimes P_2 $ & Circle times  & Concurrent & Run processes $P_1$ and $P_2$ concurrently \\
+109 & 382 & $ \nu a ~\tau . p $ & Nu & New channel & Create a new chanell \\
+110 & 383 & $ m \overset{\alpha}{\underset{\Sigma}{\Rightarrow}} \nu \Sigma ' \{ m' \otimes p'\} $ & Fat right arrow & Transitions & Command $m$ transitions to command $m'$ while creating new channels $\Sigma$  and
 new processes $p'$ . The action $\alpha$ specifies the interactions of which $m$ is capable when executed. \\
 \end{tabular}
 
@@ -361,8 +361,18 @@ new processes $p'$ . The action $\alpha$ specifies the interactions of which $m$
 p{.22\textwidth} p{.32\textwidth}}
 N & P & Expression & Name & Say & Meaning \\ \\
 
-110 & 392 & $ a~\tau @ w $ & Tilde  & Declare & $a$ is a channel at site $w$ carrying payloads of type $\tau$ \\
+111 & 392 & $ a~\tau @ w $ & Tilde  & Declare & $a$ is a channel at site $w$ carrying payloads of type $\tau$ \\
 \end{tabular}
 
+\subsection*{XVII. Modularity}
+
+\subsubsection*{43 Singular Kinds and Subkinding}
+\begin{tabular}[b] {p{.025\textwidth} p{.025\textwidth} p{.13\textwidth} p{.15\textwidth} 
+p{.22\textwidth} p{.32\textwidth}}
+N & P & Expression & Name & Say & Meaning \\ \\
+112 & 407 & $ c::k $ & Colon colon  & Define constructor &  Define constructor $c$ of kind $k$\\
+113 & 407 & $ k_1<::k_2 $ & Less than colon colon  & Subkind & Kind $k_1$ is a subkind of kind $k_2$\\
+
+\end{tabular}
 
 \end{document}
