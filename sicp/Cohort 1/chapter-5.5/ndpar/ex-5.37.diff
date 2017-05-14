@@ -1,0 +1,22 @@
+diff --git a/sicp/chapter-5.5/ndpar/compiler.rkt b/sicp/chapter-5.5/ndpar/compiler.rkt
+index ea80b35..4b67277 100644
+--- a/sicp/chapter-5.5/ndpar/compiler.rkt
++++ b/sicp/chapter-5.5/ndpar/compiler.rkt
+@@ -300,8 +300,6 @@
+   (if (null? regs)
+       (append-instruction-sequences seq1 seq2)
+       (let ((first-reg (car regs)))
+-        (if (and (needs-register? seq2 first-reg)
+-                 (modifies-register? seq1 first-reg))
+             (preserving (cdr regs)
+              (make-instruction-sequence
+               (list+ (list first-reg)
+@@ -312,7 +310,7 @@
+                       (statements seq1)
+                       `((restore ,first-reg))))
+              seq2)
+-            (preserving (cdr regs) seq1 seq2)))))
++            )))
+
+ (define (tack-on-instruction-sequence seq body-seq)
+   (make-instruction-sequence

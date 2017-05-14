@@ -1,0 +1,50 @@
+\documentclass[12pt]{article}
+
+\usepackage{amsthm}
+\usepackage{amsmath}    % need for subequations
+\usepackage{amsfonts}
+\usepackage[ocgcolorlinks]{hyperref}
+
+\setlength{\baselineskip}{16.0pt}    % 16 pt usual spacing between lines
+
+\setlength{\parskip}{3pt plus 2pt}
+\setlength{\parindent}{20pt}
+\setlength{\oddsidemargin}{0.5cm}
+\setlength{\evensidemargin}{0.5cm}
+\setlength{\marginparsep}{0.75cm}
+\setlength{\marginparwidth}{2.0cm}
+\setlength{\marginparpush}{1.0cm}
+\setlength{\textwidth}{150mm}
+
+\begin{document}
+
+\section{Exercise 2.13: Tolerances}
+
+\[
+    t_{a/b} = t_{ab} = \frac{t_a + t_b}{1 + t_a t_b}
+\]
+
+\[
+    t_{a+b} = \frac{at_a + bt_b}{a+b}
+\]
+
+\[
+    t_{a-b} = \frac{at_a + bt_b}{a-b}
+\]
+
+\section{Exercise 2.15: Error bounds}
+
+\[
+    \min{t_a,t_b} \le \frac{t_a + t_b}{2} \le t_{a/b} = t_{ab} \le t_a + t_b
+\]
+
+\[
+    \min{t_a,t_b} \le t_{a+b} \le t_a + t_b \le t_{a-b}
+\]
+
+\[
+    t_a > 0 \implies t_{a/a} \ge t_a > 0
+\]
+
+\end{document}
+

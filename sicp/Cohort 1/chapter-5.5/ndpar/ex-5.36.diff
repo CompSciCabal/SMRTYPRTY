@@ -1,0 +1,22 @@
+diff --git a/sicp/chapter-5.5/ndpar/compiler.rkt b/sicp/chapter-5.5/ndpar/compiler.rkt
+index 10e3714..e13d89e 100644
+--- a/sicp/chapter-5.5/ndpar/compiler.rkt
++++ b/sicp/chapter-5.5/ndpar/compiler.rkt
+@@ -181,7 +181,7 @@
+       (compile-procedure-call target linkage)))))
+
+ (define (construct-arglist operand-codes)
+-  (let ((operand-codes (reverse operand-codes)))
++  (let ((operand-codes (identity operand-codes)))
+     (if (null? operand-codes)
+         (make-instruction-sequence '() '(argl)
+          '((assign argl (const ()))))
+@@ -202,7 +202,7 @@
+          (preserving '(argl)
+           (car operand-codes)
+           (make-instruction-sequence '(val argl) '(argl)
+-           '((assign argl (op cons) (reg val) (reg argl)))))))
++           '((assign argl (op adjoin-arg) (reg val) (reg argl)))))))
+     (if (null? (cdr operand-codes))
+         code-for-next-arg
+         (preserving '(env)
