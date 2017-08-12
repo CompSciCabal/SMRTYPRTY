@@ -3,14 +3,11 @@ SMRTYPRTY
 
 We study computer science for fun and ???. Then we post our secret findings here. TOP SECRET DO NOT ENTER!
 
-
 ### Schedules
 
-The [classic Friday night meetings](https://github.com/CompSciCabal/SMRTYPRTY/wiki/Reading-Schedule). We're currently reading CS papers for a few months before picking our next book.
+The [classic Friday night meetings](https://github.com/CompSciCabal/reading-material). We're currently reading CS papers for a few months before picking our next book.
 
-We're also [reading SICP again](https://github.com/CompSciCabal/SMRTYPRTY/wiki/Reading-Schedule!-SICP-Mark-II), because it was so much fun the first time!
-
-And given how popular reading SICP has become, we've created a [SICP reading group meetup](http://www.meetup.com/SICP-TO/) for it, and are working on a [new schedule](https://github.com/CompSciCabal/SMRTYPRTY/wiki/Reading-Schedule!-SICP-Mark-III).
+We're also [reading SICP again](https://www.meetup.com/SICP-TO/), because it was so much fun the first time! (And the second time, and the third time!)
 
 ### Also
 
