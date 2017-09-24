@@ -78,6 +78,38 @@ class TestDefault(unittest.TestCase):
             with self.assertRaises(ValueError):
                 self.String(a).split(n)
 
+    def run_split_join_test(self, desc, a, n):
+        my_a = self.String(a)
+        split = my_a.split(n)
+        joined = self.String()
+        for s in split:
+            joined = joined + s
+        assert joined == my_a, desc
+
+    def run_sjsj_test(self, desc, a, n):
+        my_a = self.String(a)
+        split = my_a.split(n)
+        joined = self.String()
+        for s in split:
+            joined = joined + s
+        assert joined == my_a, desc
+
+        split_2 = joined.split(n)
+        joined_2 = self.String()
+        for s in split:
+            joined_2 = joined_2 + s
+        assert joined_2 == my_a, desc
+
+    def test_split_join(self):
+        cases = [("normal and 1", "some string", 1),
+                 ("normal and 2", "some string", 2),
+                 ("normal and 3", "some string", 3),
+                 ("normal and longer than string", "some string", 32)]
+        for desc, a, n in cases:
+            self.run_split_join_test(desc, a, n)
+
+        for desc, a, n in cases:
+            self.run_sjsj_test(desc, a, n)
 
 class TestListString(TestDefault):
     def setUp(self):
@@ -90,3 +122,4 @@ class TestBSTString(TestDefault):
 class TestLinkedListString(TestDefault):
     def setUp(self):
         self.String = LinkedListString
+
