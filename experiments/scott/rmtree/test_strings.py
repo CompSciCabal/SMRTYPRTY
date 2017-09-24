@@ -1,7 +1,10 @@
 import unittest
 from itertools import product
 
-from .rm_strings import String, ListString, BSTString, LinkedListString
+from .str_default import String
+from .str_list import ListString
+from .str_bst import BSTString
+from .str_ll import LinkedListString
 
 
 class TestDefault(unittest.TestCase):
