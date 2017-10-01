@@ -90,7 +90,7 @@ class LinkedListString(object):
     def __repr__(self):
         return ''.join([self[i] for i in range(len(self))])
 
-    def copy_until(self, position):
+    def split_at(self, position):
         curr = self.head
         last = curr
         new_curr = self.Node.from_node(self.head)
@@ -121,7 +121,7 @@ class LinkedListString(object):
         rest_string = self
         while position < n_total:
             stride = min(n, n_total - position)
-            curr, rest = rest_string.copy_until(stride)
+            curr, rest = rest_string.split_at(stride)
             result.append(LinkedListString.from_node(curr))
             rest_string = LinkedListString.from_node(rest)
             position += n

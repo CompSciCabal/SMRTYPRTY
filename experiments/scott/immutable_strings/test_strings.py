@@ -5,6 +5,7 @@ from .str_default import String
 from .str_list import ListString
 from .str_bst import BSTString
 from .str_ll import LinkedListString
+from .str_rope import RopeString
 
 
 class TestDefault(unittest.TestCase):
@@ -126,3 +127,6 @@ class TestLinkedListString(TestDefault):
     def setUp(self):
         self.String = LinkedListString
 
+class TestRopeString(TestDefault):
+    def setUp(self):
+        self.String = RopeString
