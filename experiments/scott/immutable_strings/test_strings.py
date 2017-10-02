@@ -6,6 +6,7 @@ from .str_list import ListString
 from .str_bst import BSTString
 from .str_ll import LinkedListString
 from .str_rope import RopeString
+from .str_mway import MWayString
 
 
 class TestDefault(unittest.TestCase):
@@ -46,7 +47,7 @@ class TestDefault(unittest.TestCase):
             self.run_concat_test(desc, a, b, expected)
 
     def test_concat_small_lengths(self):
-        n = 16
+        n = 17
         cases = [("len = {} and len = {}".format(i, j),
                   "a" * i,
                   "b" * j,
@@ -130,3 +131,7 @@ class TestLinkedListString(TestDefault):
 class TestRopeString(TestDefault):
     def setUp(self):
         self.String = RopeString
+
+class TestMWayString(TestDefault):
+    def setUp(self):
+        self.String = MWayString

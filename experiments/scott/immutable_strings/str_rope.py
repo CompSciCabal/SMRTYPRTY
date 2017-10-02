@@ -1,6 +1,6 @@
 
 class RopeString(object):
-    """Implementation of Rope String using Prefix Tree
+    """String using Prefix Tree (Rope)
 
     The prefix tree has:
      - strings in the leaf nodes
