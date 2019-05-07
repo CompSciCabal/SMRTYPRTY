@@ -1,9 +1,8 @@
 # saropaip
-### _Your Name <your.name@example.com>_
+### Scott's Paip Exercises Package
 
-This is a project to do ... something.
+This is a project to contain scott's paip exericses.
 
 ## License
 
-Specify license here
-
+BSD
