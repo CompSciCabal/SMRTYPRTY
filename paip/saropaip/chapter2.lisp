@@ -42,6 +42,9 @@
   "Return a list of the possible rewrites for this category."
   (rule-rhs (assoc category *grammar*)))
 
+(defun terminalp (category)
+  (not (listp (first (rewrites category)))))
+
 (defun generate (phrase)
   "Generate a random sentence or phrase"
   (if (listp phrase)
@@ -63,4 +66,9 @@
 ;; Exercise 2.2
 (defun generate-2.2 (phrase)
   "Generate a random sentence or phrase"
-  '())
+  (cond ((listp phrase)
+         (mappend #'generate-2.2 phrase))
+        ((terminalp phrase) (list (random-elt (rewrites phrase))))
+        (t (generate-2.2 (first (rewrites phrase))))
+  )
+)
