@@ -36,3 +36,21 @@
   (if (= n 0)
       1
       (* x  (power x (- n 1)) )))
+
+(defun last-name-greg (name)
+   (let ((rname (reverse name)))
+     (if (not (member (car rname) *titles*))
+         (car rname)
+         (last-name-greg (cdr name)))))
+
+;; Exercise 1.4
+;; Copied From Answers
+(defun count-anywhere (item tree)
+  "Count number of times item appears in tree."
+  (cond ((eql item tree) 1)
+        ((atom tree) 0)
+        (t (+ (count-anywhere item (first tree))
+              (count-anywhere item (rest tree))))))
+
+(assert (eql (count-anywhere 'a '(a (a b) b a)) 3))
+

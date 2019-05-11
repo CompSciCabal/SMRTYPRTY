@@ -58,7 +58,7 @@
          (mappend #'generate-2.1 phrase))
         (t (let ((choices (rewrites phrase)))
              (cond ((not choices) (list phrase))
-                   (t (generate (random-elt choices))))))))
+                 (t (generate (random-elt choices))))))))
 
 ;; Exercise 2.2
 (defun generate-2.2 (phrase)
