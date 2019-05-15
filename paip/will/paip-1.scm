@@ -12,32 +12,6 @@
 ;;; "Exercise 1.4 [m] Write a function that counts the number of times an expression occurs anywhere within another expression.
 ;;; Example: (count-anywhere 'a '(a ((a) b) a)) ⇒ 3."
 
-;;;
-
-;;; Examples of relational arithmetic using "Oleg Numerals"
-;;; (little-endian binary lists):
-
-(test "build-num 1"
-  (build-num 6)
-  '(0 1 1))
-
-(test "pluso 1"
-  (run 1 (q)
-    (pluso (build-num 6) (build-num 7) q))
-  '((1 0 1 1)))
-
-(test "pluso 2"
-  (run* (x y)
-    (pluso x y (build-num 5)))
-  '(((1 0 1) ())
-    (() (1 0 1))
-    ((1) (0 0 1))
-    ((0 0 1) (1))
-    ((1 1) (0 1))
-    ((0 1) (1 1))))
-
-
-
 ;;; In plain Scheme:
 
 (define count-anywhere
@@ -63,6 +37,29 @@
 
 
 ;;; miniKanren version
+
+;;; Examples of relational arithmetic using "Oleg Numerals"
+;;; (little-endian binary lists):
+
+(test "build-num 1"
+  (build-num 6)
+  '(0 1 1))
+
+(test "pluso 1"
+  (run 1 (q)
+    (pluso (build-num 6) (build-num 7) q))
+  '((1 0 1 1)))
+
+(test "pluso 2"
+  (run* (x y)
+    (pluso x y (build-num 5)))
+  '(((1 0 1) ())
+    (() (1 0 1))
+    ((1) (0 0 1))
+    ((0 0 1) (1))
+    ((1 1) (0 1))
+    ((0 1) (1 1))))
+
 
 ;;; Uncomment this definition of 'pluso' to use Greg's approach that
 ;;; builds up arithmetic expressions, rather than evaluating to a
@@ -280,6 +277,168 @@
     (membero x '(hit took saw liked))))
 
 
+(test "sentence 1"
+  (run 10 (q) (sentence q))
+  '((the man hit the man)
+    (the man hit the ball)
+    (the man hit a man)
+    (the man took the man)
+    (the ball hit the man)
+    (the man hit the woman)
+    (the man hit a ball)
+    (the man hit the table)
+    (the man hit a woman)
+    (the man took the ball)))
 
+(test "sentence 1"
+  (run* (q) (sentence '(a woman liked a table)))
+  '(_.0))
 
+(test "sentence 2"
+  (run* (q) (sentence '(woman a liked a table)))
+  '())
 
+(test "sentence 2"
+  (run* (x y) (sentence '(a ,x liked . ,y)))
+  '())
+
+(test "sentence 3"
+  (run 10 (x y) (sentence `(a ,x liked . ,y)))
+  '((man (the man))
+    (man (the ball))
+    (man (a man))
+    (man (the woman))
+    (man (a ball))
+    (man (the table))
+    (man (a woman))
+    (man (a table))
+    (ball (the man))
+    (ball (the ball))))
+
+(test "sentence 4"
+  (run 1 (s)
+    (fresh (x y z)
+      (== `(,x ,y liked . ,z) s)
+      (sentence s)))
+  '((the man liked the man)))
+
+(test "sentence 5"
+  (run 1 (s)
+    (fresh (x y z)
+      (== `(,x ,y liked . ,z) s)
+      (absento 'man s)
+      (sentence s)))
+  '((the ball liked the ball)))
+
+(test "sentence 6"
+  (run 1 (s)
+    (fresh (x y z)
+      (== `(,x ,y liked . ,z) s)
+      (absento 'man s)
+      (absento 'ball s)
+      (sentence s)))
+  '((the woman liked the woman)))
+
+(test "Adj* 1"
+  (run 100 (adj*)
+    (Adj* adj*))
+  '(()
+    (big)
+    (little)
+    (big big)
+    (green)
+    (big little)    
+    (little big)
+    (big big big)
+    (blue)
+    (big green)
+    (little little)
+    (big big little)
+    (green big)
+    (big little big)
+    (little big big)
+    (big big big big)
+    (adiabatic)
+    (big blue)
+    (little green)
+    (big big green)
+    (green little)
+    (big little little)
+    (little big little)
+    (big big big little)
+    (blue big)
+    (big green big)
+    (little little big)
+    (big big little big)
+    (green big big)
+    (big little big big)
+    (little big big big)
+    (big big big big big)
+    (adiabatic big)
+    (big adiabatic)
+    (little blue)
+    (big big blue)
+    (green green)
+    (big little green)
+    (little big green)
+    (big big big green)
+    (blue little)
+    (big green little)
+    (little little little)
+    (big big little little)
+    (green big little)
+    (big little big little)
+    (little big big little)
+    (big big big big little)
+    (big blue big)
+    (adiabatic little)
+    (little green big)
+    (big big green big)
+    (green little big)
+    (big little little big)
+    (little big little big)
+    (big big big little big)
+    (blue big big)
+    (big green big big)
+    (little little big big)
+    (big big little big big)
+    (green big big big)
+    (big little big big big)
+    (little big big big big)
+    (big big big big big big)
+    (adiabatic big big)
+    (big adiabatic big)
+    (little adiabatic)
+    (big big adiabatic)
+    (green blue)
+    (big little blue)
+    (little big blue)
+    (big big big blue)
+    (blue green)
+    (big green green)
+    (little little green)
+    (big big little green)
+    (green big green)
+    (big little big green)
+    (little big big green)
+    (big big big big green)
+    (big blue little)
+    (adiabatic green)
+    (little green little)
+    (big big green little)
+    (green little little)
+    (big little little little)
+    (little big little little)
+    (big big big little little)
+    (blue big little)
+    (big green big little)
+    (little little big little)
+    (big big little big little)
+    (green big big little)
+    (big little big big little)
+    (little big big big little)
+    (big big big big big little)
+    (adiabatic big little)
+    (little blue big)
+    (big big blue big)
+    (green green big)))
