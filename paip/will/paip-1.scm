@@ -12,6 +12,31 @@
 ;;; "Exercise 1.4 [m] Write a function that counts the number of times an expression occurs anywhere within another expression.
 ;;; Example: (count-anywhere 'a '(a ((a) b) a)) ⇒ 3."
 
+;;;
+
+;;; Examples of relational arithmetic using "Oleg Numerals"
+;;; (little-endian binary lists):
+
+(test "build-num 1"
+  (build-num 6)
+  '(0 1 1))
+
+(test "pluso 1"
+  (run 1 (q)
+    (pluso (build-num 6) (build-num 7) q))
+  '((1 0 1 1)))
+
+(test "pluso 2"
+  (run* (x y)
+    (pluso x y (build-num 5)))
+  '(((1 0 1) ())
+    (() (1 0 1))
+    ((1) (0 0 1))
+    ((0 0 1) (1))
+    ((1 1) (0 1))
+    ((0 1) (1 1))))
+
+
 
 ;;; In plain Scheme:
 
