@@ -67,9 +67,16 @@
          (pluso a-count d-count count))))))
 
 
-;;; generative grammar
+;;; Generative grammar time!
+;;;
+;;; This code is inspired by Chapter 2 of PAIP, starting with the code
+;;; in section 2.2.
 
-;;; helper
+;;; 'membero' is the standard list membership miniKanren helper relation.
+;;;
+;;; Succeeds if 'x' is a member of 'ls'.
+;;;
+;;; Both 'x' and 'ls' can be logic variables, or pairs that contain logic variables.
 (define membero
   (lambda (x ls)
     (fresh (a d)
@@ -78,6 +85,36 @@
         ((== a x))
         ((=/= a x)
          (membero x d))))))
+
+(test "membero 1"
+  (run* (q)
+    (membero 'y '(x y z)))
+  '(_.0))
+
+(test "membero 2"
+  (run* (q)
+    (membero 'w '(x y z)))
+  '())
+
+(test "membero 3"
+  (run* (q)
+    (membero q '(x y z)))
+  '(x y z))
+
+(test "membero 4"
+  (run 3 (q)
+    (membero 'y q))
+  '((y . _.0)
+    ((_.0 y . _.1)
+     (=/= ((_.0 y))))
+    ((_.0 _.1 y . _.2)
+     (=/= ((_.0 y)) ((_.1 y))))))
+
+(test "membero 5"
+  (run* (q)
+    (membero 'y `(x ,q z)))
+  '(y))
+
 
 (define Adj
   (lambda (x)
