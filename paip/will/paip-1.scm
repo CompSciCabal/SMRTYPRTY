@@ -66,6 +66,83 @@
          (count-anywhereo x d d-count)
          (pluso a-count d-count count))))))
 
+(test "count-anywhereo 1"
+  (run* (q)
+    (count-anywhereo
+     q
+     '((z x y) ((x y z) b) x y)
+     (build-num 2)))
+  '((x y) z (y)))
+
+(test "count-anywhereo 2"
+  (run 1 (q)
+    (count-anywhereo
+     '(x y)
+     '((z x y) ((x y z) b) x y)
+     q))
+  '((0 1)))
+
+(test "count-anywhereo 3"
+  (run 1 (q)
+    (count-anywhereo
+     q
+     '((z x y) ((x y z) b) x y)
+     (build-num 2)))
+  '((x y)))
+
+(test "count-anywhereo 4"
+  (run 2 (q)
+    (count-anywhereo
+     q
+     '((z x y) ((x y z) b) x y)
+     (build-num 2)))
+  '((x y) z))
+
+(test "count-anywhereo 5"
+  (run* (q)
+    (count-anywhereo
+     q
+     '((z x y) ((x y z) b) x y)
+     (build-num 2)))
+  '((x y) z (y)))
+
+(test "count-anywhereo 6"
+  (run 1 (e1 e2)
+    (count-anywhereo
+     e1
+     e2
+     (build-num 3)))
+  '((_.0 (_.0 _.0 . _.0))))
+
+(test "count-anywhereo 7"
+  (run 10 (e1 e2)
+    (count-anywhereo
+     e1
+     e2
+     (build-num 3)))
+  '((_.0 (_.0 _.0 . _.0))
+    ((_.0 (_.0 _.0 _.0))
+     (=/= ((_.0 ()))))
+    ((_.0 (_.0 _.0 () . _.0))
+     (=/= ((_.0 ()))))
+    ((_.0 (_.0 _.0 _.0 . #t))
+     (=/= ((_.0 #t))))
+    ((_.0 (_.0 _.0 _.0 . #f))
+     (=/= ((_.0 #f))))
+    ((_.0 (_.0 () _.0 . _.0))
+     (=/= ((_.0 ()))))
+    ((_.0 (() _.0 _.0 . _.0))
+     (=/= ((_.0 ()))))
+    ((_.0 (_.0 _.0 _.0 . _.1))
+     (=/= ((_.0 _.1)))
+     (sym _.1))
+    ((_.0 (_.0 _.0 #t . _.0))
+     (=/= ((_.0 #t))))
+    ((_.0 (_.0 _.0 _.0 . _.1))
+     (=/= ((_.0 _.1)))
+     (num _.1))))
+
+
 
 ;;; Generative grammar time!
 ;;;
