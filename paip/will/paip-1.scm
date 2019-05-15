@@ -7,6 +7,10 @@
 
 ;;; Exercises from Peter Norvig's 'Paradigms of Artificial Intelligence Programming'
 
+;;; All code released under MIT licence.
+
+
+
 ;;; Load this file in Chez Scheme (https://cisco.github.io/ChezScheme/)
 
 ;;; "Exercise 1.4 [m] Write a function that counts the number of times an expression occurs anywhere within another expression.
