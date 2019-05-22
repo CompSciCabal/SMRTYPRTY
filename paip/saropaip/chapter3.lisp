@@ -37,4 +37,30 @@
 (defun print-dotted-pairs (e)
   (princ (expression-to-dotted-pairs e)))
            
+;; &#9635; **Exercise 3.4 [m]** Write a function that, like the regular `print` function, will print an expression in dotted pair notation when necessary but will use normal list notation when possible.
+
+;; Noticed that listp doesn't check if a cons cell is nil terminated so is more like consp except true for nil
+;; SAROPAIP/CHAPTER3> (listp (cons 'x 'y))
+;; T
+
+(defun expression-to-print-ready-string (e)
+  (labels
+      ((list-to-str (e &optional (prefix "("))
+         (if (consp e)
+             (let ((el (first e))
+                   (er (rest e)))
+               (cond  ((consp er)
+                       (concatenate 'string prefix (list-to-str el) (list-to-str er " ")))
+                      ((null er)
+                       (concatenate 'string prefix (list-to-str el) ")"))
+                      (t
+                       (concatenate 'string prefix (list-to-str el) " . " (list-to-str er) ")"))
+                  ))
+             (princ-to-string e))))
+    (list-to-str e)
+    )
+ )
+
+;; SAROPAIP/CHAPTER3> (expression-to-print-ready-string '(0 ((a . b) . (c . d)) 2 (3 . (4 . (8 . 9)))))
+;; "(0 ((A . B) C . D) 2 (3 4 8 . 9))"
 
