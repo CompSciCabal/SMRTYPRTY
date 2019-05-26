@@ -134,6 +134,27 @@ bananaOps =
        }
   ]
 
+data MazeCond a = At a deriving (Show, Eq)
+
+exampleMaze :: [(Int, Int)]
+exampleMaze =
+  [ (1, 2), (2, 3), (3, 4), (4, 9)
+  , (9, 14), (9, 8), (8, 7), (7, 12)
+  , (12, 13), (12, 11), (11, 6), (11, 16)
+  , (16, 17), (17, 22), (21, 22), (22, 23)
+  , (23, 18), (23, 24), (24, 19), (19, 20)
+  , (20, 15), (15, 10), (10, 5), (20, 25)
+  ]
+makeMaze = concatMap makeMazeOps
+makeMazeOps (a, b) = [ makeMazeOp a b, makeMazeOp b a ]
+makeMazeOp a b =
+  Op { action = "move from " ++ show a ++ " to " ++ show b
+     , preconds = [At a]
+     , addList = [At b]
+     , delList = [At a]
+     }
+
+
 
 main :: IO ()
 main = do
@@ -148,3 +169,5 @@ main = do
   putStrLn "** Monkey and Bananas"
   pPrint $ gps2 [AtDoor, OnFloor, HasBall, Hungry, ChairAtDoor] [NotHungry] bananaOps
 
+  putStrLn "** Maze Solving"
+  pPrint $ gps2 [At 1] [At 25] (makeMaze exampleMaze)
