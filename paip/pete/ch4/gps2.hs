@@ -18,8 +18,8 @@ wouldAchieve cond op = cond `elem` addList op
 precondsApply :: Eq c => [c] -> Op c -> Bool
 precondsApply state op = all (\c -> c `elem` state) (preconds op)
 
-gps1 :: Eq c => [c] -> [c] -> [Op c] -> [([OpName], [c])]
-gps1 state goals ops =
+gps2 :: Eq c => [c] -> [c] -> [Op c] -> [([OpName], [c])]
+gps2 state goals ops =
   filter (satisfied goals) (generate state ops)
     where
       satisfied goals (_, st) = all (\g -> g `elem` st) goals
@@ -51,7 +51,7 @@ data SchoolCond
   | ShopKnowsProblem
   | SonAtHome
   | SonAtSchool
-  deriving (Show, Eq, Enum)
+  deriving (Show, Eq)
 
 schoolOps =
   [ Op { action = "drive-son-to-school"
@@ -86,11 +86,65 @@ schoolOps =
        }
   ]
 
+data BananaCond
+  = ChairAtMiddleRoom
+  | AtMiddleRoom
+  | OnFloor
+  | AtBananas
+  | OnChair
+  | ChairAtDoor
+  | AtDoor
+  | EmptyHanded
+  | HasBall
+  | HasBananas
+  | NotHungry
+  | Hungry
+  deriving (Show, Eq)
+
+bananaOps =
+  [ Op { action = "climb-on-chair"
+       , preconds = [ChairAtMiddleRoom, AtMiddleRoom, OnFloor]
+       , addList = [AtBananas, OnChair]
+       , delList = [AtMiddleRoom, OnFloor] -- EmptyHanded?
+       }
+  , Op { action = "push-chair-to-middle"
+       , preconds = [ChairAtDoor, AtDoor]
+       , addList = [ChairAtMiddleRoom, AtMiddleRoom]
+       , delList = [ChairAtDoor, AtDoor]
+       }
+  , Op { action = "walk-to-middle"
+       , preconds = [AtDoor, OnFloor] -- WalkTheDinosaur?
+       , addList = [AtMiddleRoom]
+       , delList = [AtDoor]
+       }
+  , Op { action = "grasp-bananas"
+       , preconds = [AtBananas, EmptyHanded]
+       , addList = [HasBananas]
+       , delList = [AtDoor]
+       }
+  , Op { action = "drop-ball"
+       , preconds = [HasBall]
+       , addList = [EmptyHanded]
+       , delList = [HasBall]
+       }
+  , Op { action = "eat-bananas"
+       , preconds = [HasBananas]
+       , addList = [EmptyHanded, NotHungry]
+       , delList = [HasBananas, Hungry]
+       }
+  ]
+
+
 main :: IO ()
 main = do
+  putStrLn "** Getting the kid to school"
   putStrLn "Example 1:"
-  pPrint $ gps1 [SonAtHome, CarNeedsBattery, HaveMoney, HavePhoneBook] [SonAtSchool] schoolOps
+  pPrint $ gps2 [SonAtHome, CarNeedsBattery, HaveMoney, HavePhoneBook] [SonAtSchool] schoolOps
   putStrLn "Example 2:"
-  pPrint $ gps1 [SonAtHome, CarNeedsBattery, HaveMoney] [SonAtSchool] schoolOps
+  pPrint $ gps2 [SonAtHome, CarNeedsBattery, HaveMoney] [SonAtSchool] schoolOps
   putStrLn "Example 3:"
-  pPrint $ gps1 [SonAtHome, CarWorks] [SonAtSchool] schoolOps
+  pPrint $ gps2 [SonAtHome, CarWorks] [SonAtSchool] schoolOps
+
+  putStrLn "** Monkey and Bananas"
+  pPrint $ gps2 [AtDoor, OnFloor, HasBall, Hungry, ChairAtDoor] [NotHungry] bananaOps
+
