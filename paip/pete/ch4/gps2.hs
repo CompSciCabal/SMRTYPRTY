@@ -1,0 +1,96 @@
+import Text.Pretty.Simple (pPrint)
+import qualified Data.List as List
+import Data.List ((\\))
+
+-- Operation data type
+data Op cond = Op
+  { action   :: OpName
+  , preconds :: [cond]
+  , addList  :: [cond]
+  , delList  :: [cond]
+  } deriving (Show, Eq)
+
+type OpName = String
+
+wouldAchieve :: Eq c => c -> Op c -> Bool
+wouldAchieve cond op = cond `elem` addList op
+
+precondsApply :: Eq c => [c] -> Op c -> Bool
+precondsApply state op = all (\c -> c `elem` state) (preconds op)
+
+gps1 :: Eq c => [c] -> [c] -> [Op c] -> [([OpName], [c])]
+gps1 state goals ops =
+  filter (satisfied goals) (generate state ops)
+    where
+      satisfied goals (_, st) = all (\g -> g `elem` st) goals
+
+generate :: Eq c => [c] -> [Op c] -> [([OpName], [c])]
+generate state ops =
+  let ns = nextSteps state ops
+      as = map (\(newState, op, _) -> ([op], newState)) ns
+      bs = concatMap (\(newState, op, newOps) -> map (\(xs,st) -> (op:xs, st)) (generate newState newOps)) ns
+   in as ++ bs
+
+nextSteps :: Eq c => [c] -> [Op c] -> [([c], OpName, [Op c])]
+nextSteps state ops =
+  [ (applyOp state op, action op, List.delete op ops) | op <- ops, precondsApply state op ]
+
+applyOp :: Eq c => [c] -> Op c -> [c]
+applyOp state op =
+  (state \\ delList op) ++ addList op
+
+
+data SchoolCond
+  = CarNeedsBattery
+  | CarWorks
+  | HaveMoney
+  | HavePhoneBook
+  | InCommunicationWithShop
+  | KnowPhoneNumber
+  | ShopHasMoney
+  | ShopKnowsProblem
+  | SonAtHome
+  | SonAtSchool
+  deriving (Show, Eq, Enum)
+
+schoolOps =
+  [ Op { action = "drive-son-to-school"
+       , preconds = [SonAtHome, CarWorks]
+       , addList = [SonAtSchool]
+       , delList = [SonAtHome]
+       }
+  , Op { action = "shop-installs-battery"
+       , preconds = [CarNeedsBattery, ShopKnowsProblem, ShopHasMoney]
+       , addList = [CarWorks]
+       , delList = []
+       }
+  , Op { action = "tell-shop-problem"
+       , preconds = [InCommunicationWithShop]
+       , addList = [ShopKnowsProblem]
+       , delList = []
+       }
+  , Op { action = "telephone-shop"
+       , preconds = [KnowPhoneNumber]
+       , addList = [InCommunicationWithShop]
+       , delList = []
+       }
+  , Op { action = "look-up-number"
+       , preconds = [HavePhoneBook]
+       , addList = [KnowPhoneNumber]
+       , delList = []
+       }
+  , Op { action = "give-shop-money"
+       , preconds = [HaveMoney]
+       , addList = [ShopHasMoney]
+       , delList = [HaveMoney]
+       }
+  ]
+
+main :: IO ()
+main = do
+  putStrLn "Example 1:"
+  pPrint $ gps1 [SonAtHome, CarNeedsBattery, HaveMoney, HavePhoneBook] [SonAtSchool] schoolOps
+  putStrLn "Example 2:"
+  pPrint $ gps1 [SonAtHome, CarNeedsBattery, HaveMoney] [SonAtSchool] schoolOps
+  putStrLn "Example 3:"
+  pPrint $ gps1 [SonAtHome, CarWorks] [SonAtSchool] schoolOps
