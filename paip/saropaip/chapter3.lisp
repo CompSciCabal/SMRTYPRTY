@@ -64,3 +64,109 @@
 ;; SAROPAIP/CHAPTER3> (expression-to-print-ready-string '(0 ((a . b) . (c . d)) 2 (3 . (4 . (8 . 9)))))
 ;; "(0 ((A . B) C . D) 2 (3 4 8 . 9))"
 
+
+;; &#9635; **Exercise 3.6 [s]** Given the following initialization for the lexical variable `a` and the special variable `*b*`, what will be the value of the `let` form?
+
+(setf a 'global-a)
+(defvar *b* 'global-b)
+
+(defun fn () *b*)
+
+(let ((a 'local-a)
+      (*b* 'local-b))
+  (list a *b* (fn) (symbol-value 'a) (symbol-value '*b*)))
+;; Only the special vars defvar can be shadowed like this
+;; I think it must be that the lexical vars don't end up in the symbol table, not sure
+;; '(local-a local-b local-b global-a local-b)
+
+;; From section 3.19
+(defun find-all (item sequence &rest keyword-args
+                 &key (test #'eql) test-not &allow-other-keys)
+  "Find all those elements of sequence that match item,
+  according to the keywords.  Doesn't alter sequence."
+  (if test-not
+      (apply #'remove item sequence
+             :test-not (complement test-not) keyword-args)
+      (apply #'remove item sequence
+             :test (complement test) keyword-args)))
+
+(setf nums '(1 2 3 2 1))
+
+(find-all 1 nums :test #'= :key #'abs)
+;;  = (remove 1 nums :test (complement #'=) :test #'= :key #'abs)
+
+
+;; &#9635; **Exercise 3.7 [s]** Why do you think the leftmost of two keys is the one that counts, rather than the rightmost?
+
+;; because it's implemented as a find on a list?
+
+
+;; &#9635; **Exercise 3.8 [m]** Some versions of Kyoto Common Lisp (KCL) have a bug wherein they use the rightmost value when more than one keyword/value pair is specified for the same keyword.
+;; Change the definition of `find-all` so that it works in KCL.
+
+(defun printing-kwargs (&rest keyword-args
+                        &key (a 'default-a) b &allow-other-keys)
+  (progn
+    (print keyword-args)
+    (print a)
+    (print b)
+    (print (remove ':a (remove a keyword-args)))
+    (print (remove (list ':a a) keyword-args))
+    (print (set-difference keyword-args (list ':a a)))
+    (let ((start (position ':a keyword-args)))
+      (if (not start)
+          (print keyword-args)
+          (print (append (subseq keyword-args 0 start) (subseq keyword-args (+ start 2))))))))
+
+(defun remove-keyword-arg (keyword-arg keyword-args)
+  (let ((start (position keyword-arg keyword-args)))
+    (if (not start)
+        keyword-args
+        (append (subseq keyword-args 0 start) (subseq keyword-args (+ start 2))))))
+
+(defun find-all-kyoto (item sequence &rest keyword-args
+                 &key (test #'eql) test-not &allow-other-keys)
+  "Find all those elements of sequence that match item,
+  according to the keywords.  Doesn't alter sequence."
+  (if test-not
+      (apply #'remove item sequence
+             :test-not (complement test-not) (remove-keyword-arg ':test-not keyword-args))
+      (apply #'remove item sequence
+             :test (complement test) (remove-keyword-arg ':test keyword-args))))
+
+;; &#9635; **Exercise 3.9 [m]** Write a version of `length` using the function `reduce`.
+(defun length-reduce (list)
+  (reduce #'+ list :key (lambda (x) (declare (ignore x)) 1)))
+
+
+;; &#9635; **Exercise 3.10 [m]** Use a reference manual or `describe` to figure out what the functions `lcm` and `nreconc` do.
+(describe #'lcm) 
+;; least common multiple
+(lcm 2 5 8) 
+;; = 40
+;; hah, don't do this
+;; (setf x '(1 2 3))
+;; (nconc x x)
+
+;; nreconc seems a bit odd
+;; It will return the first argument reversed with all the other values appeneded
+;; but it in place modifies the first argument to be the last element only + all the other values appended
+(setf x '(1 2 3))
+(nreverse x)
+;; returns '(3 2 1)
+;; x = '(1)
+(setf x '(1 2 3))
+(nreconc x '(a b c))
+;; returns '(3 2 1 a b c)
+;; x = '(1 a b c)
+
+
+;; &#9635; **Exercise 3.11** [m] There is a built-in Common Lisp function that, given a key, a value, and an association list, returns a new association list that is extended to include the key/value pair.
+;; What is the name of this function?
+(acons 'c 2 '((a . 0) (b . 1)))
+
+
+;; &#9635; **Exercise 3.12 [m]** Write a single expression using format that will take a list of words and print them as a sentence, with the first word capitalized and a period after the last word.
+;; You will have to consult a reference to learn new `format` directives.
+(format t "~@(~{~s~^ ~}~)." '(hello bob smith))
+
