@@ -9,6 +9,18 @@
 
 ;;; All code released under MIT licence.
 
+;; TODO
+;;
+;; * thread the tracing through the entire GPS monadically to capture all states and ops
+;;
+;; * add tests for real
+;;
+;; * add tests for inventing lists of ops, inventing the starting state, etc.
+;;
+;; * make more efficient running backwards
+;;
+;; * right the code can construct multisets instead of sets when running backwards--can we fix this?
+
 
 (define membero
   (lambda (x ls)
