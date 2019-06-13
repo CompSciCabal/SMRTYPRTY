@@ -4,6 +4,8 @@
   adjoin
   sub*
   pat-match
+  pat-match-abbrevs
+  expand-pat-match-abbrev
   rule-system
   rule-based-translator
   is
@@ -140,6 +142,19 @@
     (?+  . ,segment-match-+)
     (??  . ,segment-match-?)
     (?if . ,match-if)))
+
+(define (pat-match-abbrevs old new)
+  (foldl (lambda (abbrev abbrevs)
+           (cons (cons (car abbrev)
+                       (expand-pat-match-abbrev abbrevs (cdr abbrev)))
+                 abbrevs))
+         old new))
+(define (expand-pat-match-abbrev abbrevs p)
+  (cond ((symbol? p) (define binding (assoc p abbrevs))
+                     (if binding (cdr binding) p))
+        ((pair? p)   (cons (expand-pat-match-abbrev abbrevs (car p))
+                           (expand-pat-match-abbrev abbrevs (cdr p))))
+        (else p)))
 
 (define (rule-system rule-match rule-if rule-then action)
   (list rule-match rule-if rule-then action))
