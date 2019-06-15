@@ -297,7 +297,7 @@
          eliza-rules))
 
 (define (switch-viewpoint words)
-  (sub* '((I . you) (you . I) (me . you) (am . are)) words))
+  (sub* '((I . you) (you . I) (me . you) (am . are) (my . your) (your . my)) words))
 
 (eliza/script
   '((hello there)
