@@ -1,3 +1,3 @@
 #!/bin/bash
 
-sed s/\;.*// $1 >$2
+sed s/\;.*// $1 | xclip -selection clipboard

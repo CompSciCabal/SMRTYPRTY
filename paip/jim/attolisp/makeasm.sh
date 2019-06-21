@@ -1,3 +1,3 @@
 #!/bin/bash
 
-sed 's/ |\t|\n//' $1 | ./makeasm.py > $2
+ tr -d " "  < $1 |  tr -d "\t" |  tr -d "\n" | sed 's/\\b/ /g' | ./makeasm.py | xclip -selection clipboard

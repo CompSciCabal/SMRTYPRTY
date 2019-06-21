@@ -9,3 +9,6 @@ while True:
 		break
 
 	print ('.BYTE $%02X' % (ord(c)))
+
+print ('.BYTE $%02X' % 0)
+

@@ -1,0 +1,18 @@
+(		open s-expression
+)		close s-expression
+[		open argument list
+]		close argument list
+f		function
+m		macro
+'		quote
+"		character
+#		number
+d		define symbol
+=		equals
+<		less than
++		add
+c 		cons
+a 		car
+r		cdr
+e 		eval
+n 		nil
