@@ -45,6 +45,8 @@
     (((?* ?x) = (?* ?y))                      (= ?x ?y))
     (((?* ?x) is equal to (?* ?y))            (= ?x ?y))
     (((?* ?x) is (?* ?y))                     (= ?x ?y))
+    (((?* ?x) has (?* ?y))                    (= ?x ?y))
+    (((?* ?x) can (?* ?y))                    (= ?x ?y))
     (((?* ?x) - (?* ?y))                      (- ?x ?y))
     (((?* ?x) minus (?* ?y))                  (- ?x ?y))
     ((difference between (?* ?x) and (?* ?y)) (- ?x ?y))
@@ -87,6 +89,7 @@
 
 (define (create-list-of-equations e)
   (cond ((null? e)             '())
+        ((not (pair? e))       '())
         ((not (pair? (car e))) (list e))
         (else (append (create-list-of-equations (car e))
                       (create-list-of-equations (cdr e))))))
@@ -233,3 +236,7 @@
                     old |,| how old is Jane ?)))
 (example (student '(what is 4 + 5 * 14 / 7 ?)))
 (example (student '(x * b = c + d |.| b * c = x |.| x = b + b |.| b = 5 |.|)))
+
+(example (student '(Werner has 3 apples |.|
+                    if the number of apples barfed into Werner's lap by a surfacing whale is 18 |,|
+                    how many apples can Werner eat ?)))
