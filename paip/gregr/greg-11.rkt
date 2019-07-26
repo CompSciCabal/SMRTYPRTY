@@ -41,6 +41,11 @@
       (and (vector? x) (loop (vector->list x)))))
 (define (rename-vars d)
   (walk* (map (lambda (v) (cons v (gensym v))) (vars d)) d))
+(define (rename-?-vars d)
+  (cond ((eq? d '?)  (gensym '?))
+        ((pair? d)   (cons (rename-?-vars (car d)) (rename-?-vars (cdr d))))
+        ((vector? d) (vector-map rename-?-vars d))
+        (else        d)))
 
 (define (unify-var env v x)
   (and (not (occurs? env v x))
@@ -74,26 +79,48 @@
 (define (clear-database!) (set! *database* empty-database))
 
 (define (prove env goal)
-  (append* (map (lambda (clause)
-                  (let ((new-clause (rename-vars clause)))
-                    (prove* (unify/env env goal (clause-head new-clause))
-                            (clause-body new-clause))))
-                (predicate->clauses (predicate goal)))))
+  (let outer-loop ((clauses (predicate->clauses (predicate goal))))
+    (if (null? clauses) '()
+      (let ((new-clause (rename-vars (car clauses))))
+        (let loop ((envs (prove* (unify/env env goal (clause-head new-clause))
+                                 (clause-body new-clause))))
+          (if (stream-empty? envs) (outer-loop (cdr clauses))
+            (stream-cons (stream-first envs)
+                         (loop (stream-rest envs)))))))))
 (define (prove* env goals)
   (cond ((not env)     '())
         ((null? goals) (list env))
-        (else (append* (map (lambda (s1) (prove* s1 (cdr goals)))
-                            (prove env (car goals)))))))
-(define (top-level-prove goals)
-  (define envs (prove* env-empty goals))
-  (map (lambda (env)
-         (map (lambda (v) `(,v = ,(walk* env v))) (vars goals)))
-       envs))
+        (else (let outer-loop ((s1s (prove env (car goals))))
+                (if (stream-empty? s1s) '()
+                  (let loop ((envs (prove* (stream-first s1s) (cdr goals))))
+                    (if (stream-empty? envs) (outer-loop (stream-rest s1s))
+                      (stream-cons (stream-first envs)
+                                   (loop (stream-rest envs))))))))))
+(define (top-level-prove count goals)
+  (define answers
+    (stream-map (lambda (env)
+                  (map (lambda (v) `(,v = ,(walk* env v))) (vars goals)))
+                (prove* env-empty goals)))
+  (cond ((not count)
+         (let loop ((answers answers))
+           (unless (or (stream-empty? answers) (eof-object? (read-line)))
+             (pretty-print (stream-first answers))
+             (loop (stream-rest answers)))))
+        ((and (number? count) (<= 0 count))
+         (let loop ((answers answers) (count count))
+           (if (= count 0) '()
+             (cons (stream-first answers)
+                   (loop (stream-rest answers) (- count 1))))))
+        (else (stream->list answers))))
 
 (define-syntax <-
-  (syntax-rules () ((_ . clause) (add-clause! 'clause))))
+  (syntax-rules () ((_ . clause) (add-clause! (rename-?-vars 'clause)))))
+(define-syntax ?-n
+  (syntax-rules () ((_ n . goals) (top-level-prove n (rename-?-vars 'goals)))))
+(define-syntax ?-*
+  (syntax-rules () ((_ . goals) (?-n -1 . goals))))
 (define-syntax ?-
-  (syntax-rules () ((_ . goals) (top-level-prove 'goals))))
+  (syntax-rules () ((_ . goals) (?-n #f . goals))))
 
 (examples
   (unify '(?x + 1) '(2 + ?y))
@@ -109,6 +136,7 @@
   (unify '(?x ?y) '((f ?y) (f ?x)))
   (unify '(?x ?y ?z) '((?y ?z) (?x ?z) (?x ?y)))
   (unify 'a 'a)
+  (unify '(f (?x ?y a) (?y ?x ?x)) '(f ?z ?z))
 
   (unifier '(?a + ?a = 0) '(?x + ?y = ?y))
   (unifier '(?a + ?a = 2) '(?x + ?y = ?y))
@@ -126,11 +154,11 @@
 (<- (likes ?x ?x))
 
 (examples
-  (?- (likes Robin Lee))
-  (?- (likes Sandy ?who))
-  (?- (likes ?who Sandy))
-  (?- (likes ?who Lee))
-  (?- (likes ?x ?y) (likes ?y ?x))
+  (?-* (likes Robin Lee))
+  (?-* (likes Sandy ?who))
+  (?-* (likes ?who Sandy))
+  (?-* (likes ?who Lee))
+  (?-* (likes ?x ?y) (likes ?y ?x))
   )
 
 (<- (member ?item (?item . ?rest)))
@@ -147,9 +175,81 @@
     ;(or (= ?item ?first)
         ;(member ?item ?rest))))
 
+(<- (length () 0))
+(<- (length (?x . ?y) (1+ ?n)) (length ?y ?n))
+
+(<- (= ?x ?x))
+
 (examples
-  (?- (member 2 (1 2 3)))
-  (?- (member 2 (1 2 3 2 1)))
-  (?- (member ?x (1 2 3)))
+  (?-* (member 2 (1 2 3)))
+  (?-* (member 2 (1 2 3 2 1)))
+  (?-* (member ?x (1 2 3)))
+  (?-* (length (a b c d) ?n))
+  (?-* (length ?list (1+ (1+ 0))))
+  (?-* (length ?l (1+ (1+ 0))) (member a ?l))
+  (?-* (length ?l (1+ (1+ (1+ (1+ 0)))))
+       (member d ?l) (member a ?l) (member c ?l) (member b ?l)
+       (= ?l (a b c d))))
+
+(<- (nextto ?x ?y ?list) (iright ?x ?y ?list))
+(<- (nextto ?x ?y ?list) (iright ?y ?x ?list))
+(<- (iright ?left ?right (?left ?right . ?rest)))
+(<- (iright ?left ?right (?x . ?rest))
+    (iright ?left ?right ?rest))
+
+(<- (zebra ?h ?w ?z)
+    ;; Each house is of the form:
+    ;; (house nationality pet cigarette drink house-color)
+    (= ?h ((house norwegian ? ? ? ?)
+           ?
+           (house ? ? ? milk ?) ? ?))
+    (member (house englishman ? ? ? red) ?h)
+    (member (house spaniard dog ? ? ?)   ?h)
+    (member (house ? ? ? coffee green)   ?h)
+    (member (house ukrainian ? ? tea ?)  ?h)
+    (iright (house ? ? ? ? ivory)
+            (house ? ? ? ? green) ?h)
+    (member (house ? snails winston ? ?) ?h)
+    (member (house ? ? kools ? yellow)   ?h)
+    (nextto (house ? ? chesterfield ? ?)
+            (house ? fox ? ? ?) ?h)
+    (nextto (house ? ? kools ? ?)
+            (house ? horse ? ? ?) ?h)
+    (member (house ? ? luckystrike orange-juice ?) ?h)
+    (member (house japanese ? parliaments ? ?) ?h)
+    (nextto (house norwegian ? ? ? ?)
+            (house ? ? ? ? blue) ?h)
+    ;; Questions:
+    (member (house ?w ? ? water ?) ?h)
+    (member (house ?z zebra ? ? ?) ?h))
+
+(examples (?-* (zebra ?houses ?water-drinker ?zebra-owner)))
+
+(<- (append () ?ys ?ys))
+(<- (append (?x . ?xs) ?ys (?x . ?xsys))
+    (append ?xs ?ys ?xsys))
+
+(<- (prove ?goal) (prove* (?goal)))
+
+(<- (prove* ()))
+(<- (prove* (?goal . ?goals))
+    (clause (<- ?goal . ?body))
+    (append ?body ?goals ?new-goals)
+    (prove* ?new-goals))
+
+(<- (clause (<- (mem ?x (?x . ?y)))))
+(<- (clause (<- (mem ?x (? . ?z)) (mem ?x ?z))))
+
+(examples
+  (?-* (append ?x ?y (1 2 3 4)))
+  (?-* (prove (mem ?x (1 2 3))))
   )
 
+;; Interactive examples
+(examples
+  (?- (member 2 ?list))
+  (?- (member ?item ?list))
+  (?- (length ?list ?n))
+  ;; Asking for more than two answers will infinite loop.
+  (?- (member a ?l) (length ?l (1+ (1+ 0))))
+  )
