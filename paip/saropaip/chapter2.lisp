@@ -1,4 +1,3 @@
-
 ;; chapter2
 
 (defpackage :saropaip/chapter2
