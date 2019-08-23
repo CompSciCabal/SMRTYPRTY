@@ -10,9 +10,13 @@ m		macro
 d		define symbol
 =		equals
 <		less than
+>		greater than
+!		not
+^		and
+|		or
 +		add
 c 		cons
 a 		car
 r		cdr
 e 		eval
-n 		nil
+t 		cond (test)
