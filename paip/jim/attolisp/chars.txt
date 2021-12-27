@@ -7,7 +7,7 @@ m		macro
 '		quote
 "		character
 #		number
-d		define symbol
+s		set symbol
 =		equals
 <		less than
 >		greater than

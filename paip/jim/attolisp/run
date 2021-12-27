@@ -1,0 +1,6 @@
+#!/bin/bash
+
+sed -f replace.sed < $1 > tail.s
+cat attolisp.asm tail.s > run.s
+xa -l symbols.tbl -I ~/dev/cabal/x6502 run.s
+x6502 a.o65

@@ -1,0 +1,4 @@
+for f in *.al
+do
+	./run $f
+done
